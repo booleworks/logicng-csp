@@ -43,7 +43,7 @@ public class CspFactory {
     private final Map<Term, NegationFunction> unaryMinusTerms;
     private final Map<LinkedHashSet<Term>, Term> addTerms;
     private final Map<Pair<Term, Term>, SubtractionFunction> subTerms;
-    private final Map<LinkedHashSet<Term>, MultiplicationFunction> mulTerms;
+    private final Map<Pair<IntegerConstant, Term>, MultiplicationFunction> mulTerms;
     private final Map<LinkedHashSet<Term>, ComparisonPredicate> eqPredicates;
     private final Map<LinkedHashSet<Term>, ComparisonPredicate> nePredicates;
     private final Map<Pair<Term, Term>, ComparisonPredicate> lePredicates;
@@ -124,15 +124,9 @@ public class CspFactory {
     }
 
     public IntegerVariable variable(final String name, final IntegerDomain domain) {
-        if (domain.isEmpty()) {
-            throw new IllegalArgumentException("Empty domain for variable " + name);
-        }
         final IntegerVariable existingVar = integerVariables.get(name);
         if (existingVar != null) {
-            if (!domain.equals(existingVar.getDomain())) {
-                throw new IllegalArgumentException("Variable " + name + " already exists in the CSP factory with another domain");
-            }
-            return existingVar;
+            throw new IllegalArgumentException("Variable \"" + name + "\" already exists in this CSP factory");
         }
         final IntegerVariable newVariable = new IntegerVariable(name, domain);
         integerVariables.put(name, newVariable);
@@ -167,7 +161,10 @@ public class CspFactory {
         if (term instanceof NegationFunction) {
             return ((NegationFunction) term).getOperand();
         }
-        return unaryMinusTerms.computeIfAbsent(term, t -> new NegationFunction(term));
+        if (term instanceof IntegerConstant) {
+            return constant(((IntegerConstant) term).getValue() * -1);
+        }
+        return unaryMinusTerms.computeIfAbsent(term, NegationFunction::new);
     }
 
     public Term minus(final IntegerConstant constant) {
@@ -185,6 +182,10 @@ public class CspFactory {
             return foundFunction;
         }
         final LinkedHashSet<Term> compactedOperands = compactifyAddOperands(originalOperands);
+        final Term foundFunctionCompact = this.addTerms.get(compactedOperands);
+        if (foundFunctionCompact != null) {
+            return foundFunctionCompact;
+        }
         if (compactedOperands.size() == 1) {
             final Term term = compactedOperands.iterator().next();
             addTerms.put(compactedOperands, term);
@@ -218,7 +219,7 @@ public class CspFactory {
             }
         }
         for (final Map.Entry<Term, Integer> entry : mergedTerms.entrySet()) {
-            if(entry.getValue() == 1) {
+            if (entry.getValue() == 1) {
                 compactifiedTerms.add(entry.getKey());
             } else {
                 compactifiedTerms.add(mul(entry.getValue(), entry.getKey()));
@@ -285,8 +286,7 @@ public class CspFactory {
         if (right instanceof IntegerConstant) {
             return constant(left.getValue() * ((IntegerConstant) right).getValue());
         }
-        final LinkedHashSet<Term> operands = new LinkedHashSet<>(Arrays.asList(left, right));
-        return mulTerms.computeIfAbsent(operands, o -> new MultiplicationFunction(left, right));
+        return mulTerms.computeIfAbsent(new Pair<>(left, right), o -> new MultiplicationFunction(left, right));
     }
 
     public ComparisonPredicate comparison(final Term left, final Term right, final CspPredicate.Type type) {
