@@ -78,6 +78,24 @@ public abstract class IntegerDomain {
     protected final int lb;
     protected final int ub;
 
+    public static IntegerDomain of(final SortedSet<Integer> values) {
+        assert values.comparator() == null : "Custom comparators are not supported";
+        if (values.isEmpty()) {
+            return IntegerDomain.of(0, -1);
+        }
+        final int lb = values.first();
+        final int ub = values.last();
+        if (values.size() == ub - lb + 1) {
+            return IntegerDomain.of(lb, ub);
+        } else {
+            return new IntegerSetDomain(values);
+        }
+    }
+
+    public static IntegerDomain of(final int lb, final int ub) {
+        return new IntegerRangeDomain(lb, ub);
+    }
+
     protected IntegerDomain(final int lb, final int ub) {
         this.lb = lb;
         this.ub = ub;
@@ -247,6 +265,8 @@ public abstract class IntegerDomain {
      */
     public abstract IntegerDomain max(final IntegerDomain d);
 
+    public abstract SortedSet<Integer> headSet(final int value);
+
     /**
      * Returns the lower bound of this domain.
      * @return the lower bound
@@ -270,25 +290,11 @@ public abstract class IntegerDomain {
     protected static IntegerDomain create(final SortedSet<Integer> domain) {
         final int lb = domain.first();
         final int ub = domain.last();
-        boolean createRange = false;
         if (domain.size() <= MAX_SET_SIZE) {
-            boolean sparse = false;
-            for (int value = lb; value <= ub; value++) {
-                if (!domain.contains(value)) {
-                    sparse = true;
-                    break;
-                }
-            }
-            if (!sparse) {
-                createRange = true;
-            }
+            return IntegerDomain.of(domain);
         } else {
-            createRange = true;
+            return IntegerDomain.of(lb, ub);
         }
-        if (createRange) {
-            return new IntegerRangeDomain(lb, ub);
-        }
-        return new IntegerSetDomain(domain);
     }
 
     static protected IntegerDomain mulRanges(final IntegerDomain a, final IntegerDomain b) {
@@ -298,7 +304,7 @@ public abstract class IntegerDomain {
         final int b11 = a.ub * b.ub;
         final int lb0 = Math.min(Math.min(b00, b01), Math.min(b10, b11));
         final int ub0 = Math.max(Math.max(b00, b01), Math.max(b10, b11));
-        return new IntegerRangeDomain(lb0, ub0);
+        return IntegerDomain.of(lb0, ub0);
     }
 
     static protected IntegerDomain divRanges(final IntegerDomain a, final IntegerDomain b) {
@@ -316,39 +322,10 @@ public abstract class IntegerDomain {
             lb0 = Math.min(lb0, Math.min(-a.lb, -a.ub));
             ub0 = Math.max(ub0, Math.max(-a.lb, -a.ub));
         }
-        return new IntegerRangeDomain(lb0, ub0);
+        return IntegerDomain.of(lb0, ub0);
     }
 
     static protected int div(final int x, final int y) {
         return x < 0 && x % y != 0 ? x / y - 1 : x / y;
-    }
-
-    protected static class Iter implements Iterator<Integer> {
-        int value;
-        int ub;
-
-        /**
-         * Constructs a new bound iterator.
-         * @param lb the lower bound
-         * @param ub the upper bound
-         */
-        public Iter(final int lb, final int ub) {
-            this.value = lb;
-            this.ub = ub;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return value <= ub;
-        }
-
-        @Override
-        public Integer next() {
-            return value++;
-        }
-
-        @Override
-        public void remove() {
-        }
     }
 }

@@ -5,7 +5,6 @@ import com.booleworks.logicng.csp.Csp;
 import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.IntegerClause;
 import com.booleworks.logicng.csp.IntegerDomain;
-import com.booleworks.logicng.csp.IntegerSetDomain;
 import com.booleworks.logicng.csp.LinearExpression;
 import com.booleworks.logicng.csp.literals.ArithmeticLiteral;
 import com.booleworks.logicng.csp.literals.CspLiteral;
@@ -205,7 +204,7 @@ public class OrderEncoding {
         if (d.isContiguous()) {
             return value - d.lb() + 1;
         } else {
-            return ((IntegerSetDomain) d).headSet(value + 1).size();
+            return d.headSet(value + 1).size();
         }
     }
 

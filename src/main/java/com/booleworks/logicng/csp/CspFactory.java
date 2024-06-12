@@ -116,11 +116,11 @@ public class CspFactory {
     }
 
     public IntegerVariable variable(final String name, final int lowerBound, final int upperBound) {
-        return variable(name, new IntegerRangeDomain(lowerBound, upperBound));
+        return variable(name, IntegerDomain.of(lowerBound, upperBound));
     }
 
     public IntegerVariable variable(final String name, final Collection<Integer> values) {
-        return variable(name, new IntegerSetDomain(new TreeSet<>(values)));
+        return variable(name, IntegerDomain.of(new TreeSet<>(values)));
     }
 
     public IntegerVariable variable(final String name, final IntegerDomain domain) {

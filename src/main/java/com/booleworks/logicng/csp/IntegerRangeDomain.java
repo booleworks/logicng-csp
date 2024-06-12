@@ -1,5 +1,6 @@
 package com.booleworks.logicng.csp;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -10,14 +11,14 @@ import java.util.TreeSet;
  * @version 3.0.0
  * @since 3.0.0
  */
-public class IntegerRangeDomain extends IntegerDomain {
+class IntegerRangeDomain extends IntegerDomain {
 
     /**
      * Constructs a new integer range domain with a lower and an upper bound
      * @param lb the lower bound
      * @param ub the upper bound
      */
-    public IntegerRangeDomain(final int lb, final int ub) {
+    protected IntegerRangeDomain(final int lb, final int ub) {
         super(lb, ub);
     }
 
@@ -37,18 +38,18 @@ public class IntegerRangeDomain extends IntegerDomain {
     }
 
     @Override
-    public IntegerRangeDomain bound(final int lb, final int ub) {
-        return lb <= this.lb && this.ub <= ub ? this : new IntegerRangeDomain(Math.max(this.lb, lb), Math.min(this.ub, ub));
+    public IntegerDomain bound(final int lb, final int ub) {
+        return lb <= this.lb && this.ub <= ub ? this : IntegerDomain.of(Math.max(this.lb, lb), Math.min(this.ub, ub));
     }
 
     @Override
     public Iterator<Integer> values(final int lb, final int ub) {
-        return lb > ub ? new Iter(lb, ub) : new Iter(Math.max(lb, this.lb), Math.min(ub, this.ub));
+        return lb > ub ? Collections.emptyIterator() : new Iter(Math.max(lb, this.lb), Math.min(ub, this.ub));
     }
 
     @Override
     public IntegerDomain cup(final IntegerDomain d) {
-        return new IntegerRangeDomain(Math.min(lb, d.lb), Math.max(ub, d.ub));
+        return IntegerDomain.of(Math.min(lb, d.lb), Math.max(ub, d.ub));
     }
 
     @Override
@@ -58,19 +59,19 @@ public class IntegerRangeDomain extends IntegerDomain {
 
     @Override
     public IntegerDomain neg() {
-        return new IntegerRangeDomain(-ub, -lb);
+        return IntegerDomain.of(-ub, -lb);
     }
 
     @Override
     public IntegerDomain abs() {
         final int lb0 = Math.min(Math.abs(lb), Math.abs(ub));
         final int ub0 = Math.max(Math.abs(lb), Math.abs(ub));
-        return lb <= 0 && 0 <= ub ? new IntegerRangeDomain(0, ub0) : new IntegerRangeDomain(lb0, ub0);
+        return lb <= 0 && 0 <= ub ? IntegerDomain.of(0, ub0) : IntegerDomain.of(lb0, ub0);
     }
 
     @Override
     public IntegerDomain add(final int a) {
-        return new IntegerRangeDomain(lb + a, ub + a);
+        return IntegerDomain.of(lb + a, ub + a);
     }
 
     @Override
@@ -80,7 +81,7 @@ public class IntegerRangeDomain extends IntegerDomain {
         } else if (size() == 1) {
             return d.add(lb);
         }
-        return new IntegerRangeDomain(lb + d.lb, ub + d.ub);
+        return IntegerDomain.of(lb + d.lb, ub + d.ub);
     }
 
     @Override
@@ -92,7 +93,7 @@ public class IntegerRangeDomain extends IntegerDomain {
             }
             return create(d);
         } else {
-            return a < 0 ? new IntegerRangeDomain(ub * a, lb * a) : new IntegerRangeDomain(lb * a, ub * a);
+            return a < 0 ? IntegerDomain.of(ub * a, lb * a) : IntegerDomain.of(lb * a, ub * a);
         }
     }
 
@@ -108,7 +109,7 @@ public class IntegerRangeDomain extends IntegerDomain {
 
     @Override
     public IntegerDomain div(final int a) {
-        return a < 0 ? new IntegerRangeDomain(div(ub, a), div(lb, a)) : new IntegerRangeDomain(div(lb, a), div(ub, a));
+        return a < 0 ? IntegerDomain.of(div(ub, a), div(lb, a)) : IntegerDomain.of(div(lb, a), div(ub, a));
     }
 
     @Override
@@ -122,12 +123,12 @@ public class IntegerRangeDomain extends IntegerDomain {
     @Override
     public IntegerDomain mod(int a) {
         a = Math.abs(a);
-        return new IntegerRangeDomain(0, a - 1);
+        return IntegerDomain.of(0, a - 1);
     }
 
     @Override
     public IntegerDomain mod(final IntegerDomain d) {
-        return d.size() == 1 ? mod(d.lb) : new IntegerRangeDomain(0, Math.max(Math.abs(d.lb), Math.abs(d.ub)) - 1);
+        return d.size() == 1 ? mod(d.lb) : IntegerDomain.of(0, Math.max(Math.abs(d.lb), Math.abs(d.ub)) - 1);
     }
 
     @Override
@@ -137,7 +138,7 @@ public class IntegerRangeDomain extends IntegerDomain {
         } else if (d.ub <= lb) {
             return d;
         }
-        return d instanceof IntegerRangeDomain ? new IntegerRangeDomain(Math.min(lb, d.lb), Math.min(ub, d.ub)) : d.min(this);
+        return d instanceof IntegerRangeDomain ? IntegerDomain.of(Math.min(lb, d.lb), Math.min(ub, d.ub)) : d.min(this);
     }
 
     @Override
@@ -147,7 +148,17 @@ public class IntegerRangeDomain extends IntegerDomain {
         } else if (d.lb >= ub) {
             return d;
         }
-        return d instanceof IntegerRangeDomain ? new IntegerRangeDomain(Math.max(lb, d.lb), Math.max(ub, d.ub)) : d.max(this);
+        return d instanceof IntegerRangeDomain ? IntegerDomain.of(Math.max(lb, d.lb), Math.max(ub, d.ub)) : d.max(this);
+    }
+
+    @Override
+    public SortedSet<Integer> headSet(final int value) {
+        final TreeSet<Integer> result = new TreeSet<>();
+        Iterator<Integer> it = values(lb, value - 1);
+        while (it.hasNext()) {
+            result.add(it.next());
+        }
+        return result;
     }
 
     @Override
@@ -158,5 +169,34 @@ public class IntegerRangeDomain extends IntegerDomain {
         final IntegerRangeDomain that = (IntegerRangeDomain) o;
 
         return ub == that.ub && lb == that.lb;
+    }
+
+    protected static class Iter implements Iterator<Integer> {
+        int value;
+        int ub;
+
+        /**
+         * Constructs a new bound iterator.
+         * @param lb the lower bound
+         * @param ub the upper bound
+         */
+        public Iter(final int lb, final int ub) {
+            this.value = lb;
+            this.ub = ub;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return value <= ub;
+        }
+
+        @Override
+        public Integer next() {
+            return value++;
+        }
+
+        @Override
+        public void remove() {
+        }
     }
 }

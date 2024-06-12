@@ -118,7 +118,7 @@ public class LinearExpression implements Comparable<LinearExpression> {
 
     public IntegerDomain getDomain() {
         if (domain == null) {
-            domain = new IntegerRangeDomain(b, b);
+            domain = IntegerDomain.of(b, b);
             for (final IntegerVariable v : coef.keySet()) {
                 final int a = getA(v);
                 domain = domain.add(v.getDomain().mul(a));
@@ -128,7 +128,7 @@ public class LinearExpression implements Comparable<LinearExpression> {
     }
 
     public IntegerDomain getDomainExcept(final IntegerVariable v, final Map<IntegerVariable, IntegerVariable> restrictions) {
-        IntegerDomain d = new IntegerRangeDomain(b, b);
+        IntegerDomain d = IntegerDomain.of(b, b);
         for (final IntegerVariable v2 : coef.keySet()) {
             if (!v2.equals(v)) {
                 final int a = getA(v2);

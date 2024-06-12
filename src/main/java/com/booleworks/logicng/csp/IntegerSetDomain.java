@@ -74,21 +74,16 @@ import java.util.TreeSet;
  * An integer set domain consists of a set of given integers and contains
  * only these values.
  */
-public class IntegerSetDomain extends IntegerDomain {
+class IntegerSetDomain extends IntegerDomain {
     private final SortedSet<Integer> values;
 
     /**
      * Constructs a new integer set domain with the given values.
      * @param values the values
      */
-    public IntegerSetDomain(final SortedSet<Integer> values) {
+    protected IntegerSetDomain(final SortedSet<Integer> values) {
         super(values.first(), values.last());
         this.values = values;
-    }
-
-    public IntegerSetDomain(final int value) {
-        super(value, value);
-        this.values = new TreeSet<>(Collections.singletonList(value));
     }
 
     @Override
@@ -107,17 +102,17 @@ public class IntegerSetDomain extends IntegerDomain {
     }
 
     @Override
-    public IntegerSetDomain bound(final int lb, final int ub) {
+    public IntegerDomain bound(final int lb, final int ub) {
         if (lb <= this.lb && this.ub <= ub) {
             return this;
         }
-        return new IntegerSetDomain(values.subSet(lb, ub + 1));
+        return IntegerDomain.of(values.subSet(lb, ub + 1));
     }
 
     @Override
     public Iterator<Integer> values(final int lb, final int ub) {
         if (lb > ub) {
-            return new Iter(lb, ub);
+            return Collections.emptyIterator();
         } else {
             return values.subSet(lb, ub + 1).iterator();
         }
@@ -130,7 +125,7 @@ public class IntegerSetDomain extends IntegerDomain {
             newValues.addAll(((IntegerSetDomain) d).values);
             return create(newValues);
         } else {
-            return new IntegerRangeDomain(Math.min(lb, d.lb), Math.max(ub, d.ub));
+            return IntegerDomain.of(Math.min(lb, d.lb), Math.max(ub, d.ub));
         }
     }
 
@@ -145,7 +140,7 @@ public class IntegerSetDomain extends IntegerDomain {
                     newValues.add(value);
                 }
             }
-            return new IntegerSetDomain(newValues);
+            return IntegerDomain.of(newValues);
         }
     }
 
@@ -184,7 +179,7 @@ public class IntegerSetDomain extends IntegerDomain {
             return d.add(lb);
         }
         if (d instanceof IntegerRangeDomain) {
-            return new IntegerRangeDomain(lb + d.lb, ub + d.ub);
+            return IntegerDomain.of(lb + d.lb, ub + d.ub);
         } else {
             final SortedSet<Integer> newValues = new TreeSet<>();
             for (final int value1 : values) {
@@ -268,7 +263,7 @@ public class IntegerSetDomain extends IntegerDomain {
             return mod(d.lb);
         }
         if (d instanceof IntegerRangeDomain) {
-            return new IntegerRangeDomain(0, Math.max(Math.abs(d.lb), Math.abs(d.ub)) - 1);
+            return IntegerDomain.of(0, Math.max(Math.abs(d.lb), Math.abs(d.ub)) - 1);
         } else {
             final SortedSet<Integer> d0 = new TreeSet<>();
             for (final int value1 : values) {
@@ -304,6 +299,7 @@ public class IntegerSetDomain extends IntegerDomain {
         return generateMinMaxRange(d, lb0, ub0);
     }
 
+    @Override
     public SortedSet<Integer> headSet(final int value) {
         return values.headSet(value);
     }
