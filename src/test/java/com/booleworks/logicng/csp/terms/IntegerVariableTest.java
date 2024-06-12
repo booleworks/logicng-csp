@@ -1,0 +1,48 @@
+package com.booleworks.logicng.csp.terms;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.booleworks.logicng.csp.CspFactory;
+import com.booleworks.logicng.csp.ParameterizedCspTest;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.Set;
+
+public class IntegerVariableTest extends ParameterizedCspTest {
+    @ParameterizedTest
+    @MethodSource("cspFactories")
+    public void testCreation(final CspFactory cf) {
+        final IntegerVariable a = cf.variable("a", 0, 10);
+        final IntegerVariable b = cf.variable("b", Set.of(1, 3, 7));
+        final IntegerVariable c = cf.variable("c", Set.of());
+        final IntegerVariable d = cf.variable("d", Set.of(1, 2, 3, 4));
+
+        assertThat(a.getName()).isEqualTo("a");
+        assertThat(a.getType()).isEqualTo(Term.Type.VAR);
+        assertThat(a.getDomain().size()).isEqualTo(11);
+        assertThat(a.getDomain().isContiguous()).isTrue();
+        assertThat(a.getDomain().isEmpty()).isFalse();
+
+        assertThat(b.getName()).isEqualTo("b");
+        assertThat(b.getType()).isEqualTo(Term.Type.VAR);
+        assertThat(b.getDomain().size()).isEqualTo(3);
+        assertThat(b.getDomain().isContiguous()).isFalse();
+        assertThat(b.getDomain().isEmpty()).isFalse();
+
+        assertThat(c.getName()).isEqualTo("c");
+        assertThat(c.getType()).isEqualTo(Term.Type.VAR);
+        assertThat(c.getDomain().size()).isEqualTo(0);
+        assertThat(c.getDomain().isContiguous()).isTrue();
+        assertThat(c.getDomain().isEmpty()).isTrue();
+
+        assertThat(d.getName()).isEqualTo("d");
+        assertThat(d.getType()).isEqualTo(Term.Type.VAR);
+        assertThat(d.getDomain().size()).isEqualTo(4);
+        assertThat(d.getDomain().isContiguous()).isTrue();
+        assertThat(d.getDomain().isEmpty()).isFalse();
+
+        assertThatThrownBy(() -> cf.variable("a", 0, 10)).isInstanceOf(IllegalArgumentException.class);
+    }
+}
