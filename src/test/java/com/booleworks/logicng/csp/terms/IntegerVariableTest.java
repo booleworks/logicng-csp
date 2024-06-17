@@ -45,4 +45,21 @@ public class IntegerVariableTest extends ParameterizedCspTest {
 
         assertThatThrownBy(() -> cf.variable("a", 0, 10)).isInstanceOf(IllegalArgumentException.class);
     }
+
+    @ParameterizedTest
+    @MethodSource("cspFactories")
+    public void testDecomposition(final CspFactory cf) {
+        final IntegerVariable a = cf.variable("a", 0, 10);
+        final IntegerVariable b = cf.variable("b", Set.of(1, 3, 7, 8, 22));
+        final Term.Decomposition aDecomp = a.decompose();
+        final Term.Decomposition bDecomp = b.decompose();
+
+        assertThat(aDecomp.getLinearExpression().getB()).isEqualTo(0);
+        assertThat(aDecomp.getLinearExpression().getCoef().size()).isOne();
+        assertThat(aDecomp.getLinearExpression().getA(a)).isOne();
+        assertThat(aDecomp.getAdditionalConstraints()).isEmpty();
+        assertThat(bDecomp.getLinearExpression().getB()).isEqualTo(0);
+        assertThat(bDecomp.getLinearExpression().getCoef().size()).isOne();
+        assertThat(bDecomp.getAdditionalConstraints()).isEmpty();
+    }
 }

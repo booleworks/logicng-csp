@@ -55,4 +55,31 @@ public class NegationFunctionTest extends ParameterizedCspTest {
         assertThat(cf.minus(cf.sub(a, b))).isSameAs(cf.minus(cf.sub(a, b)));
         assertThat(cf.minus(cf.mul(c, a))).isSameAs(cf.minus(cf.mul(c, a)));
     }
+
+    @ParameterizedTest
+    @MethodSource("cspFactories")
+    public void testDecomposition(final CspFactory cf) {
+        final IntegerVariable a = cf.variable("a", 0, 10);
+        final IntegerVariable b = cf.variable("b", 0, 10);
+        final IntegerConstant c = cf.constant(5);
+        final Term neg1 = cf.minus(c);
+        final Term neg2 = cf.minus(a);
+        final Term neg3 = cf.minus(cf.add(a, cf.mul(2, b), c));
+        final Term.Decomposition neg1Decomp = neg1.decompose();
+        final Term.Decomposition neg2Decomp = neg2.decompose();
+        final Term.Decomposition neg3Decomp = neg3.decompose();
+
+        assertThat(neg1Decomp.getLinearExpression().getB()).isEqualTo(-5);
+        assertThat(neg1Decomp.getLinearExpression().getCoef()).hasSize(0);
+        assertThat(neg1Decomp.getAdditionalConstraints()).isEmpty();
+        assertThat(neg2Decomp.getLinearExpression().getB()).isEqualTo(0);
+        assertThat(neg2Decomp.getLinearExpression().getCoef()).hasSize(1);
+        assertThat(neg2Decomp.getLinearExpression().getA(a)).isEqualTo(-1);
+        assertThat(neg2Decomp.getAdditionalConstraints()).isEmpty();
+        assertThat(neg3Decomp.getLinearExpression().getB()).isEqualTo(-5);
+        assertThat(neg3Decomp.getLinearExpression().getCoef()).hasSize(2);
+        assertThat(neg3Decomp.getLinearExpression().getA(a)).isEqualTo(-1);
+        assertThat(neg3Decomp.getLinearExpression().getA(b)).isEqualTo(-2);
+        assertThat(neg3Decomp.getAdditionalConstraints()).isEmpty();
+    }
 }

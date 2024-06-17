@@ -57,4 +57,34 @@ public class AdditionFunctionTest extends ParameterizedCspTest {
         assertThat(cf.add(a, b)).isNotSameAs(cf.add(a, c));
         assertThat(cf.add(a, b)).isNotSameAs(cf.add(a, a));
     }
+
+    @ParameterizedTest
+    @MethodSource("cspFactories")
+    public void testDecomposition(final CspFactory cf) {
+        final IntegerVariable a = cf.variable("a", 0, 10);
+        final IntegerVariable b = cf.variable("b", 0, 10);
+        final IntegerConstant c = cf.constant(5);
+        final Term add1 = cf.add(a, b);
+        final Term add2 = cf.add(a, cf.mul(c, b));
+        final Term add3 = cf.add(add1, add2, c);
+        final Term.Decomposition add1Decomp = add1.decompose();
+        final Term.Decomposition add2Decomp = add2.decompose();
+        final Term.Decomposition add3Decomp = add3.decompose();
+
+        assertThat(add1Decomp.getLinearExpression().getB()).isEqualTo(0);
+        assertThat(add1Decomp.getLinearExpression().getCoef()).hasSize(2);
+        assertThat(add1Decomp.getLinearExpression().getA(a)).isEqualTo(1);
+        assertThat(add1Decomp.getLinearExpression().getA(b)).isEqualTo(1);
+        assertThat(add1Decomp.getAdditionalConstraints()).isEmpty();
+        assertThat(add2Decomp.getLinearExpression().getB()).isEqualTo(0);
+        assertThat(add2Decomp.getLinearExpression().getCoef()).hasSize(2);
+        assertThat(add2Decomp.getLinearExpression().getA(a)).isEqualTo(1);
+        assertThat(add2Decomp.getLinearExpression().getA(b)).isEqualTo(5);
+        assertThat(add2Decomp.getAdditionalConstraints()).isEmpty();
+        assertThat(add3Decomp.getLinearExpression().getB()).isEqualTo(5);
+        assertThat(add3Decomp.getLinearExpression().getCoef()).hasSize(2);
+        assertThat(add3Decomp.getLinearExpression().getA(a)).isEqualTo(2);
+        assertThat(add3Decomp.getLinearExpression().getA(b)).isEqualTo(6);
+        assertThat(add3Decomp.getAdditionalConstraints()).isEmpty();
+    }
 }

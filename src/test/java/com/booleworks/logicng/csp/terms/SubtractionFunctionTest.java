@@ -64,4 +64,31 @@ public class SubtractionFunctionTest extends ParameterizedCspTest {
         assertThat(cf.sub(a, b)).isSameAs(cf.sub(a, b));
         assertThat(cf.sub(a, c)).isSameAs(cf.sub(a, c));
     }
+
+    @ParameterizedTest
+    @MethodSource("cspFactories")
+    public void testDecomposition(final CspFactory cf) {
+        final IntegerVariable a = cf.variable("a", 0, 10);
+        final IntegerVariable b = cf.variable("b", 0, 10);
+        final IntegerConstant c = cf.constant(5);
+        final Term sub1 = cf.minus(c);
+        final Term sub2 = cf.minus(a);
+        final Term sub3 = cf.minus(cf.add(a, cf.mul(2, b), c));
+        final Term.Decomposition sub1Decomp = sub1.decompose();
+        final Term.Decomposition sub2Decomp = sub2.decompose();
+        final Term.Decomposition sub3Decomp = sub3.decompose();
+
+        assertThat(sub1Decomp.getLinearExpression().getB()).isEqualTo(-5);
+        assertThat(sub1Decomp.getLinearExpression().getCoef()).hasSize(0);
+        assertThat(sub1Decomp.getAdditionalConstraints()).isEmpty();
+        assertThat(sub2Decomp.getLinearExpression().getB()).isEqualTo(0);
+        assertThat(sub2Decomp.getLinearExpression().getCoef()).hasSize(1);
+        assertThat(sub2Decomp.getLinearExpression().getA(a)).isEqualTo(-1);
+        assertThat(sub2Decomp.getAdditionalConstraints()).isEmpty();
+        assertThat(sub3Decomp.getLinearExpression().getB()).isEqualTo(-5);
+        assertThat(sub3Decomp.getLinearExpression().getCoef()).hasSize(2);
+        assertThat(sub3Decomp.getLinearExpression().getA(a)).isEqualTo(-1);
+        assertThat(sub3Decomp.getLinearExpression().getA(b)).isEqualTo(-2);
+        assertThat(sub3Decomp.getAdditionalConstraints()).isEmpty();
+    }
 }

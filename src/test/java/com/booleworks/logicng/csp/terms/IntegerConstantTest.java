@@ -49,4 +49,26 @@ public class IntegerConstantTest extends ParameterizedCspTest {
         assertThat(cf.constant(2)).isNotEqualTo(new IntegerConstant(1));
         assertThat(cf.constant(2)).isNotEqualTo(new IntegerConstant(-1));
     }
+
+    @ParameterizedTest
+    @MethodSource("cspFactories")
+    public void testDecomposition(final CspFactory cf) {
+        final Term.Decomposition zero = cf.zero().decompose();
+        final Term.Decomposition one = cf.one().decompose();
+        final Term.Decomposition cn1 = cf.constant(-1).decompose();
+        final Term.Decomposition c100 = cf.constant(100).decompose();
+
+        assertThat(zero.getLinearExpression().getB()).isEqualTo(0);
+        assertThat(zero.getLinearExpression().getCoef()).isEmpty();
+        assertThat(zero.getAdditionalConstraints()).isEmpty();
+        assertThat(one.getLinearExpression().getB()).isEqualTo(1);
+        assertThat(one.getLinearExpression().getCoef()).isEmpty();
+        assertThat(one.getAdditionalConstraints()).isEmpty();
+        assertThat(cn1.getLinearExpression().getB()).isEqualTo(-1);
+        assertThat(cn1.getLinearExpression().getCoef()).isEmpty();
+        assertThat(cn1.getAdditionalConstraints()).isEmpty();
+        assertThat(c100.getLinearExpression().getB()).isEqualTo(100);
+        assertThat(c100.getLinearExpression().getCoef()).isEmpty();
+        assertThat(c100.getAdditionalConstraints()).isEmpty();
+    }
 }

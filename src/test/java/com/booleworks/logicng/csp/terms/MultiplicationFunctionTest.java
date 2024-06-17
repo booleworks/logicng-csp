@@ -61,4 +61,40 @@ public class MultiplicationFunctionTest extends ParameterizedCspTest {
         assertThat(cf.mul(c, cf.mul(c, a))).isSameAs(cf.mul(c, cf.mul(c, a)));
         assertThat(cf.mul(c, cf.minus(a))).isSameAs(cf.mul(c, cf.minus(a)));
     }
+
+    @ParameterizedTest
+    @MethodSource("cspFactories")
+    public void testDecomposition(final CspFactory cf) {
+        final IntegerVariable a = cf.variable("a", 0, 10);
+        final IntegerVariable b = cf.variable("b", 0, 10);
+        final IntegerConstant c = cf.constant(5);
+        final Term mul1 = cf.mul(c, a);
+        final Term mul2 = cf.mul(c, cf.add(a, b));
+        final Term mul3 = cf.mul(c, cf.sub(a, b));
+        final Term mul4 = cf.mul(c, cf.add(a, cf.mul(7, b)));
+        final Term.Decomposition mul1Decomp = mul1.decompose();
+        final Term.Decomposition mul2Decomp = mul2.decompose();
+        final Term.Decomposition mul3Decomp = mul3.decompose();
+        final Term.Decomposition mul4Decomp = mul4.decompose();
+
+        assertThat(mul1Decomp.getLinearExpression().getB()).isEqualTo(0);
+        assertThat(mul1Decomp.getLinearExpression().getCoef()).hasSize(1);
+        assertThat(mul1Decomp.getLinearExpression().getA(a)).isEqualTo(5);
+        assertThat(mul1Decomp.getAdditionalConstraints()).isEmpty();
+        assertThat(mul2Decomp.getLinearExpression().getB()).isEqualTo(0);
+        assertThat(mul2Decomp.getLinearExpression().getCoef()).hasSize(2);
+        assertThat(mul2Decomp.getLinearExpression().getA(a)).isEqualTo(5);
+        assertThat(mul2Decomp.getLinearExpression().getA(b)).isEqualTo(5);
+        assertThat(mul2Decomp.getAdditionalConstraints()).isEmpty();
+        assertThat(mul3Decomp.getLinearExpression().getB()).isEqualTo(0);
+        assertThat(mul3Decomp.getLinearExpression().getCoef()).hasSize(2);
+        assertThat(mul3Decomp.getLinearExpression().getA(a)).isEqualTo(5);
+        assertThat(mul3Decomp.getLinearExpression().getA(b)).isEqualTo(-5);
+        assertThat(mul3Decomp.getAdditionalConstraints()).isEmpty();
+        assertThat(mul4Decomp.getLinearExpression().getB()).isEqualTo(0);
+        assertThat(mul4Decomp.getLinearExpression().getCoef()).hasSize(2);
+        assertThat(mul4Decomp.getLinearExpression().getA(a)).isEqualTo(5);
+        assertThat(mul4Decomp.getLinearExpression().getA(b)).isEqualTo(35);
+        assertThat(mul4Decomp.getAdditionalConstraints()).isEmpty();
+    }
 }
