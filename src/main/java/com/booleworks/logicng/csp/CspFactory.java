@@ -51,7 +51,7 @@ public class CspFactory {
     private final Map<Pair<Term, Term>, ComparisonPredicate> gePredicates;
     private final Map<Pair<Term, Term>, ComparisonPredicate> gtPredicates;
     private final Map<LinkedHashSet<Term>, AllDifferentPredicate> allDifferentPredicates;
-    private int auxCounter;
+    protected final Map<String, Integer> auxVarCounters;
 
     public CspFactory(final FormulaFactory formulaFactory) {
         this.formulaFactory = formulaFactory;
@@ -68,7 +68,7 @@ public class CspFactory {
         this.gePredicates = new HashMap<>();
         this.gtPredicates = new HashMap<>();
         this.allDifferentPredicates = new HashMap<>();
-        this.auxCounter = 0;
+        this.auxVarCounters = new HashMap<>();
         this.zero = new IntegerConstant(0);
         this.one = new IntegerConstant(1);
         this.integerConstants.put(0, this.zero);
@@ -90,7 +90,7 @@ public class CspFactory {
         this.gePredicates = new HashMap<>(other.gePredicates);
         this.gtPredicates = new HashMap<>(other.gtPredicates);
         this.allDifferentPredicates = new HashMap<>(other.allDifferentPredicates);
-        this.auxCounter = other.auxCounter;
+        this.auxVarCounters = new HashMap<>(other.auxVarCounters);
         this.zero = new IntegerConstant(0);
         this.one = new IntegerConstant(1);
         this.integerConstants.put(0, this.zero);
@@ -152,8 +152,14 @@ public class CspFactory {
         }
     }
 
-    public IntegerVariable auxVariable(final IntegerDomain domain) {
-        return variable(AUX_PREFIX + auxCounter++, domain);
+    public IntegerVariable auxVariable(final String type, final IntegerDomain domain) {
+        final int counter = auxVarCounters.compute(type, (key, value) -> value == null ? 0 : value + 1);
+        return variable(AUX_PREFIX + type + "_" + counter, domain);
+    }
+
+    public IntegerVariable auxVariable(final String type, final String postfix, final IntegerDomain domain) {
+        final int counter = auxVarCounters.compute(type, (key, value) -> value == null ? 0 : value + 1);
+        return variable(AUX_PREFIX + type + "_" + counter + "_" + postfix, domain);
     }
 
     public Term minus(final Term term) {
