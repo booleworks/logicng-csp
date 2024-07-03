@@ -18,8 +18,8 @@ public class AllDifferentPredicate extends CspPredicate {
 
     List<Term> terms;
 
-    public AllDifferentPredicate(final Collection<Term> terms) {
-        super(CspPredicate.Type.ALLDIFFERENT);
+    public AllDifferentPredicate(final Collection<Term> terms, final FormulaFactory f) {
+        super(CspPredicate.Type.ALLDIFFERENT, f);
         this.terms = new ArrayList<>(terms);
     }
 

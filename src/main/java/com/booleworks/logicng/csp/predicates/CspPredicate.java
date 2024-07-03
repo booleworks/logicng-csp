@@ -11,9 +11,11 @@ public abstract class CspPredicate implements Predicate {
 
     protected final Type type;
     protected Set<IntegerClause> decomposition;
+    private final FormulaFactory f;
 
-    protected CspPredicate(final Type type) {
+    protected CspPredicate(final Type type, final FormulaFactory f) {
         this.type = type;
+        this.f = f;
     }
 
     public Type getType() {
@@ -33,7 +35,7 @@ public abstract class CspPredicate implements Predicate {
 
     @Override
     public FormulaFactory factory() {
-        return null;
+        return f;
     }
 
     public enum Type {

@@ -1,6 +1,7 @@
 package com.booleworks.logicng.csp.predicates;
 
 import com.booleworks.logicng.csp.terms.Term;
+import com.booleworks.logicng.formulas.FormulaFactory;
 
 import java.util.Objects;
 
@@ -9,8 +10,8 @@ public abstract class BinaryPredicate extends CspPredicate {
     protected Term left;
     protected Term right;
 
-    BinaryPredicate(final CspPredicate.Type type, final Term left, final Term right) {
-        super(type);
+    BinaryPredicate(final CspPredicate.Type type, final Term left, final Term right, final FormulaFactory f) {
+        super(type, f);
         this.left = left;
         this.right = right;
     }

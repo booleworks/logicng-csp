@@ -7,6 +7,7 @@ import com.booleworks.logicng.csp.LinearExpression;
 import com.booleworks.logicng.csp.literals.LinearLiteral;
 import com.booleworks.logicng.csp.terms.MultiplicationFunction;
 import com.booleworks.logicng.csp.terms.Term;
+import com.booleworks.logicng.formulas.FormulaFactory;
 
 import java.util.Collections;
 import java.util.Set;
@@ -14,8 +15,8 @@ import java.util.TreeSet;
 
 public class ComparisonPredicate extends BinaryPredicate {
 
-    public ComparisonPredicate(final Type type, final Term left, final Term right) {
-        super(type, left, right);
+    public ComparisonPredicate(final Type type, final Term left, final Term right, final FormulaFactory f) {
+        super(type, left, right, f);
     }
 
     @Override

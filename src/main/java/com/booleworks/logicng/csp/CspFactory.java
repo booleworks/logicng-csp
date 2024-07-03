@@ -323,7 +323,7 @@ public class CspFactory {
         if (foundFormula != null) {
             return foundFormula;
         }
-        final ComparisonPredicate predicate = new ComparisonPredicate(CspPredicate.Type.EQ, left, right);
+        final ComparisonPredicate predicate = new ComparisonPredicate(CspPredicate.Type.EQ, left, right, formulaFactory);
         eqPredicates.put(operands, predicate);
         return predicate;
     }
@@ -334,7 +334,7 @@ public class CspFactory {
         if (foundFormula != null) {
             return foundFormula;
         }
-        final ComparisonPredicate predicate = new ComparisonPredicate(CspPredicate.Type.NE, left, right);
+        final ComparisonPredicate predicate = new ComparisonPredicate(CspPredicate.Type.NE, left, right, formulaFactory);
         nePredicates.put(operands, predicate);
         return predicate;
     }
@@ -362,7 +362,7 @@ public class CspFactory {
         if (foundFormula != null) {
             return foundFormula;
         }
-        final ComparisonPredicate predicate = new ComparisonPredicate(type, left, right);
+        final ComparisonPredicate predicate = new ComparisonPredicate(type, left, right, formulaFactory);
         cache.put(operands, predicate);
         return predicate;
     }
@@ -373,7 +373,7 @@ public class CspFactory {
         if (foundFormula != null) {
             return foundFormula;
         }
-        final AllDifferentPredicate predicate = new AllDifferentPredicate(operands);
+        final AllDifferentPredicate predicate = new AllDifferentPredicate(operands, formulaFactory);
         allDifferentPredicates.put(operands, predicate);
         return predicate;
     }
