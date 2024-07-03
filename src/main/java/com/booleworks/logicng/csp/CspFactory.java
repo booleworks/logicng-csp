@@ -7,6 +7,7 @@ import com.booleworks.logicng.csp.encodings.OrderReduction;
 import com.booleworks.logicng.csp.predicates.AllDifferentPredicate;
 import com.booleworks.logicng.csp.predicates.ComparisonPredicate;
 import com.booleworks.logicng.csp.predicates.CspPredicate;
+import com.booleworks.logicng.csp.predicates.PigeonholePredicate;
 import com.booleworks.logicng.csp.terms.AdditionFunction;
 import com.booleworks.logicng.csp.terms.IntegerConstant;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
@@ -29,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
 public class CspFactory {
@@ -51,7 +51,8 @@ public class CspFactory {
     private final Map<Pair<Term, Term>, ComparisonPredicate> gePredicates;
     private final Map<Pair<Term, Term>, ComparisonPredicate> gtPredicates;
     private final Map<LinkedHashSet<Term>, AllDifferentPredicate> allDifferentPredicates;
-    protected final Map<String, Integer> auxVarCounters;
+    private final Map<LinkedHashSet<Term>, PigeonholePredicate> pigeonholePredicates;
+    private final Map<String, Integer> auxVarCounters;
 
     public CspFactory(final FormulaFactory formulaFactory) {
         this.formulaFactory = formulaFactory;
@@ -68,6 +69,7 @@ public class CspFactory {
         this.gePredicates = new HashMap<>();
         this.gtPredicates = new HashMap<>();
         this.allDifferentPredicates = new HashMap<>();
+        this.pigeonholePredicates = new HashMap<>();
         this.auxVarCounters = new HashMap<>();
         this.zero = new IntegerConstant(0);
         this.one = new IntegerConstant(1);
@@ -90,6 +92,7 @@ public class CspFactory {
         this.gePredicates = new HashMap<>(other.gePredicates);
         this.gtPredicates = new HashMap<>(other.gtPredicates);
         this.allDifferentPredicates = new HashMap<>(other.allDifferentPredicates);
+        this.pigeonholePredicates = new HashMap<>(other.pigeonholePredicates);
         this.auxVarCounters = new HashMap<>(other.auxVarCounters);
         this.zero = new IntegerConstant(0);
         this.one = new IntegerConstant(1);
@@ -340,23 +343,22 @@ public class CspFactory {
     }
 
     public ComparisonPredicate lt(final Term left, final Term right) {
-        return processComparison(left, right, ltPredicates, (l, r) -> l.getValue() < r.getValue(), CspPredicate.Type.LT);
+        return processComparison(left, right, ltPredicates, CspPredicate.Type.LT);
     }
 
     public ComparisonPredicate le(final Term left, final Term right) {
-        return processComparison(left, right, lePredicates, (l, r) -> l.getValue() <= r.getValue(), CspPredicate.Type.LE);
+        return processComparison(left, right, lePredicates, CspPredicate.Type.LE);
     }
 
     public ComparisonPredicate gt(final Term left, final Term right) {
-        return processComparison(left, right, gtPredicates, (l, r) -> l.getValue() > r.getValue(), CspPredicate.Type.GT);
+        return processComparison(left, right, gtPredicates, CspPredicate.Type.GT);
     }
 
     public ComparisonPredicate ge(final Term left, final Term right) {
-        return processComparison(left, right, gePredicates, (l, r) -> l.getValue() >= r.getValue(), CspPredicate.Type.GE);
+        return processComparison(left, right, gePredicates, CspPredicate.Type.GE);
     }
 
-    private ComparisonPredicate processComparison(final Term left, final Term right, final Map<Pair<Term, Term>, ComparisonPredicate> cache,
-                                                  final BiPredicate<IntegerConstant, IntegerConstant> test, final CspPredicate.Type type) {
+    private ComparisonPredicate processComparison(final Term left, final Term right, final Map<Pair<Term, Term>, ComparisonPredicate> cache, final CspPredicate.Type type) {
         final Pair<Term, Term> operands = new Pair<>(left, right);
         final ComparisonPredicate foundFormula = cache.get(operands);
         if (foundFormula != null) {
@@ -375,6 +377,17 @@ public class CspFactory {
         }
         final AllDifferentPredicate predicate = new AllDifferentPredicate(operands, formulaFactory);
         allDifferentPredicates.put(operands, predicate);
+        return predicate;
+    }
+
+    public PigeonholePredicate pigeonhole(final Collection<Term> terms) {
+        final LinkedHashSet<Term> operands = new LinkedHashSet<>(terms);
+        final PigeonholePredicate foundFormula = pigeonholePredicates.get(operands);
+        if(foundFormula != null) {
+            return foundFormula;
+        }
+        final PigeonholePredicate predicate = new PigeonholePredicate(operands, formulaFactory);
+        pigeonholePredicates.put(operands, predicate);
         return predicate;
     }
 

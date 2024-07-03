@@ -8,6 +8,7 @@ import com.booleworks.logicng.formulas.FormulaFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -24,8 +25,8 @@ public class AllDifferentPredicate extends CspPredicate {
     }
 
     @Override
-    public CspPredicate negate(final CspFactory cf) {
-        throw new UnsupportedOperationException("Not yet implemented");
+    public PigeonholePredicate negate(final CspFactory cf) {
+        return cf.pigeonhole(terms);
     }
 
     @Override
@@ -45,23 +46,14 @@ public class AllDifferentPredicate extends CspPredicate {
             lb = Math.min(lb, d.lb());
             ub = Math.max(ub, d.ub());
         }
-        Set<IntegerClause> xs1 = new TreeSet<>();
-        Set<IntegerClause> xs2 = new TreeSet<>();
-        boolean first = true;
+        Set<CspPredicate> xs1 = new LinkedHashSet<>();
+        Set<CspPredicate> xs2 = new LinkedHashSet<>();
         for (int i = 0; i < terms.size(); i++) {
-            final Set<IntegerClause> new1 = cf.lt(terms.get(i), cf.constant(lb + terms.size() - 1)).negate(cf).decompose(cf);
-            final Set<IntegerClause> new2 = cf.gt(terms.get(i), cf.constant(ub - terms.size() + 1)).negate(cf).decompose(cf);
-            if (first) {
-                xs1 = new1;
-                xs2 = new2;
-                first = false;
-            } else {
-                xs1 = IntegerClause.factorize(xs1, new1);
-                xs2 = IntegerClause.factorize(xs2, new2);
-            }
+            xs1.add(cf.ge(terms.get(i), cf.constant(lb + terms.size() - 1)));
+            xs2.add(cf.le(terms.get(i), cf.constant(ub - terms.size() + 1)));
         }
-        clauses.addAll(xs1);
-        clauses.addAll(xs2);
+        clauses.addAll(cf.decompose(f.or(xs1)));
+        clauses.addAll(cf.decompose(f.or(xs2)));
         return clauses;
     }
 

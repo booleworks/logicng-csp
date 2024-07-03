@@ -39,6 +39,6 @@ public abstract class CspPredicate implements Predicate {
     }
 
     public enum Type {
-        EQ, NE, LE, LT, GE, GT, ALLDIFFERENT
+        EQ, NE, LE, LT, GE, GT, ALLDIFFERENT, PIGEONHOLE
     }
 }
