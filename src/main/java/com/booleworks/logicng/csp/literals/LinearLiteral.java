@@ -126,7 +126,7 @@ public class LinearLiteral extends ArithmeticLiteral {
 
     @Override
     public String toString() {
-        return op.toString() + "(" + sum.toString() + " 0)";
+        return op.toString() + "(" + sum.toString() + ",0)";
     }
 
     @Override

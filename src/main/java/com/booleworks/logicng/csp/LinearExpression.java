@@ -237,6 +237,7 @@ public class LinearExpression implements Comparable<LinearExpression> {
                 sb.append(v.toString());
                 sb.append(">");
             }
+            sb.append(",");
         }
         sb.append(b);
         sb.append(">");
