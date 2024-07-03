@@ -382,6 +382,10 @@ public class CspFactory {
         return formulaFactory;
     }
 
+    public Set<IntegerClause> decompose(Formula formula) {
+        return CspDecomposition.decompose(formula, this);
+    }
+
     public Csp buildCsp(final Collection<CspPredicate> predicates) {
         final Set<IntegerClause> clauses = predicates.stream().flatMap(p -> p.decompose(this).stream()).collect(Collectors.toSet());
         return Csp.fromClauses(clauses);
