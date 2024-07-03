@@ -16,8 +16,7 @@ public class IntegerVariableTest extends ParameterizedCspTest {
     public void testCreation(final CspFactory cf) {
         final IntegerVariable a = cf.variable("a", 0, 10);
         final IntegerVariable b = cf.variable("b", Set.of(1, 3, 7));
-        final IntegerVariable c = cf.variable("c", Set.of());
-        final IntegerVariable d = cf.variable("d", Set.of(1, 2, 3, 4));
+        final IntegerVariable c = cf.variable("c", Set.of(1, 2, 3, 4));
 
         assertThat(a.getName()).isEqualTo("a");
         assertThat(a.getType()).isEqualTo(Term.Type.VAR);
@@ -33,15 +32,9 @@ public class IntegerVariableTest extends ParameterizedCspTest {
 
         assertThat(c.getName()).isEqualTo("c");
         assertThat(c.getType()).isEqualTo(Term.Type.VAR);
-        assertThat(c.getDomain().size()).isEqualTo(0);
+        assertThat(c.getDomain().size()).isEqualTo(4);
         assertThat(c.getDomain().isContiguous()).isTrue();
-        assertThat(c.getDomain().isEmpty()).isTrue();
-
-        assertThat(d.getName()).isEqualTo("d");
-        assertThat(d.getType()).isEqualTo(Term.Type.VAR);
-        assertThat(d.getDomain().size()).isEqualTo(4);
-        assertThat(d.getDomain().isContiguous()).isTrue();
-        assertThat(d.getDomain().isEmpty()).isFalse();
+        assertThat(c.getDomain().isEmpty()).isFalse();
 
         assertThatThrownBy(() -> cf.variable("a", 0, 10)).isInstanceOf(IllegalArgumentException.class);
     }

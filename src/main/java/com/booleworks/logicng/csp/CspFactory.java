@@ -124,6 +124,9 @@ public class CspFactory {
     }
 
     public IntegerVariable variable(final String name, final IntegerDomain domain) {
+        if(domain.isEmpty()) {
+            throw new IllegalArgumentException("Cannot create a variable with an empty domain");
+        }
         final IntegerVariable existingVar = integerVariables.get(name);
         if (existingVar != null) {
             throw new IllegalArgumentException("Variable \"" + name + "\" already exists in this CSP factory");
