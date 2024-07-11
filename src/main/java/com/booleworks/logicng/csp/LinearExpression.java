@@ -107,8 +107,11 @@ public class LinearExpression implements Comparable<LinearExpression> {
         }
         int gcd = Math.abs(getA(coef.firstKey()));
         for (final IntegerVariable v : coef.keySet()) {
-            gcd = gcd(gcd, Math.abs(getA(v)));
-            if (gcd == 1) {break;}
+            final int a = getA(v);
+            if (a != 0) {
+                gcd = gcd(gcd, Math.abs(getA(v)));
+                if (gcd == 1) {break;}
+            }
         }
         if (b != 0) {
             gcd = gcd(gcd, Math.abs(b));
@@ -196,7 +199,7 @@ public class LinearExpression implements Comparable<LinearExpression> {
             return 1;
         }
         final Iterator<IntegerVariable> it1 = coef.keySet().iterator();
-        final Iterator<IntegerVariable> it2 = coef.keySet().iterator();
+        final Iterator<IntegerVariable> it2 = other.coef.keySet().iterator();
         while (it1.hasNext()) {
             assert it2.hasNext();
             final IntegerVariable v1 = it1.next();

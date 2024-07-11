@@ -20,7 +20,7 @@ public class ComparisonPredicate extends BinaryPredicate {
     }
 
     @Override
-    public CspPredicate negate(final CspFactory cf) {
+    public ComparisonPredicate negate(final CspFactory cf) {
         switch (type) {
             case EQ:
                 return cf.ne(left, right);

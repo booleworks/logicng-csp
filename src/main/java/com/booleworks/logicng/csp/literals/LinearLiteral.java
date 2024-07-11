@@ -136,8 +136,8 @@ public class LinearLiteral extends ArithmeticLiteral {
 
         final LinearLiteral that = (LinearLiteral) o;
 
-        if (!sum.equals(that.sum)) {return false;}
-        return op == that.op;
+        if (!op.equals(that.op)) {return false;}
+        return sum.equals(that.sum);
     }
 
     @Override
@@ -157,8 +157,8 @@ public class LinearLiteral extends ArithmeticLiteral {
         }
         if (other instanceof LinearLiteral) {
             final LinearLiteral o = (LinearLiteral) other;
-            final int c1 = sum.compareTo(o.sum);
-            return c1 == 0 ? op.compareTo(o.op) : c1;
+            final int c1 = op.compareTo(o.op);
+            return c1 == 0 ? sum.compareTo(o.sum) : c1;
 
         } else {
             return -1;
