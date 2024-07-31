@@ -38,7 +38,9 @@ public class CspDecomposition {
                         break;
                     }
                 }
-                clauses.addAll(factorized);
+                if(factorized != null) {
+                    clauses.addAll(factorized);
+                }
                 break;
             case LITERAL:
                 clauses.add(new IntegerClause((Literal) formula));
@@ -54,7 +56,7 @@ public class CspDecomposition {
                 final Not not = (Not) formula;
                 assert(not.operand().type() == FType.PREDICATE);
                 if(not.operand() instanceof CspPredicate) {
-                    decomposeRecursive(((CspPredicate) not.operand()).negate(cf), cf, clauses);
+                    decomposeRecursive(((CspPredicate) not.operand()).negate(cf).nnf(cf.formulaFactory()), cf, clauses);
                 } else {
                     throw new RuntimeException("Cannot decompose predicates of type: " + not.operand().getClass());
                 }
