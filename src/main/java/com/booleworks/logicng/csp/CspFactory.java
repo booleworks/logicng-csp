@@ -7,7 +7,6 @@ import com.booleworks.logicng.csp.encodings.OrderReduction;
 import com.booleworks.logicng.csp.predicates.AllDifferentPredicate;
 import com.booleworks.logicng.csp.predicates.ComparisonPredicate;
 import com.booleworks.logicng.csp.predicates.CspPredicate;
-import com.booleworks.logicng.csp.predicates.PigeonholePredicate;
 import com.booleworks.logicng.csp.terms.AdditionFunction;
 import com.booleworks.logicng.csp.terms.IntegerConstant;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
@@ -51,7 +50,6 @@ public class CspFactory {
     private final Map<Pair<Term, Term>, ComparisonPredicate> gePredicates;
     private final Map<Pair<Term, Term>, ComparisonPredicate> gtPredicates;
     private final Map<LinkedHashSet<Term>, AllDifferentPredicate> allDifferentPredicates;
-    private final Map<LinkedHashSet<Term>, PigeonholePredicate> pigeonholePredicates;
     private final Map<String, Integer> auxVarCounters;
 
     public CspFactory(final FormulaFactory formulaFactory) {
@@ -69,7 +67,6 @@ public class CspFactory {
         this.gePredicates = new HashMap<>();
         this.gtPredicates = new HashMap<>();
         this.allDifferentPredicates = new HashMap<>();
-        this.pigeonholePredicates = new HashMap<>();
         this.auxVarCounters = new HashMap<>();
         this.zero = new IntegerConstant(0);
         this.one = new IntegerConstant(1);
@@ -92,7 +89,6 @@ public class CspFactory {
         this.gePredicates = new HashMap<>(other.gePredicates);
         this.gtPredicates = new HashMap<>(other.gtPredicates);
         this.allDifferentPredicates = new HashMap<>(other.allDifferentPredicates);
-        this.pigeonholePredicates = new HashMap<>(other.pigeonholePredicates);
         this.auxVarCounters = new HashMap<>(other.auxVarCounters);
         this.zero = new IntegerConstant(0);
         this.one = new IntegerConstant(1);
@@ -377,17 +373,6 @@ public class CspFactory {
         }
         final AllDifferentPredicate predicate = new AllDifferentPredicate(operands, formulaFactory);
         allDifferentPredicates.put(operands, predicate);
-        return predicate;
-    }
-
-    public PigeonholePredicate pigeonhole(final Collection<Term> terms) {
-        final LinkedHashSet<Term> operands = new LinkedHashSet<>(terms);
-        final PigeonholePredicate foundFormula = pigeonholePredicates.get(operands);
-        if(foundFormula != null) {
-            return foundFormula;
-        }
-        final PigeonholePredicate predicate = new PigeonholePredicate(operands, formulaFactory);
-        pigeonholePredicates.put(operands, predicate);
         return predicate;
     }
 

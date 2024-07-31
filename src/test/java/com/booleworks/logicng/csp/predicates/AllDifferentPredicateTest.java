@@ -1,15 +1,12 @@
 package com.booleworks.logicng.csp.predicates;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import com.booleworks.logicng.csp.Common;
-import com.booleworks.logicng.csp.CspFactory;
-import com.booleworks.logicng.csp.IntegerClause;
-import com.booleworks.logicng.csp.LinearExpression;
-import com.booleworks.logicng.csp.ParameterizedCspTest;
+import com.booleworks.logicng.csp.*;
 import com.booleworks.logicng.csp.literals.LinearLiteral;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.csp.terms.Term;
+import com.booleworks.logicng.formulas.FType;
+import com.booleworks.logicng.formulas.Formula;
+import com.booleworks.logicng.formulas.Or;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -17,6 +14,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class AllDifferentPredicateTest extends ParameterizedCspTest {
     @ParameterizedTest
@@ -54,18 +53,19 @@ public class AllDifferentPredicateTest extends ParameterizedCspTest {
         final IntegerVariable b = cf.variable("b", 10, 15);
         final Term term1 = cf.add(a, b);
         final Term term2 = cf.mul(2, a);
-        final PigeonholePredicate pred1 = cf.allDifferent(List.of(cf.zero(), cf.one())).negate(cf);
-        final PigeonholePredicate pred2 = cf.allDifferent(List.of(term1, term2)).negate(cf);
-        final PigeonholePredicate pred3 = cf.allDifferent(List.of(term1, term2, cf.zero(), cf.one(), cf.constant(20))).negate(cf);
+        final Formula pred1 = cf.allDifferent(List.of(cf.zero(), cf.one())).negate(cf);
+        final Formula pred2 = cf.allDifferent(List.of(term1, term2)).negate(cf);
+        final Formula pred3 = cf.allDifferent(List.of(term1, term2, cf.zero(), cf.one(), cf.constant(20))).negate(cf);
 
-        assertThat(pred1.terms).containsExactlyInAnyOrder(cf.zero(), cf.one());
-        assertThat(pred1.type).isEqualTo(CspPredicate.Type.PIGEONHOLE);
-
-        assertThat(pred2.terms).containsExactlyInAnyOrder(term1, term2);
-        assertThat(pred2.type).isEqualTo(CspPredicate.Type.PIGEONHOLE);
-
-        assertThat(pred3.terms).containsExactlyInAnyOrder(term1, term2, cf.zero(), cf.one(), cf.constant(20));
-        assertThat(pred3.type).isEqualTo(CspPredicate.Type.PIGEONHOLE);
+        assertThat(pred1).isEqualTo(cf.eq(cf.zero(), cf.one()));
+        assertThat(pred2).isEqualTo(cf.eq(cf.add(a, b), cf.mul(2, a)));
+        assertThat(pred3.type()).isEqualTo(FType.OR);
+        assertThat(((Or) pred3).operands()).containsExactlyInAnyOrder(
+                cf.eq(cf.add(a, b), cf.mul(2, a)), cf.eq(cf.add(a, b), cf.zero()), cf.eq(cf.add(a, b), cf.one()),
+                cf.eq(cf.add(a, b), cf.constant(20)), cf.eq(cf.mul(2, a), cf.zero()), cf.eq(cf.mul(2, a), cf.one()),
+                cf.eq(cf.mul(2, a), cf.constant(20)), cf.eq(cf.zero(), cf.one()), cf.eq(cf.zero(), cf.constant(20)),
+                cf.eq(cf.one(), cf.constant(20))
+        );
     }
 
     @ParameterizedTest

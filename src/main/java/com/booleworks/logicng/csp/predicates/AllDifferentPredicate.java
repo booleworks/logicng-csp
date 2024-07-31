@@ -4,6 +4,7 @@ import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.IntegerClause;
 import com.booleworks.logicng.csp.IntegerDomain;
 import com.booleworks.logicng.csp.terms.Term;
+import com.booleworks.logicng.formulas.Formula;
 import com.booleworks.logicng.formulas.FormulaFactory;
 
 import java.util.ArrayList;
@@ -25,8 +26,14 @@ public class AllDifferentPredicate extends CspPredicate {
     }
 
     @Override
-    public PigeonholePredicate negate(final CspFactory cf) {
-        return cf.pigeonhole(terms);
+    public Formula negate(final CspFactory cf) {
+        List<CspPredicate> eqs = new ArrayList<>();
+        for (int i = 0; i < terms.size(); i++) {
+            for (int j = i + 1; j < terms.size(); j++) {
+                eqs.add(cf.eq(terms.get(i), terms.get(j)));
+            }
+        }
+        return cf.formulaFactory().or(eqs);
     }
 
     @Override

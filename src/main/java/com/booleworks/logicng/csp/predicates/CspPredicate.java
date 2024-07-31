@@ -2,6 +2,7 @@ package com.booleworks.logicng.csp.predicates;
 
 import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.IntegerClause;
+import com.booleworks.logicng.formulas.Formula;
 import com.booleworks.logicng.formulas.FormulaFactory;
 import com.booleworks.logicng.formulas.Predicate;
 
@@ -22,7 +23,7 @@ public abstract class CspPredicate implements Predicate {
         return type;
     }
 
-    public abstract CspPredicate negate(final CspFactory cf);
+    public abstract Formula negate(final CspFactory cf);
 
     protected abstract Set<IntegerClause> calculateDecomposition(final CspFactory cf);
 
@@ -39,6 +40,6 @@ public abstract class CspPredicate implements Predicate {
     }
 
     public enum Type {
-        EQ, NE, LE, LT, GE, GT, ALLDIFFERENT, PIGEONHOLE
+        EQ, NE, LE, LT, GE, GT, ALLDIFFERENT
     }
 }
