@@ -1,5 +1,6 @@
 package com.booleworks.logicng.csp.terms;
 
+import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.LinearExpression;
 
 public final class IntegerConstant extends Term implements Comparable<IntegerConstant> {
@@ -20,7 +21,7 @@ public final class IntegerConstant extends Term implements Comparable<IntegerCon
     }
 
     @Override
-    protected Decomposition calculateDecomposition() {
+    protected Decomposition calculateDecomposition(final CspFactory cf) {
         return new Decomposition(new LinearExpression(value));
     }
 

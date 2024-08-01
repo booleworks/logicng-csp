@@ -1,5 +1,6 @@
 package com.booleworks.logicng.csp.terms;
 
+import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.IntegerClause;
 import com.booleworks.logicng.csp.LinearExpression;
 
@@ -12,11 +13,11 @@ public final class SubtractionFunction extends BinaryFunction {
     }
 
     @Override
-    public Decomposition calculateDecomposition() {
-        final Decomposition resultLeft = left.decompose();
+    public Decomposition calculateDecomposition(final CspFactory cf) {
+        final Decomposition resultLeft = left.decompose(cf);
         LinearExpression expression = resultLeft.getLinearExpression();
         final Set<IntegerClause> constraints = new TreeSet<>(resultLeft.getAdditionalConstraints());
-        final Decomposition resultRight = right.decompose();
+        final Decomposition resultRight = right.decompose(cf);
         expression = LinearExpression.add(expression, LinearExpression.multiply(resultRight.getLinearExpression(), -1));
         constraints.addAll(resultRight.getAdditionalConstraints());
         return new Decomposition(expression, constraints);

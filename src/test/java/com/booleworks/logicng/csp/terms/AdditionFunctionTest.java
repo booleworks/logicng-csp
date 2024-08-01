@@ -67,9 +67,9 @@ public class AdditionFunctionTest extends ParameterizedCspTest {
         final Term add1 = cf.add(a, b);
         final Term add2 = cf.add(a, cf.mul(c, b));
         final Term add3 = cf.add(add1, add2, c);
-        final Term.Decomposition add1Decomp = add1.decompose();
-        final Term.Decomposition add2Decomp = add2.decompose();
-        final Term.Decomposition add3Decomp = add3.decompose();
+        final Term.Decomposition add1Decomp = add1.decompose(cf);
+        final Term.Decomposition add2Decomp = add2.decompose(cf);
+        final Term.Decomposition add3Decomp = add3.decompose(cf);
 
         assertThat(add1Decomp.getLinearExpression().getB()).isEqualTo(0);
         assertThat(add1Decomp.getLinearExpression().getCoef()).hasSize(2);

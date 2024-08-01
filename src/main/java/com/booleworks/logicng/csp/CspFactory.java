@@ -7,9 +7,14 @@ import com.booleworks.logicng.csp.encodings.OrderReduction;
 import com.booleworks.logicng.csp.predicates.AllDifferentPredicate;
 import com.booleworks.logicng.csp.predicates.ComparisonPredicate;
 import com.booleworks.logicng.csp.predicates.CspPredicate;
+import com.booleworks.logicng.csp.terms.AbsoluteFunction;
 import com.booleworks.logicng.csp.terms.AdditionFunction;
+import com.booleworks.logicng.csp.terms.DivisionFunction;
 import com.booleworks.logicng.csp.terms.IntegerConstant;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
+import com.booleworks.logicng.csp.terms.MaxFunction;
+import com.booleworks.logicng.csp.terms.MinFunction;
+import com.booleworks.logicng.csp.terms.ModuloFunction;
 import com.booleworks.logicng.csp.terms.MultiplicationFunction;
 import com.booleworks.logicng.csp.terms.NegationFunction;
 import com.booleworks.logicng.csp.terms.SubtractionFunction;
@@ -32,8 +37,8 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 public class CspFactory {
-    private static final String AUX_PREFIX = "@AUX_";
-    private static final String BOUND_PREFIX = "@BOUND_";
+    public static final String AUX_PREFIX = "@AUX_";
+    public static final String BOUND_PREFIX = "@BOUND_";
     private final IntegerConstant zero;
     private final IntegerConstant one;
     private final FormulaFactory formulaFactory;
@@ -42,7 +47,12 @@ public class CspFactory {
     private final Map<Term, NegationFunction> unaryMinusTerms;
     private final Map<LinkedHashSet<Term>, Term> addTerms;
     private final Map<Pair<Term, Term>, SubtractionFunction> subTerms;
-    private final Map<Pair<IntegerConstant, Term>, MultiplicationFunction> mulTerms;
+    private final Map<Pair<Integer, Term>, MultiplicationFunction> mulTerms;
+    private final Map<Term, AbsoluteFunction> absTerms;
+    private final Map<LinkedHashSet<Term>, MaxFunction> maxTerms;
+    private final Map<LinkedHashSet<Term>, MinFunction> minTerms;
+    private final Map<Pair<Term, Integer>, ModuloFunction> modTerms;
+    private final Map<Pair<Term, Integer>, DivisionFunction> divTerms;
     private final Map<LinkedHashSet<Term>, ComparisonPredicate> eqPredicates;
     private final Map<LinkedHashSet<Term>, ComparisonPredicate> nePredicates;
     private final Map<Pair<Term, Term>, ComparisonPredicate> lePredicates;
@@ -60,6 +70,11 @@ public class CspFactory {
         this.addTerms = new HashMap<>();
         this.subTerms = new HashMap<>();
         this.mulTerms = new HashMap<>();
+        this.absTerms = new HashMap<>();
+        this.maxTerms = new HashMap<>();
+        this.minTerms = new HashMap<>();
+        this.modTerms = new HashMap<>();
+        this.divTerms = new HashMap<>();
         this.eqPredicates = new HashMap<>();
         this.nePredicates = new HashMap<>();
         this.lePredicates = new HashMap<>();
@@ -82,6 +97,11 @@ public class CspFactory {
         this.addTerms = new HashMap<>(other.addTerms);
         this.subTerms = new HashMap<>(other.subTerms);
         this.mulTerms = new HashMap<>(other.mulTerms);
+        this.absTerms = new HashMap<>(other.absTerms);
+        this.maxTerms = new HashMap<>(other.maxTerms);
+        this.minTerms = new HashMap<>(other.minTerms);
+        this.modTerms = new HashMap<>(other.modTerms);
+        this.divTerms = new HashMap<>(other.divTerms);
         this.eqPredicates = new HashMap<>(other.eqPredicates);
         this.nePredicates = new HashMap<>(other.nePredicates);
         this.lePredicates = new HashMap<>(other.lePredicates);
@@ -123,14 +143,18 @@ public class CspFactory {
     }
 
     public IntegerVariable variable(final String name, final IntegerDomain domain) {
-        if(domain.isEmpty()) {
+        return variableIntern(name, domain, false);
+    }
+
+    private IntegerVariable variableIntern(final String name, final IntegerDomain domain, final boolean aux) {
+        if (domain.isEmpty()) {
             throw new IllegalArgumentException("Cannot create a variable with an empty domain");
         }
         final IntegerVariable existingVar = integerVariables.get(name);
         if (existingVar != null) {
             throw new IllegalArgumentException("Variable \"" + name + "\" already exists in this CSP factory");
         }
-        final IntegerVariable newVariable = new IntegerVariable(name, domain);
+        final IntegerVariable newVariable = new IntegerVariable(name, domain, aux);
         integerVariables.put(name, newVariable);
         return newVariable;
     }
@@ -141,7 +165,7 @@ public class CspFactory {
             return variable;
         }
         final String name = getUnboundedVariableOf(variable).getName();
-        return variable(BOUND_PREFIX + "[" + d.lb() + "," + d.ub() + "]_" + name, d);
+        return variableIntern(BOUND_PREFIX + "[" + d.lb() + "," + d.ub() + "]_" + name, d, variable.isAux());
     }
 
     public IntegerVariable getUnboundedVariableOf(final IntegerVariable variable) {
@@ -156,12 +180,12 @@ public class CspFactory {
 
     public IntegerVariable auxVariable(final String type, final IntegerDomain domain) {
         final int counter = auxVarCounters.compute(type, (key, value) -> value == null ? 0 : value + 1);
-        return variable(AUX_PREFIX + type + "_" + counter, domain);
+        return variableIntern(AUX_PREFIX + type + "_" + counter, domain, true);
     }
 
     public IntegerVariable auxVariable(final String type, final String postfix, final IntegerDomain domain) {
         final int counter = auxVarCounters.compute(type, (key, value) -> value == null ? 0 : value + 1);
-        return variable(AUX_PREFIX + type + "_" + counter + "_" + postfix, domain);
+        return variableIntern(AUX_PREFIX + type + "_" + counter + "_" + postfix, domain, true);
     }
 
     public Term minus(final Term term) {
@@ -294,7 +318,88 @@ public class CspFactory {
         if (right instanceof IntegerConstant) {
             return constant(left.getValue() * ((IntegerConstant) right).getValue());
         }
-        return mulTerms.computeIfAbsent(new Pair<>(left, right), o -> new MultiplicationFunction(left, right));
+        return mulTerms.computeIfAbsent(new Pair<>(left.getValue(), right), o -> new MultiplicationFunction(left, right));
+    }
+
+    public Term abs(final Term operand) {
+        // constant
+        if (operand instanceof IntegerConstant) {
+            return constant(Math.abs(((IntegerConstant) operand).getValue()));
+        }
+        return absTerms.computeIfAbsent(operand, o -> new AbsoluteFunction(operand));
+    }
+
+    public Term div(final Term left, final int right) {
+        return div(left, constant(right));
+    }
+
+    public Term div(final Term left, final IntegerConstant right) {
+        // no division by 0
+        if (right.getValue() == 0) {
+            throw new IllegalArgumentException("Cannot divide by zero");
+        }
+        // Decomposition only supports division by positive integers
+        if (right.getValue() < 0) {
+            return div(minus(left), constant(-right.getValue()));
+        }
+        // a/1 = a
+        if (right.getValue() == 1) {
+            return left;
+        }
+        // constant
+        if (left instanceof IntegerConstant) {
+            return constant(((IntegerConstant) left).getValue() / right.getValue());
+        }
+        return this.divTerms.computeIfAbsent(new Pair<>(left, right.getValue()), p -> new DivisionFunction(left, right));
+    }
+
+    public Term mod(final Term left, final int right) {
+        return mod(left, constant(right));
+    }
+
+    public Term mod(final Term left, final IntegerConstant right) {
+        // no division by 0 or by negative integers
+        if (right.getValue() == 0) {
+            throw new IllegalArgumentException("Cannot modulo by zero");
+        }
+        if (right.getValue() < 0) {
+            throw new IllegalArgumentException("Modulo a negative number is not allowed");
+        }
+        // x % 1 = 0
+        if (right.getValue() == 1) {
+            return this.zero;
+        }
+        // inline % in constants
+        if (left instanceof IntegerConstant) {
+            return constant(((IntegerConstant) left).getValue() % right.getValue());
+        }
+        return this.modTerms.computeIfAbsent(new Pair<>(left, right.getValue()), p -> new ModuloFunction(left, right));
+    }
+
+    public Term min(final Term left, final Term right) {
+        // min(x, x) = x
+        if (left.equals(right)) {
+            return left;
+        }
+        // inline % in constants
+        if (left instanceof IntegerConstant && right instanceof IntegerConstant) {
+            return constant(Math.min(((IntegerConstant) left).getValue(), ((IntegerConstant) right).getValue()));
+        }
+        final LinkedHashSet<Term> operands = new LinkedHashSet<>(Arrays.asList(left, right));
+        return minTerms.computeIfAbsent(operands, p -> new MinFunction(left, right));
+    }
+
+    public Term max(final Term left, final Term right) {
+        // max(x, x) = x
+        if (left.equals(right)) {
+            return left;
+        }
+        // inline % in constants
+        if (left instanceof IntegerConstant && right instanceof IntegerConstant) {
+            return constant(Math.max(((IntegerConstant) left).getValue(), ((IntegerConstant) right).getValue()));
+        }
+        final LinkedHashSet<Term> operands = new LinkedHashSet<>(Arrays.asList(left, right));
+        return maxTerms.computeIfAbsent(operands, p -> new MaxFunction(left, right));
     }
 
     public ComparisonPredicate comparison(final Term left, final Term right, final CspPredicate.Type type) {
@@ -380,7 +485,7 @@ public class CspFactory {
         return formulaFactory;
     }
 
-    public Set<IntegerClause> decompose(Formula formula) {
+    public Set<IntegerClause> decompose(final Formula formula) {
         return CspDecomposition.decompose(formula, this);
     }
 

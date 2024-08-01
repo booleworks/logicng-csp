@@ -1,5 +1,6 @@
 package com.booleworks.logicng.csp.terms;
 
+import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.LinearExpression;
 
 public final class NegationFunction extends UnaryFunction {
@@ -9,8 +10,8 @@ public final class NegationFunction extends UnaryFunction {
     }
 
     @Override
-    public Decomposition calculateDecomposition() {
-        final Decomposition result = operand.decompose();
+    public Decomposition calculateDecomposition(final CspFactory cf) {
+        final Decomposition result = operand.decompose(cf);
         return new Decomposition(LinearExpression.multiply(result.getLinearExpression(), -1), result.getAdditionalConstraints());
     }
 }

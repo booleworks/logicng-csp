@@ -27,7 +27,7 @@ public class AllDifferentPredicate extends CspPredicate {
 
     @Override
     public Formula negate(final CspFactory cf) {
-        List<CspPredicate> eqs = new ArrayList<>();
+        final List<CspPredicate> eqs = new ArrayList<>();
         for (int i = 0; i < terms.size(); i++) {
             for (int j = i + 1; j < terms.size(); j++) {
                 eqs.add(cf.eq(terms.get(i), terms.get(j)));
@@ -48,13 +48,13 @@ public class AllDifferentPredicate extends CspPredicate {
         int lb = Integer.MAX_VALUE;
         int ub = Integer.MIN_VALUE;
         for (final Term term : terms) {
-            final Term.Decomposition decompositionResult = term.decompose();
+            final Term.Decomposition decompositionResult = term.decompose(cf);
             final IntegerDomain d = decompositionResult.getLinearExpression().getDomain();
             lb = Math.min(lb, d.lb());
             ub = Math.max(ub, d.ub());
         }
-        Set<CspPredicate> xs1 = new LinkedHashSet<>();
-        Set<CspPredicate> xs2 = new LinkedHashSet<>();
+        final Set<CspPredicate> xs1 = new LinkedHashSet<>();
+        final Set<CspPredicate> xs2 = new LinkedHashSet<>();
         for (int i = 0; i < terms.size(); i++) {
             xs1.add(cf.ge(terms.get(i), cf.constant(lb + terms.size() - 1)));
             xs2.add(cf.le(terms.get(i), cf.constant(ub - terms.size() + 1)));

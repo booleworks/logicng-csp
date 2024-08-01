@@ -64,6 +64,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package com.booleworks.logicng.csp.terms;
 
+import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.IntegerDomain;
 import com.booleworks.logicng.csp.LinearExpression;
 
@@ -75,16 +76,19 @@ import java.util.Objects;
 public final class IntegerVariable extends Term implements Comparable<IntegerVariable> {
     private final String name;
     private final IntegerDomain domain;
+    private final boolean aux;
 
     /**
      * Generates a new variable in a given domain.
      * @param name   the variable's name
      * @param domain the variable's domain
+     * @param aux    auxiliary tag
      */
-    public IntegerVariable(final String name, final IntegerDomain domain) {
+    public IntegerVariable(final String name, final IntegerDomain domain, final boolean aux) {
         super(Type.VAR);
         this.name = name;
         this.domain = domain;
+        this.aux = aux;
     }
 
     /**
@@ -95,13 +99,17 @@ public final class IntegerVariable extends Term implements Comparable<IntegerVar
         return domain.isEmpty();
     }
 
+    public boolean isAux() {
+        return aux;
+    }
+
     @Override
     public boolean isAtom() {
         return true;
     }
 
     @Override
-    public Decomposition calculateDecomposition() {
+    public Decomposition calculateDecomposition(final CspFactory cf) {
         return new Decomposition(new LinearExpression(this));
     }
 
@@ -142,13 +150,16 @@ public final class IntegerVariable extends Term implements Comparable<IntegerVar
 
     @Override
     public String toString() {
-        return "\"" +
-                name +
-                "\"";
+        final String s = "\"" + name + "\"";
+        if (aux) {
+            return s + ":[" + domain.lb() + "," + domain.ub() + "]";
+        } else {
+            return s;
+        }
     }
 
     public static IntegerVariable auxVar(final String name, final IntegerDomain domain) {
-        return new IntegerVariable(name, domain);
+        return new IntegerVariable(name, domain, true);
     }
 }
 

@@ -72,10 +72,10 @@ public class MultiplicationFunctionTest extends ParameterizedCspTest {
         final Term mul2 = cf.mul(c, cf.add(a, b));
         final Term mul3 = cf.mul(c, cf.sub(a, b));
         final Term mul4 = cf.mul(c, cf.add(a, cf.mul(7, b)));
-        final Term.Decomposition mul1Decomp = mul1.decompose();
-        final Term.Decomposition mul2Decomp = mul2.decompose();
-        final Term.Decomposition mul3Decomp = mul3.decompose();
-        final Term.Decomposition mul4Decomp = mul4.decompose();
+        final Term.Decomposition mul1Decomp = mul1.decompose(cf);
+        final Term.Decomposition mul2Decomp = mul2.decompose(cf);
+        final Term.Decomposition mul3Decomp = mul3.decompose(cf);
+        final Term.Decomposition mul4Decomp = mul4.decompose(cf);
 
         assertThat(mul1Decomp.getLinearExpression().getB()).isEqualTo(0);
         assertThat(mul1Decomp.getLinearExpression().getCoef()).hasSize(1);

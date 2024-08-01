@@ -44,8 +44,8 @@ public class IntegerVariableTest extends ParameterizedCspTest {
     public void testDecomposition(final CspFactory cf) {
         final IntegerVariable a = cf.variable("a", 0, 10);
         final IntegerVariable b = cf.variable("b", Set.of(1, 3, 7, 8, 22));
-        final Term.Decomposition aDecomp = a.decompose();
-        final Term.Decomposition bDecomp = b.decompose();
+        final Term.Decomposition aDecomp = a.decompose(cf);
+        final Term.Decomposition bDecomp = b.decompose(cf);
 
         assertThat(aDecomp.getLinearExpression().getB()).isEqualTo(0);
         assertThat(aDecomp.getLinearExpression().getCoef().size()).isOne();

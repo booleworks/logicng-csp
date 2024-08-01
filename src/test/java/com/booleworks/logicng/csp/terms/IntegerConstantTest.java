@@ -53,10 +53,10 @@ public class IntegerConstantTest extends ParameterizedCspTest {
     @ParameterizedTest
     @MethodSource("cspFactories")
     public void testDecomposition(final CspFactory cf) {
-        final Term.Decomposition zero = cf.zero().decompose();
-        final Term.Decomposition one = cf.one().decompose();
-        final Term.Decomposition cn1 = cf.constant(-1).decompose();
-        final Term.Decomposition c100 = cf.constant(100).decompose();
+        final Term.Decomposition zero = cf.zero().decompose(cf);
+        final Term.Decomposition one = cf.one().decompose(cf);
+        final Term.Decomposition cn1 = cf.constant(-1).decompose(cf);
+        final Term.Decomposition c100 = cf.constant(100).decompose(cf);
 
         assertThat(zero.getLinearExpression().getB()).isEqualTo(0);
         assertThat(zero.getLinearExpression().getCoef()).isEmpty();

@@ -1,11 +1,11 @@
 package com.booleworks.logicng.csp.terms;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.ParameterizedCspTest;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class NegationFunctionTest extends ParameterizedCspTest {
 
@@ -65,9 +65,9 @@ public class NegationFunctionTest extends ParameterizedCspTest {
         final Term neg1 = cf.minus(c);
         final Term neg2 = cf.minus(a);
         final Term neg3 = cf.minus(cf.add(a, cf.mul(2, b), c));
-        final Term.Decomposition neg1Decomp = neg1.decompose();
-        final Term.Decomposition neg2Decomp = neg2.decompose();
-        final Term.Decomposition neg3Decomp = neg3.decompose();
+        final Term.Decomposition neg1Decomp = neg1.decompose(cf);
+        final Term.Decomposition neg2Decomp = neg2.decompose(cf);
+        final Term.Decomposition neg3Decomp = neg3.decompose(cf);
 
         assertThat(neg1Decomp.getLinearExpression().getB()).isEqualTo(-5);
         assertThat(neg1Decomp.getLinearExpression().getCoef()).hasSize(0);

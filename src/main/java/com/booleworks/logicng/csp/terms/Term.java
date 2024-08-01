@@ -1,5 +1,6 @@
 package com.booleworks.logicng.csp.terms;
 
+import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.IntegerClause;
 import com.booleworks.logicng.csp.LinearExpression;
 
@@ -21,17 +22,17 @@ public abstract class Term {
 
     public abstract boolean isAtom();
 
-    protected abstract Decomposition calculateDecomposition();
+    protected abstract Decomposition calculateDecomposition(final CspFactory cf);
 
-    public final Decomposition decompose() {
+    public final Decomposition decompose(final CspFactory cf) {
         if (decompositionResult == null) {
-            decompositionResult = calculateDecomposition();
+            decompositionResult = calculateDecomposition(cf);
         }
         return decompositionResult;
     }
 
     public enum Type {
-        ZERO, ONE, CONST, VAR, NEG, ADD, SUB, MUL
+        ZERO, ONE, CONST, VAR, NEG, ADD, SUB, MUL, MOD, DIV, MAX, MIN, ABS
     }
 
     public static final class Decomposition {

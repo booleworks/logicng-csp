@@ -1,5 +1,6 @@
 package com.booleworks.logicng.csp.terms;
 
+import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.LinearExpression;
 
 public final class MultiplicationFunction extends BinaryFunction {
@@ -8,8 +9,8 @@ public final class MultiplicationFunction extends BinaryFunction {
     }
 
     @Override
-    public Decomposition calculateDecomposition() {
-        final Decomposition resultRight = right.decompose();
+    public Decomposition calculateDecomposition(final CspFactory cf) {
+        final Decomposition resultRight = right.decompose(cf);
         final LinearExpression exp = LinearExpression.multiply(resultRight.getLinearExpression(), getLeft().getValue());
         return new Decomposition(exp, resultRight.getAdditionalConstraints());
     }

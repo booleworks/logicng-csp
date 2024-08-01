@@ -74,9 +74,9 @@ public class SubtractionFunctionTest extends ParameterizedCspTest {
         final Term sub1 = cf.minus(c);
         final Term sub2 = cf.minus(a);
         final Term sub3 = cf.minus(cf.add(a, cf.mul(2, b), c));
-        final Term.Decomposition sub1Decomp = sub1.decompose();
-        final Term.Decomposition sub2Decomp = sub2.decompose();
-        final Term.Decomposition sub3Decomp = sub3.decompose();
+        final Term.Decomposition sub1Decomp = sub1.decompose(cf);
+        final Term.Decomposition sub2Decomp = sub2.decompose(cf);
+        final Term.Decomposition sub3Decomp = sub3.decompose(cf);
 
         assertThat(sub1Decomp.getLinearExpression().getB()).isEqualTo(-5);
         assertThat(sub1Decomp.getLinearExpression().getCoef()).hasSize(0);
