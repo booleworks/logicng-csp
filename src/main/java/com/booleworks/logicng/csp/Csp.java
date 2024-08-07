@@ -6,6 +6,9 @@ import com.booleworks.logicng.formulas.Variable;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -13,24 +16,29 @@ import java.util.stream.Collectors;
 public class Csp {
     private final Set<IntegerVariable> integerVariables;
     private final Set<Variable> booleanVariables;
+    private final Map<IntegerVariable, IntegerVariable> reverseSubstitutions;
     private Set<IntegerClause> clauses;
 
     private Csp() {
         this.integerVariables = new TreeSet<>();
         this.booleanVariables = new TreeSet<>();
         this.clauses = new TreeSet<>();
+        this.reverseSubstitutions = new HashMap<>();
     }
 
     private Csp(final Csp other) {
         this.integerVariables = new TreeSet<>(other.integerVariables);
         this.booleanVariables = new TreeSet<>(other.booleanVariables);
         this.clauses = new TreeSet<>(other.clauses);
+        this.reverseSubstitutions = new HashMap<>(other.reverseSubstitutions);
     }
 
-    public Csp(final Set<IntegerVariable> integerVariables, final Set<Variable> booleanVariables, final Set<IntegerClause> clauses) {
+    public Csp(final Set<IntegerVariable> integerVariables, final Set<Variable> booleanVariables, final Set<IntegerClause> clauses,
+               final Map<IntegerVariable, IntegerVariable> reverseSubstitutions) {
         this.integerVariables = integerVariables;
         this.booleanVariables = booleanVariables;
         this.clauses = clauses;
+        this.reverseSubstitutions = reverseSubstitutions;
     }
 
     public Set<IntegerVariable> getIntegerVariables() {
@@ -45,6 +53,10 @@ public class Csp {
         return clauses;
     }
 
+    public Map<IntegerVariable, IntegerVariable> getReverseSubstitutions() {
+        return reverseSubstitutions;
+    }
+
     @Override
     public String toString() {
         return "Csp{" +
@@ -55,13 +67,17 @@ public class Csp {
     }
 
     public static Csp fromClauses(final Set<IntegerClause> clauses) {
+        return fromClauses(clauses, Collections.emptyMap());
+    }
+
+    public static Csp fromClauses(final Set<IntegerClause> clauses, final Map<IntegerVariable, IntegerVariable> reverseSubstitutions) {
         final Set<IntegerVariable> intVars = new TreeSet<>();
         final Set<Variable> boolVars = new TreeSet<>();
         for (final IntegerClause clause : clauses) {
             intVars.addAll(clause.getArithmeticLiterals().stream().flatMap(v -> v.getVariables().stream()).collect(Collectors.toSet()));
             boolVars.addAll(clause.getBoolLiterals().stream().map(Literal::variable).collect(Collectors.toSet()));
         }
-        return new Csp(intVars, boolVars, clauses);
+        return new Csp(intVars, boolVars, clauses, reverseSubstitutions);
     }
 
     public static Csp merge(final CspFactory f, final Csp... csps) {
@@ -79,6 +95,7 @@ public class Csp {
                 newCsp.integerVariables.addAll(csp.integerVariables);
                 newCsp.booleanVariables.addAll(csp.booleanVariables);
                 newCsp.clauses.addAll(csp.clauses);
+                newCsp.reverseSubstitutions.putAll(csp.reverseSubstitutions);
             }
             return newCsp;
         }

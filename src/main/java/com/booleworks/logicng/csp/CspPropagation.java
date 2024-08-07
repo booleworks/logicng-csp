@@ -3,6 +3,7 @@ package com.booleworks.logicng.csp;
 import com.booleworks.logicng.csp.literals.ArithmeticLiteral;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -12,13 +13,16 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public class CspPropagation {
+    public static String BOUNDED_AUX_VAR = "PROPAGATION";
+
     public static Csp propagate(final Csp csp, final CspFactory cf) {
         final Map<IntegerVariable, IntegerVariable> restrictions = new TreeMap<>();
+        final Map<IntegerVariable, IntegerVariable> reverseSubstitutions = new HashMap<>();
         boolean changed = true;
         while (changed) {
             changed = false;
             for (final IntegerClause clause : csp.getClauses()) {
-                if (calculateNewBounds(clause, restrictions, cf)) {
+                if (calculateNewBounds(clause, restrictions, reverseSubstitutions, cf)) {
                     changed = true;
                 }
             }
@@ -26,13 +30,14 @@ public class CspPropagation {
         if (!restrictions.isEmpty()) {
             final Set<IntegerClause> newClauses =
                     csp.getClauses().stream().map(c -> rebuildClause(c, restrictions)).filter(c -> !c.isValid()).collect(Collectors.toSet());
-            return Csp.fromClauses(newClauses);
+            return Csp.fromClauses(newClauses, reverseSubstitutions);
         } else {
             return csp;
         }
     }
 
-    private static boolean calculateNewBounds(final IntegerClause clause, final Map<IntegerVariable, IntegerVariable> restrictions, final CspFactory f) {
+    private static boolean calculateNewBounds(final IntegerClause clause, final Map<IntegerVariable, IntegerVariable> restrictions,
+                                              final Map<IntegerVariable, IntegerVariable> reverseSubstitutions, final CspFactory cf) {
         boolean changed = false;
         for (final IntegerVariable v : clause.getCommonVariables()) {
             assert clause.getBoolLiterals().isEmpty();
@@ -57,8 +62,9 @@ public class CspPropagation {
             }
             if (bound != null && bound[0] <= bound[1]) {
                 final IntegerVariable oldVar = restrictions.getOrDefault(v, v);
-                final IntegerVariable newVar = f.boundVariable(oldVar, bound[0], bound[1]);
+                final IntegerVariable newVar = boundVariable(oldVar, bound[0], bound[1], cf);
                 if (newVar != oldVar) {
+                    reverseSubstitutions.put(newVar, v);
                     restrictions.put(v, newVar);
                     changed = true;
                 }
@@ -81,5 +87,13 @@ public class CspPropagation {
         } else {
             return new IntegerClause(clause.getBoolLiterals(), newLits);
         }
+    }
+
+    private static IntegerVariable boundVariable(final IntegerVariable variable, final int lb, final int ub, final CspFactory cf) {
+        final IntegerDomain d = variable.getDomain().bound(lb, ub);
+        if (d == variable.getDomain()) {
+            return variable;
+        }
+        return cf.auxVariable(BOUNDED_AUX_VAR, variable.getName(), d);
     }
 }

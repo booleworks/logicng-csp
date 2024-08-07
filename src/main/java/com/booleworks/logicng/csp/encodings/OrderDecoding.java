@@ -17,7 +17,7 @@ public class OrderDecoding {
         final CspAssignment result = new CspAssignment();
         for (final IntegerVariable v : variables) {
             final int value = decodeIntVar(v, model, context);
-            result.addIntAssignment(cf.getUnboundedVariableOf(v), value);
+            result.addIntAssignment(v, value);
         }
         return result;
     }
@@ -25,9 +25,9 @@ public class OrderDecoding {
     public static CspAssignment decode(final Assignment model, final Csp csp, final CspEncodingContext context, final CspFactory cf) {
         final CspAssignment result = new CspAssignment();
         for (final IntegerVariable v : csp.getIntegerVariables()) {
-            if (!v.isAux()) {
+            if (!v.isAux() || csp.getReverseSubstitutions().containsKey(v)) {
                 final int value = decodeIntVar(v, model, context);
-                result.addIntAssignment(cf.getUnboundedVariableOf(v), value);
+                result.addIntAssignment(csp.getReverseSubstitutions().getOrDefault(v, v), value);
             }
         }
         for (final Variable v : csp.getBooleanVariables()) {
