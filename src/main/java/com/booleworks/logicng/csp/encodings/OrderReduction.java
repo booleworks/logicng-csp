@@ -64,7 +64,7 @@ public class OrderReduction {
             } else if (OrderEncoding.isSimpleClause(clause)) {
                 return Stream.of(clause);
             } else {
-                return simplifyClause(clause, Collections.emptySortedSet(), context, csp, f).stream();
+                return simplifyClause(clause, clause.getBoolLiterals(), context, csp, f).stream();
             }
         }).collect(Collectors.toSet());
     }
