@@ -75,30 +75,40 @@ public class OrderReduction {
                 return Stream.of(c);
             } else {
                 assert c.size() == OrderEncoding.simpleClauseSize(c) + 1;
-                final ArithmeticLiteral al = c.getArithmeticLiterals().first();
-                if (al instanceof LinearLiteral) {
-                    return reduceLinearLiteralToLinearLE((LinearLiteral) al, c.getBoolLiterals(), context, csp, f).stream();
+                final SortedSet<ArithmeticLiteral> simpleLiterals = new TreeSet<>();
+                ArithmeticLiteral nonSimpleLiteral = null;
+                for (final ArithmeticLiteral al : c.getArithmeticLiterals()) {
+                    if (OrderEncoding.isSimpleLiteral(al)) {
+                        simpleLiterals.add(al);
+                    } else {
+                        nonSimpleLiteral = al;
+                    }
+                }
+                assert nonSimpleLiteral != null;
+                if (nonSimpleLiteral instanceof LinearLiteral) {
+                    return reduceLinearLiteralToLinearLE((LinearLiteral) nonSimpleLiteral, simpleLiterals, c.getBoolLiterals(), context, csp, f).stream();
                 } else {
-                    throw new IllegalArgumentException("Invalid literal for order encoding reduction: " + al.getClass());
+                    throw new IllegalArgumentException("Invalid literal for order encoding reduction: " + nonSimpleLiteral.getClass());
                 }
             }
         }).collect(Collectors.toSet());
     }
 
-    private static Set<IntegerClause> reduceLinearLiteralToLinearLE(final LinearLiteral literal, final SortedSet<Literal> boolLiterals,
+    private static Set<IntegerClause> reduceLinearLiteralToLinearLE(final LinearLiteral literal,
+                                                                    final SortedSet<ArithmeticLiteral> simpleLiterals, final SortedSet<Literal> boolLiterals,
                                                                     final CspEncodingContext context, final Csp.Builder csp, final FormulaFactory f) {
         switch (literal.getOperator()) {
             case LE:
-                final TreeSet<ArithmeticLiteral> lits = new TreeSet<>();
+                final TreeSet<ArithmeticLiteral> lits = new TreeSet<>(simpleLiterals);
                 lits.add(literal);
                 return Collections.singleton(new IntegerClause(boolLiterals, lits));
             case EQ:
-                final TreeSet<ArithmeticLiteral> litsA = new TreeSet<>();
+                final TreeSet<ArithmeticLiteral> litsA = new TreeSet<>(simpleLiterals);
                 litsA.add(new LinearLiteral(literal.getLinearExpression(), LinearLiteral.Operator.LE));
                 final IntegerClause c1 = new IntegerClause(boolLiterals, litsA);
                 final LinearExpression.Builder ls = new LinearExpression.Builder(literal.getLinearExpression());
                 ls.multiply(-1);
-                final TreeSet<ArithmeticLiteral> litsB = new TreeSet<>();
+                final TreeSet<ArithmeticLiteral> litsB = new TreeSet<>(simpleLiterals);
                 litsB.add(new LinearLiteral(ls.build(), LinearLiteral.Operator.LE));
                 final IntegerClause c2 = new IntegerClause(boolLiterals, litsB);
                 return Set.of(c1, c2);
@@ -108,7 +118,7 @@ public class OrderReduction {
                 final LinearExpression.Builder ls2 = new LinearExpression.Builder(literal.getLinearExpression());
                 ls2.multiply(-1);
                 ls2.setB(ls2.getB() + 1);
-                final TreeSet<ArithmeticLiteral> litsNe = new TreeSet<>();
+                final TreeSet<ArithmeticLiteral> litsNe = new TreeSet<>(simpleLiterals);
                 litsNe.add(new LinearLiteral(ls1.build(), LinearLiteral.Operator.LE));
                 litsNe.add(new LinearLiteral(ls2.build(), LinearLiteral.Operator.LE));
                 final IntegerClause newClause = new IntegerClause(Collections.emptySortedSet(), litsNe);
