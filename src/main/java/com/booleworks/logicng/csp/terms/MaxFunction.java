@@ -4,8 +4,11 @@ import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.IntegerClause;
 import com.booleworks.logicng.csp.IntegerDomain;
 import com.booleworks.logicng.csp.LinearExpression;
+import com.booleworks.logicng.csp.predicates.CspPredicate;
 import com.booleworks.logicng.formulas.Formula;
+import com.booleworks.logicng.formulas.Variable;
 
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -29,15 +32,23 @@ public class MaxFunction extends BinaryFunction {
             return resultLeft;
         }
 
+        final Set<IntegerClause> constraints = new TreeSet<>(resultLeft.getAdditionalConstraints());
+        final Set<IntegerVariable> intVars = new TreeSet<>(resultLeft.getAuxiliaryIntegerVariables());
+        final Set<Variable> boolVars = new TreeSet<>(resultLeft.getAuxiliaryBooleanVariables());
+        constraints.addAll(resultRight.getAdditionalConstraints());
+        intVars.addAll(resultRight.getAuxiliaryIntegerVariables());
+        boolVars.addAll(resultRight.getAuxiliaryBooleanVariables());
+
         final IntegerDomain newDomain = domainLeft.max(domainRight);
         final IntegerVariable x = cf.auxVariable(MAX_AUX_VARIABLE, newDomain);
-        final Set<IntegerClause> constraints = new TreeSet<>(resultLeft.getAdditionalConstraints());
-        constraints.addAll(resultRight.getAdditionalConstraints());
-        constraints.addAll(cf.ge(x, this.left).decompose(cf));
-        constraints.addAll(cf.ge(x, this.right).decompose(cf));
+        intVars.add(x);
+
+        final CspPredicate.Decomposition d1 = cf.ge(x, this.left).decompose(cf);
+        final CspPredicate.Decomposition d2 = cf.ge(x, this.right).decompose(cf);
         final Formula leLeft = cf.le(x, this.left);
         final Formula leRight = cf.le(x, this.right);
-        constraints.addAll(cf.decompose(cf.formulaFactory().or(leLeft, leRight)));
-        return new Decomposition(new LinearExpression(x), constraints);
+        final CspPredicate.Decomposition d3 = cf.decompose(cf.formulaFactory().or(leLeft, leRight));
+        final Decomposition newTerm = new Decomposition(new LinearExpression(x), constraints, intVars, boolVars);
+        return Term.Decomposition.merge(newTerm, List.of(d1, d2, d3));
     }
 }

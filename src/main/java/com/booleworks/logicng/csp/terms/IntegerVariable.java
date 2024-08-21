@@ -68,6 +68,7 @@ import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.IntegerDomain;
 import com.booleworks.logicng.csp.LinearExpression;
 
+import java.util.Collections;
 import java.util.Objects;
 
 /**
@@ -110,7 +111,7 @@ public final class IntegerVariable extends Term implements Comparable<IntegerVar
 
     @Override
     public Decomposition calculateDecomposition(final CspFactory cf) {
-        return new Decomposition(new LinearExpression(this));
+        return new Decomposition(new LinearExpression(this), Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
     }
 
     public String getName() {

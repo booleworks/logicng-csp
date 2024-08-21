@@ -6,57 +6,59 @@ import com.booleworks.logicng.formulas.Formula;
 import com.booleworks.logicng.formulas.Literal;
 import com.booleworks.logicng.formulas.Not;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 public class CspDecomposition {
-    public static Set<IntegerClause> decompose(final Formula formula, final CspFactory cf) {
+    public static CspPredicate.Decomposition decompose(final Formula formula, final CspFactory cf) {
         final Formula nnf = formula.nnf(cf.formulaFactory());
-        final Set<IntegerClause> clauses = new TreeSet<>();
-        decomposeRecursive(nnf, cf, clauses);
-        return clauses;
+        final Set<CspPredicate.Decomposition> decompositions = new LinkedHashSet<>();
+        decomposeRecursive(nnf, cf, decompositions);
+        return CspPredicate.Decomposition.merge(decompositions);
     }
 
-    private static void decomposeRecursive(final Formula formula, final CspFactory cf, Set<IntegerClause> clauses) {
-        switch(formula.type()) {
+    private static void decomposeRecursive(final Formula formula, final CspFactory cf, final Set<CspPredicate.Decomposition> decompositions) {
+        switch (formula.type()) {
             case AND:
-                for(final Formula op: formula) {
-                    decomposeRecursive(op, cf, clauses);
+                for (final Formula op : formula) {
+                    decomposeRecursive(op, cf, decompositions);
                 }
                 break;
             case OR:
-                Set<IntegerClause> factorized = null;
-                for(final Formula op: formula) {
-                    Set<IntegerClause> disj = new TreeSet<>();
+                CspPredicate.Decomposition factorized = null;
+                for (final Formula op : formula) {
+                    final Set<CspPredicate.Decomposition> disj = new LinkedHashSet<>();
                     decomposeRecursive(op, cf, disj);
-                    if(factorized == null) {
-                        factorized = disj;
+                    final CspPredicate.Decomposition disjMerged = CspPredicate.Decomposition.merge(disj);
+                    if (factorized == null) {
+                        factorized = disjMerged;
                     } else {
-                        factorized = IntegerClause.factorize(factorized, disj);
+                        factorized = IntegerClause.factorize(factorized, disjMerged);
                     }
-                    if(factorized.isEmpty()) {
+                    if (factorized.getClauses().isEmpty()) {
                         break;
                     }
                 }
-                if(factorized != null) {
-                    clauses.addAll(factorized);
+                if (factorized != null) {
+                    decompositions.add(factorized);
                 }
                 break;
             case LITERAL:
-                clauses.add(new IntegerClause((Literal) formula));
+                decompositions.add(new CspPredicate.Decomposition(Collections.singleton(new IntegerClause((Literal) formula)), Collections.emptySet(), Collections.emptySet()));
                 break;
             case PREDICATE:
-                if(formula instanceof CspPredicate) {
-                    clauses.addAll(((CspPredicate) formula).decompose(cf));
+                if (formula instanceof CspPredicate) {
+                    decompositions.add(((CspPredicate) formula).decompose(cf));
                 } else {
                     throw new RuntimeException("Cannot decompose predicates of type: " + formula.getClass());
                 }
                 break;
             case NOT:
                 final Not not = (Not) formula;
-                assert(not.operand().type() == FType.PREDICATE);
-                if(not.operand() instanceof CspPredicate) {
-                    decomposeRecursive(((CspPredicate) not.operand()).negate(cf).nnf(cf.formulaFactory()), cf, clauses);
+                assert (not.operand().type() == FType.PREDICATE);
+                if (not.operand() instanceof CspPredicate) {
+                    decomposeRecursive(((CspPredicate) not.operand()).negate(cf).nnf(cf.formulaFactory()), cf, decompositions);
                 } else {
                     throw new RuntimeException("Cannot decompose predicates of type: " + not.operand().getClass());
                 }

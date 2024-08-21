@@ -1,6 +1,9 @@
 package com.booleworks.logicng.csp;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.booleworks.logicng.csp.literals.LinearLiteral;
+import com.booleworks.logicng.csp.predicates.CspPredicate;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.formulas.Formula;
 import com.booleworks.logicng.formulas.FormulaFactory;
@@ -13,8 +16,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class CspDecompositionTest extends ParameterizedCspTest {
 
@@ -38,19 +39,27 @@ public class CspDecompositionTest extends ParameterizedCspTest {
         );
         final Formula formula4 = f.not(cf.allDifferent(List.of(a, b, c, cf.add(a, b), cf.add(b, c), cf.add(a, c))));
 
-        final Set<IntegerClause> decomp1 = cf.decompose(formula1);
-        final Set<IntegerClause> decomp2 = cf.decompose(formula2);
-        final Set<IntegerClause> decomp3 = cf.decompose(formula3);
-        final Set<IntegerClause> decomp4 = cf.decompose(formula4);
+        final CspPredicate.Decomposition decomp1 = cf.decompose(formula1);
+        final CspPredicate.Decomposition decomp2 = cf.decompose(formula2);
+        final CspPredicate.Decomposition decomp3 = cf.decompose(formula3);
+        final CspPredicate.Decomposition decomp4 = cf.decompose(formula4);
 
-        assertThat(decomp1).containsExactlyInAnyOrder(new IntegerClause(A), new IntegerClause(B));
-        assertThat(decomp2).containsExactlyInAnyOrder(new IntegerClause(A), new IntegerClause(B.negate(f)), new IntegerClause(C.negate(f)));
+        assertThat(decomp1.getClauses()).containsExactlyInAnyOrder(new IntegerClause(A), new IntegerClause(B));
+        assertThat(decomp1.getAuxiliaryBooleanVariables()).isEmpty();
+        assertThat(decomp1.getAuxiliaryIntegerVariables()).isEmpty();
+        assertThat(decomp2.getClauses()).containsExactlyInAnyOrder(new IntegerClause(A), new IntegerClause(B.negate(f)), new IntegerClause(C.negate(f)));
+        assertThat(decomp2.getAuxiliaryBooleanVariables()).isEmpty();
+        assertThat(decomp2.getAuxiliaryIntegerVariables()).isEmpty();
         final LinearLiteral l = new LinearLiteral(new LinearExpression(1, a, -2), LinearLiteral.Operator.EQ);
-        assertThat(decomp3).containsExactlyInAnyOrder(Common.integerClauseFrom(C, l), Common.integerClauseFrom(D, l));
-        assertThat(decomp4).containsExactlyInAnyOrder(
+        assertThat(decomp3.getClauses()).containsExactlyInAnyOrder(Common.integerClauseFrom(C, l), Common.integerClauseFrom(D, l));
+        assertThat(decomp3.getAuxiliaryBooleanVariables()).isEmpty();
+        assertThat(decomp3.getAuxiliaryIntegerVariables()).isEmpty();
+        assertThat(decomp4.getClauses()).containsExactlyInAnyOrder(
                 new IntegerClause(Common.treeSetFrom(), Common.treeSetFrom(lt(-2, a), lt(-1, a, 1, b),
                         lt(1, a, -1, b), lt(1, a, -1, c), lt(-1, a, 1, b, -1, c)))
         );
+        assertThat(decomp4.getAuxiliaryBooleanVariables()).isEmpty();
+        assertThat(decomp4.getAuxiliaryIntegerVariables()).isEmpty();
     }
 
     private static LinearLiteral lt(final int c0, final IntegerVariable a0) {

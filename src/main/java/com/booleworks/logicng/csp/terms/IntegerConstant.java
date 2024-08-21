@@ -3,6 +3,8 @@ package com.booleworks.logicng.csp.terms;
 import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.LinearExpression;
 
+import java.util.Collections;
+
 public final class IntegerConstant extends Term implements Comparable<IntegerConstant> {
     private final int value;
 
@@ -22,7 +24,7 @@ public final class IntegerConstant extends Term implements Comparable<IntegerCon
 
     @Override
     protected Decomposition calculateDecomposition(final CspFactory cf) {
-        return new Decomposition(new LinearExpression(value));
+        return new Decomposition(new LinearExpression(value), Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
     }
 
     @Override

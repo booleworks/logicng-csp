@@ -1,7 +1,6 @@
 package com.booleworks.logicng.csp.predicates;
 
 import com.booleworks.logicng.csp.CspFactory;
-import com.booleworks.logicng.csp.IntegerClause;
 import com.booleworks.logicng.csp.IntegerDomain;
 import com.booleworks.logicng.csp.terms.Term;
 import com.booleworks.logicng.formulas.Formula;
@@ -38,11 +37,12 @@ public class AllDifferentPredicate extends CspPredicate {
 
     @Override
     protected Set<IntegerClause> calculateDecomposition(final CspFactory cf) {
+    protected Decomposition calculateDecomposition(final CspFactory cf) {
         final FormulaFactory f = factory();
-        final Set<IntegerClause> clauses = new TreeSet<>();
+        final List<Decomposition> decomps = new ArrayList<>();
         for (int i = 0; i < terms.size(); i++) {
             for (int j = i + 1; j < terms.size(); j++) {
-                clauses.addAll(cf.ne(terms.get(i), terms.get(j)).decompose(cf));
+                decomps.add(cf.ne(terms.get(i), terms.get(j)).decompose(cf));
             }
         }
         int lb = Integer.MAX_VALUE;
@@ -59,9 +59,9 @@ public class AllDifferentPredicate extends CspPredicate {
             xs1.add(cf.ge(terms.get(i), cf.constant(lb + terms.size() - 1)));
             xs2.add(cf.le(terms.get(i), cf.constant(ub - terms.size() + 1)));
         }
-        clauses.addAll(cf.decompose(f.or(xs1)));
-        clauses.addAll(cf.decompose(f.or(xs2)));
-        return clauses;
+        decomps.add(cf.decompose(f.or(xs1)));
+        decomps.add(cf.decompose(f.or(xs2)));
+        return Decomposition.merge(decomps);
     }
 
     @Override

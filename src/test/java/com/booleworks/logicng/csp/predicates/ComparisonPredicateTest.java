@@ -12,7 +12,6 @@ import com.booleworks.logicng.csp.terms.Term;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -142,28 +141,40 @@ public class ComparisonPredicateTest extends ParameterizedCspTest {
         final IntegerVariable b = cf.variable("b", 10, 15);
         final Term term1 = cf.add(a, b);
         final Term term2 = cf.mul(2, a);
-        final Set<IntegerClause> pred1 = cf.eq(cf.zero(), cf.one()).decompose(cf);
-        final Set<IntegerClause> pred2 = cf.le(term1, term2).decompose(cf);
-        final Set<IntegerClause> pred3 = cf.gt(term1, cf.constant(18)).decompose(cf);
-        final Set<IntegerClause> pred4 = cf.lt(cf.zero(), cf.one()).decompose(cf);
-        final Set<IntegerClause> pred5 = cf.ge(term1, term2).decompose(cf);
-        final Set<IntegerClause> pred6 = cf.ne(term1, cf.constant(20)).decompose(cf);
+        final CspPredicate.Decomposition pred1 = cf.eq(cf.zero(), cf.one()).decompose(cf);
+        final CspPredicate.Decomposition pred2 = cf.le(term1, term2).decompose(cf);
+        final CspPredicate.Decomposition pred3 = cf.gt(term1, cf.constant(18)).decompose(cf);
+        final CspPredicate.Decomposition pred4 = cf.lt(cf.zero(), cf.one()).decompose(cf);
+        final CspPredicate.Decomposition pred5 = cf.ge(term1, term2).decompose(cf);
+        final CspPredicate.Decomposition pred6 = cf.ne(term1, cf.constant(20)).decompose(cf);
 
-        assertThat(pred1).hasSize(1);
-        assertThat(pred1.iterator().next()).isEqualTo(new IntegerClause());
-        assertThat(pred2).hasSize(1);
-        assertThat(pred2.iterator().next()).isEqualTo(new IntegerClause());
-        assertThat(pred3).hasSize(1);
+        assertThat(pred1.getClauses()).hasSize(1);
+        assertThat(pred1.getClauses().iterator().next()).isEqualTo(new IntegerClause());
+        assertThat(pred1.getAuxiliaryBooleanVariables()).isEmpty();
+        assertThat(pred1.getAuxiliaryIntegerVariables()).isEmpty();
+        assertThat(pred2.getClauses()).hasSize(1);
+        assertThat(pred2.getClauses().iterator().next()).isEqualTo(new IntegerClause());
+        assertThat(pred2.getAuxiliaryBooleanVariables()).isEmpty();
+        assertThat(pred2.getAuxiliaryIntegerVariables()).isEmpty();
+        assertThat(pred3.getClauses()).hasSize(1);
         final SortedMap<IntegerVariable, Integer> coef3 = new TreeMap<>();
         coef3.put(a, -1);
         coef3.put(b, -1);
-        assertThat(pred3.iterator().next()).isEqualTo(new IntegerClause(new LinearLiteral(new LinearExpression(coef3, 19), LinearLiteral.Operator.LE)));
-        assertThat(pred4).isEmpty();
-        assertThat(pred5).isEmpty();
-        assertThat(pred6).hasSize(1);
+        assertThat(pred3.getClauses().iterator().next()).isEqualTo(new IntegerClause(new LinearLiteral(new LinearExpression(coef3, 19), LinearLiteral.Operator.LE)));
+        assertThat(pred3.getAuxiliaryBooleanVariables()).isEmpty();
+        assertThat(pred3.getAuxiliaryIntegerVariables()).isEmpty();
+        assertThat(pred4.getClauses()).isEmpty();
+        assertThat(pred4.getAuxiliaryBooleanVariables()).isEmpty();
+        assertThat(pred4.getAuxiliaryIntegerVariables()).isEmpty();
+        assertThat(pred5.getClauses()).isEmpty();
+        assertThat(pred5.getAuxiliaryBooleanVariables()).isEmpty();
+        assertThat(pred5.getAuxiliaryIntegerVariables()).isEmpty();
+        assertThat(pred6.getClauses()).hasSize(1);
         final SortedMap<IntegerVariable, Integer> coef6 = new TreeMap<>();
         coef6.put(a, 1);
         coef6.put(b, 1);
-        assertThat(pred6.iterator().next()).isEqualTo(new IntegerClause(new LinearLiteral(new LinearExpression(coef6, -20), LinearLiteral.Operator.NE)));
+        assertThat(pred6.getClauses().iterator().next()).isEqualTo(new IntegerClause(new LinearLiteral(new LinearExpression(coef6, -20), LinearLiteral.Operator.NE)));
+        assertThat(pred6.getAuxiliaryBooleanVariables()).isEmpty();
+        assertThat(pred6.getAuxiliaryIntegerVariables()).isEmpty();
     }
 }

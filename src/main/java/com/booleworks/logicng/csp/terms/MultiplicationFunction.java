@@ -12,7 +12,7 @@ public final class MultiplicationFunction extends BinaryFunction {
     public Decomposition calculateDecomposition(final CspFactory cf) {
         final Decomposition resultRight = right.decompose(cf);
         final LinearExpression exp = LinearExpression.multiply(resultRight.getLinearExpression(), getLeft().getValue());
-        return new Decomposition(exp, resultRight.getAdditionalConstraints());
+        return new Decomposition(exp, resultRight.getAdditionalConstraints(), resultRight.getAuxiliaryIntegerVariables(), resultRight.getAuxiliaryBooleanVariables());
     }
 
     @Override

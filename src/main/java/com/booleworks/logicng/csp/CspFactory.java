@@ -465,7 +465,7 @@ public class CspFactory {
         return formulaFactory;
     }
 
-    public Set<IntegerClause> decompose(final Formula formula) {
+    public CspPredicate.Decomposition decompose(final Formula formula) {
         return CspDecomposition.decompose(formula, this);
     }
 
@@ -503,12 +503,15 @@ public class CspFactory {
     }
 
     public List<Formula> encodeConstraint(final CspPredicate predicate, final CspEncodingContext context) {
-        Set<IntegerClause> clauses = predicate.decompose(this);
+        final CspPredicate.Decomposition decomp = predicate.decompose(this);
         final EncodingResult result = EncodingResult.resultForFormula(formulaFactory);
         switch (context.getAlgorithm()) {
             case Order:
-                clauses = OrderReduction.reduce(clauses, context, formulaFactory);
-                OrderEncoding.encodeClauses(clauses, context, result, this);
+                for (final IntegerVariable auxVar : decomp.getAuxiliaryIntegerVariables()) {
+                    OrderEncoding.encodeVariable(auxVar, context, result, this);
+                }
+                final Set<IntegerClause> newClauses = OrderReduction.reduce(decomp.getClauses(), context, formulaFactory);
+                OrderEncoding.encodeClauses(newClauses, context, result, this);
                 return result.result();
             default:
                 throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());

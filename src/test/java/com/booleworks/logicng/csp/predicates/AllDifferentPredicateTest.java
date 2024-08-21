@@ -1,6 +1,12 @@
 package com.booleworks.logicng.csp.predicates;
 
-import com.booleworks.logicng.csp.*;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.booleworks.logicng.csp.Common;
+import com.booleworks.logicng.csp.CspFactory;
+import com.booleworks.logicng.csp.IntegerClause;
+import com.booleworks.logicng.csp.LinearExpression;
+import com.booleworks.logicng.csp.ParameterizedCspTest;
 import com.booleworks.logicng.csp.literals.LinearLiteral;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.csp.terms.Term;
@@ -11,11 +17,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.List;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class AllDifferentPredicateTest extends ParameterizedCspTest {
     @ParameterizedTest
@@ -91,9 +94,9 @@ public class AllDifferentPredicateTest extends ParameterizedCspTest {
         final IntegerVariable b = cf.variable("b", 0, 2);
         final IntegerVariable c = cf.variable("c", 0, 2);
         final IntegerVariable d = cf.variable("d", 0, 2);
-        final Set<IntegerClause> pred1 = cf.allDifferent(List.of(cf.zero(), cf.one(), a)).decompose(cf);
-        final Set<IntegerClause> pred2 = cf.allDifferent(List.of(a, b, c)).decompose(cf);
-        final Set<IntegerClause> pred3 = cf.allDifferent(List.of(a, b, c, d)).decompose(cf);
+        final CspPredicate.Decomposition pred1 = cf.allDifferent(List.of(cf.zero(), cf.one(), a)).decompose(cf);
+        final CspPredicate.Decomposition pred2 = cf.allDifferent(List.of(a, b, c)).decompose(cf);
+        final CspPredicate.Decomposition pred3 = cf.allDifferent(List.of(a, b, c, d)).decompose(cf);
 
         final SortedMap<IntegerVariable, Integer> coefsAB = new TreeMap<>();
         final SortedMap<IntegerVariable, Integer> coefsAC = new TreeMap<>();
@@ -114,14 +117,16 @@ public class AllDifferentPredicateTest extends ParameterizedCspTest {
         coefsCD.put(c, 1);
         coefsCD.put(d, -1);
 
-        assertThat(pred1).hasSize(3);
-        assertThat(pred1).containsExactlyInAnyOrder(
+        assertThat(pred1.getClauses()).hasSize(3);
+        assertThat(pred1.getClauses()).containsExactlyInAnyOrder(
                 new IntegerClause(new LinearLiteral(new LinearExpression(-1, a, 1), LinearLiteral.Operator.NE)),
                 new IntegerClause(new LinearLiteral(new LinearExpression(1, a, 0), LinearLiteral.Operator.NE)),
                 new IntegerClause(new LinearLiteral(new LinearExpression(-1, a, 2), LinearLiteral.Operator.LE))
         );
-        assertThat(pred2).hasSize(5);
-        assertThat(pred2).containsExactlyInAnyOrder(
+        assertThat(pred1.getAuxiliaryBooleanVariables()).isEmpty();
+        assertThat(pred1.getAuxiliaryIntegerVariables()).isEmpty();
+        assertThat(pred2.getClauses()).hasSize(5);
+        assertThat(pred2.getClauses()).containsExactlyInAnyOrder(
                 new IntegerClause(new LinearLiteral(new LinearExpression(coefsAB, 0), LinearLiteral.Operator.NE)),
                 new IntegerClause(new LinearLiteral(new LinearExpression(coefsAC, 0), LinearLiteral.Operator.NE)),
                 new IntegerClause(new LinearLiteral(new LinearExpression(coefsBC, 0), LinearLiteral.Operator.NE)),
@@ -135,8 +140,10 @@ public class AllDifferentPredicateTest extends ParameterizedCspTest {
                         new LinearLiteral(new LinearExpression(1, b, 0), LinearLiteral.Operator.LE),
                         new LinearLiteral(new LinearExpression(1, c, 0), LinearLiteral.Operator.LE)
                 )));
-        assertThat(pred3).hasSize(7);
-        assertThat(pred3).containsExactlyInAnyOrder(
+        assertThat(pred2.getAuxiliaryBooleanVariables()).isEmpty();
+        assertThat(pred2.getAuxiliaryIntegerVariables()).isEmpty();
+        assertThat(pred3.getClauses()).hasSize(7);
+        assertThat(pred3.getClauses()).containsExactlyInAnyOrder(
                 new IntegerClause(),
                 new IntegerClause(new LinearLiteral(new LinearExpression(coefsAB, 0), LinearLiteral.Operator.NE)),
                 new IntegerClause(new LinearLiteral(new LinearExpression(coefsAC, 0), LinearLiteral.Operator.NE)),
@@ -145,5 +152,7 @@ public class AllDifferentPredicateTest extends ParameterizedCspTest {
                 new IntegerClause(new LinearLiteral(new LinearExpression(coefsBD, 0), LinearLiteral.Operator.NE)),
                 new IntegerClause(new LinearLiteral(new LinearExpression(coefsCD, 0), LinearLiteral.Operator.NE))
         );
+        assertThat(pred3.getAuxiliaryBooleanVariables()).isEmpty();
+        assertThat(pred3.getAuxiliaryIntegerVariables()).isEmpty();
     }
 }

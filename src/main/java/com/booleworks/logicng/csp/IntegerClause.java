@@ -1,8 +1,10 @@
 package com.booleworks.logicng.csp;
 
 import com.booleworks.logicng.csp.literals.ArithmeticLiteral;
+import com.booleworks.logicng.csp.predicates.CspPredicate;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.formulas.Literal;
+import com.booleworks.logicng.formulas.Variable;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -140,10 +142,10 @@ public class IntegerClause implements Comparable<IntegerClause> {
         return Integer.compare(boolLiterals.size(), other.boolLiterals.size());
     }
 
-    public static Set<IntegerClause> factorize(final Set<IntegerClause> left, final Set<IntegerClause> right) {
+    public static CspPredicate.Decomposition factorize(final CspPredicate.Decomposition left, final CspPredicate.Decomposition right) {
         final Set<IntegerClause> clauses = new TreeSet<>();
-        for (final IntegerClause l : left) {
-            for (final IntegerClause r : right) {
+        for (final IntegerClause l : left.getClauses()) {
+            for (final IntegerClause r : right.getClauses()) {
                 final SortedSet<Literal> newBools = new TreeSet<>(l.boolLiterals);
                 final SortedSet<ArithmeticLiteral> newAriths = new TreeSet<>(l.arithLiterals);
                 newBools.addAll(r.boolLiterals);
@@ -151,6 +153,10 @@ public class IntegerClause implements Comparable<IntegerClause> {
                 clauses.add(new IntegerClause(newBools, newAriths));
             }
         }
-        return clauses;
+        final Set<IntegerVariable> intVars = new TreeSet<>(left.getAuxiliaryIntegerVariables());
+        final Set<Variable> boolVars = new TreeSet<>(left.getAuxiliaryBooleanVariables());
+        intVars.addAll(right.getAuxiliaryIntegerVariables());
+        boolVars.addAll(right.getAuxiliaryBooleanVariables());
+        return new CspPredicate.Decomposition(clauses, intVars, boolVars);
     }
 }

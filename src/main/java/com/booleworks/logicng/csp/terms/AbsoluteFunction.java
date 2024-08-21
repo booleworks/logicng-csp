@@ -4,7 +4,9 @@ import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.IntegerClause;
 import com.booleworks.logicng.csp.IntegerDomain;
 import com.booleworks.logicng.csp.LinearExpression;
+import com.booleworks.logicng.csp.predicates.CspPredicate;
 import com.booleworks.logicng.formulas.Formula;
+import com.booleworks.logicng.formulas.Variable;
 
 import java.util.Set;
 import java.util.TreeSet;
@@ -20,18 +22,25 @@ public class AbsoluteFunction extends UnaryFunction {
     protected Decomposition calculateDecomposition(final CspFactory cf) {
         final Decomposition decomposition = this.getOperand().decompose(cf);
         final LinearExpression expression = decomposition.getLinearExpression();
-        final Set<IntegerClause> constraints = new TreeSet<>(decomposition.getAdditionalConstraints());
         final IntegerDomain domain = expression.getDomain();
         if (domain.lb() >= 0) {
-            return new Decomposition(expression, constraints);
+            return decomposition;
         } else if (domain.ub() <= 0) {
-            return new Decomposition(LinearExpression.multiply(expression, -1), constraints);
+            return new Decomposition(LinearExpression.multiply(expression, -1), decomposition.getAdditionalConstraints(), decomposition.getAuxiliaryIntegerVariables(),
+                    decomposition.getAuxiliaryBooleanVariables());
         }
+        final Set<IntegerClause> constraints = new TreeSet<>(decomposition.getAdditionalConstraints());
+        final Set<IntegerVariable> auxIntVars = new TreeSet<>(decomposition.getAuxiliaryIntegerVariables());
+        final Set<Variable> auxBoolVars = new TreeSet<>(decomposition.getAuxiliaryBooleanVariables());
         final IntegerDomain newDomain = domain.abs();
         final IntegerVariable newVariable = cf.auxVariable(ABS_AUX_VARIABLE, newDomain);
+        auxIntVars.add(newVariable);
         final Formula positiveFormula = cf.eq(newVariable, this.getOperand());
         final Formula negativeFormula = cf.eq(cf.minus(newVariable), this.getOperand());
-        constraints.addAll(cf.decompose(cf.formulaFactory().or(positiveFormula, negativeFormula)));
-        return new Decomposition(new LinearExpression(newVariable), constraints);
+        final CspPredicate.Decomposition decomp = cf.decompose(cf.formulaFactory().or(positiveFormula, negativeFormula));
+        constraints.addAll(decomp.getClauses());
+        auxIntVars.addAll(decomp.getAuxiliaryIntegerVariables());
+        auxBoolVars.addAll(decomp.getAuxiliaryBooleanVariables());
+        return new Decomposition(new LinearExpression(newVariable), constraints, auxIntVars, decomposition.getAuxiliaryBooleanVariables());
     }
 }
