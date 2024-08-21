@@ -11,9 +11,21 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 public class CspAssignment {
-    private final Map<IntegerVariable, Integer> integerAssignments = new TreeMap<>();
-    private final SortedSet<Variable> posBooleans = new TreeSet<>();
-    private final SortedSet<Literal> negBooleans = new TreeSet<>();
+    private final Map<IntegerVariable, Integer> integerAssignments;
+    private final SortedSet<Variable> posBooleans;
+    private final SortedSet<Literal> negBooleans;
+
+    public CspAssignment() {
+        this.integerAssignments = new TreeMap<>();
+        this.posBooleans = new TreeSet<>();
+        this.negBooleans = new TreeSet<>();
+    }
+
+    public CspAssignment(final CspAssignment other) {
+        this.integerAssignments = new TreeMap<>(other.integerAssignments);
+        this.posBooleans = new TreeSet<>(other.posBooleans);
+        this.negBooleans = new TreeSet<>(other.negBooleans);
+    }
 
     public Map<IntegerVariable, Integer> getIntegerAssignments() {
         return Collections.unmodifiableMap(integerAssignments);
