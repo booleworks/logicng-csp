@@ -1,6 +1,7 @@
 package com.booleworks.logicng.csp.terms;
 
 import java.util.Objects;
+import java.util.SortedSet;
 
 public abstract class BinaryFunction extends Function {
     protected final Term left;
@@ -18,6 +19,12 @@ public abstract class BinaryFunction extends Function {
 
     public Term getRight() {
         return right;
+    }
+
+    @Override
+    public void variablesInplace(final SortedSet<IntegerVariable> variables) {
+        left.variablesInplace(variables);
+        right.variablesInplace(variables);
     }
 
     boolean equals(final Object other, final boolean withOrder) {

@@ -1,6 +1,7 @@
 package com.booleworks.logicng.csp.terms;
 
 import java.util.Objects;
+import java.util.SortedSet;
 
 public abstract class UnaryFunction extends Function {
     protected final Term operand;
@@ -12,6 +13,11 @@ public abstract class UnaryFunction extends Function {
 
     public Term getOperand() {
         return operand;
+    }
+
+    @Override
+    public void variablesInplace(final SortedSet<IntegerVariable> variables) {
+        operand.variablesInplace(variables);
     }
 
     @Override

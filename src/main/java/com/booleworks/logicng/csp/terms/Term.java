@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 public abstract class Term {
@@ -26,6 +27,14 @@ public abstract class Term {
     }
 
     public abstract boolean isAtom();
+
+    public SortedSet<IntegerVariable> variables(final CspFactory cf) {
+        final SortedSet<IntegerVariable> set = new TreeSet<>();
+        variablesInplace(set);
+        return set;
+    }
+
+    public abstract void variablesInplace(SortedSet<IntegerVariable> variables);
 
     protected abstract Decomposition calculateDecomposition(final CspFactory cf);
 

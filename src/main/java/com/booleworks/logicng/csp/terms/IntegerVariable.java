@@ -70,6 +70,7 @@ import com.booleworks.logicng.csp.LinearExpression;
 
 import java.util.Collections;
 import java.util.Objects;
+import java.util.SortedSet;
 
 /**
  * An integer variable.
@@ -90,6 +91,11 @@ public final class IntegerVariable extends Term implements Comparable<IntegerVar
         this.name = name;
         this.domain = domain;
         this.aux = aux;
+    }
+
+    @Override
+    public void variablesInplace(final SortedSet<IntegerVariable> variables) {
+        variables.add(this);
     }
 
     /**

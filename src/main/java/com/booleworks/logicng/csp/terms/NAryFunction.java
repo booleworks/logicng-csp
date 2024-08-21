@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.stream.Collectors;
 
 public abstract class NAryFunction extends Function {
@@ -16,6 +17,13 @@ public abstract class NAryFunction extends Function {
 
     public Set<Term> getOperands() {
         return Collections.unmodifiableSet(operands);
+    }
+
+    @Override
+    public void variablesInplace(final SortedSet<IntegerVariable> variables) {
+        for (final Term op : operands) {
+            op.variablesInplace(variables);
+        }
     }
 
     @Override

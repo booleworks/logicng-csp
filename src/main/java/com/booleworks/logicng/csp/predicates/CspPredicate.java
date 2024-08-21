@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 public abstract class CspPredicate implements Predicate {
@@ -31,7 +32,13 @@ public abstract class CspPredicate implements Predicate {
 
     public abstract Formula negate(final CspFactory cf);
 
-    protected abstract Set<IntegerClause> calculateDecomposition(final CspFactory cf);
+    public SortedSet<IntegerVariable> variables() {
+        final SortedSet<IntegerVariable> variables = new TreeSet<>();
+        variablesInplace(variables);
+        return variables;
+    }
+
+    public abstract void variablesInplace(SortedSet<IntegerVariable> variables);
 
     protected abstract Decomposition calculateDecomposition(final CspFactory cf);
 

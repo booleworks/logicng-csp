@@ -3,6 +3,7 @@ package com.booleworks.logicng.csp.terms;
 import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.IntegerClause;
 import com.booleworks.logicng.csp.LinearExpression;
+import com.booleworks.logicng.formulas.Variable;
 
 import java.util.Set;
 import java.util.TreeSet;
@@ -17,10 +18,14 @@ public final class SubtractionFunction extends BinaryFunction {
         final Decomposition resultLeft = left.decompose(cf);
         LinearExpression expression = resultLeft.getLinearExpression();
         final Set<IntegerClause> constraints = new TreeSet<>(resultLeft.getAdditionalConstraints());
+        final Set<IntegerVariable> intVars = new TreeSet<>(resultLeft.getAuxiliaryIntegerVariables());
+        final Set<Variable> boolVars = new TreeSet<>(resultLeft.getAuxiliaryBooleanVariables());
         final Decomposition resultRight = right.decompose(cf);
         expression = LinearExpression.add(expression, LinearExpression.multiply(resultRight.getLinearExpression(), -1));
         constraints.addAll(resultRight.getAdditionalConstraints());
-        return new Decomposition(expression, constraints);
+        intVars.addAll(resultRight.getAuxiliaryIntegerVariables());
+        boolVars.addAll(resultRight.getAuxiliaryBooleanVariables());
+        return new Decomposition(expression, constraints, intVars, boolVars);
     }
 
     @Override

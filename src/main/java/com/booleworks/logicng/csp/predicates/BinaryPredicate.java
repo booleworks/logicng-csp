@@ -1,9 +1,11 @@
 package com.booleworks.logicng.csp.predicates;
 
+import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.csp.terms.Term;
 import com.booleworks.logicng.formulas.FormulaFactory;
 
 import java.util.Objects;
+import java.util.SortedSet;
 
 public abstract class BinaryPredicate extends CspPredicate {
 
@@ -14,6 +16,12 @@ public abstract class BinaryPredicate extends CspPredicate {
         super(type, f);
         this.left = left;
         this.right = right;
+    }
+
+    @Override
+    public void variablesInplace(final SortedSet<IntegerVariable> variables) {
+        left.variablesInplace(variables);
+        right.variablesInplace(variables);
     }
 
     public Term getLeft() {

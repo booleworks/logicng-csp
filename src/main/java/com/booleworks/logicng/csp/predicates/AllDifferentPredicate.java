@@ -2,6 +2,7 @@ package com.booleworks.logicng.csp.predicates;
 
 import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.IntegerDomain;
+import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.csp.terms.Term;
 import com.booleworks.logicng.formulas.Formula;
 import com.booleworks.logicng.formulas.FormulaFactory;
@@ -12,7 +13,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.SortedSet;
 import java.util.stream.Collectors;
 
 public class AllDifferentPredicate extends CspPredicate {
@@ -36,7 +37,13 @@ public class AllDifferentPredicate extends CspPredicate {
     }
 
     @Override
-    protected Set<IntegerClause> calculateDecomposition(final CspFactory cf) {
+    public void variablesInplace(final SortedSet<IntegerVariable> variables) {
+        for (final Term term : terms) {
+            term.variablesInplace(variables);
+        }
+    }
+
+    @Override
     protected Decomposition calculateDecomposition(final CspFactory cf) {
         final FormulaFactory f = factory();
         final List<Decomposition> decomps = new ArrayList<>();

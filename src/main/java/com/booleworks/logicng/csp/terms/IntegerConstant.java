@@ -4,6 +4,7 @@ import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.LinearExpression;
 
 import java.util.Collections;
+import java.util.SortedSet;
 
 public final class IntegerConstant extends Term implements Comparable<IntegerConstant> {
     private final int value;
@@ -12,6 +13,9 @@ public final class IntegerConstant extends Term implements Comparable<IntegerCon
         super(value == 0 ? Term.Type.ZERO : value == 1 ? Term.Type.ONE : Term.Type.CONST);
         this.value = value;
     }
+
+    @Override
+    public void variablesInplace(final SortedSet<IntegerVariable> variables) {}
 
     public int getValue() {
         return value;
