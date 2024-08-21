@@ -10,36 +10,43 @@ import com.booleworks.logicng.formulas.Literal;
 import com.booleworks.logicng.formulas.Variable;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 public class OrderDecoding {
-    public static CspAssignment decode(final Assignment model, final Collection<IntegerVariable> variables, final CspEncodingContext context, final CspFactory cf) {
+    public static CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables,
+                                       final Collection<Variable> booleanVariables,
+                                       final Map<IntegerVariable, IntegerVariable> reverseSubstitution,
+                                       final CspEncodingContext context,
+                                       final CspFactory cf) {
         final CspAssignment result = new CspAssignment();
-        for (final IntegerVariable v : variables) {
+        for (final IntegerVariable v : integerVariables) {
             final int value = decodeIntVar(v, model, context);
-            result.addIntAssignment(v, value);
+            result.addIntAssignment(reverseSubstitution.getOrDefault(v, v), value);
         }
-        return result;
-    }
-
-    public static CspAssignment decode(final Assignment model, final Csp csp, final CspEncodingContext context, final CspFactory cf) {
-        final CspAssignment result = new CspAssignment();
-        for (final IntegerVariable v : csp.getIntegerVariables()) {
-            if (!v.isAux() || csp.getReverseSubstitutions().containsKey(v)) {
-                final int value = decodeIntVar(v, model, context);
-                result.addIntAssignment(csp.getReverseSubstitutions().getOrDefault(v, v), value);
-            }
-        }
-        for (final Variable v : csp.getBooleanVariables()) {
+        for (final Variable v : booleanVariables) {
             if (model.positiveVariables().contains(v)) {
                 result.addPos(v);
             }
             final Literal negV = v.negate(cf.formulaFactory());
-            if (model.negativeLiterals().contains(v)) {
+            if (model.negativeLiterals().contains(negV)) {
                 result.addNeg(negV);
             }
         }
         return result;
+    }
+
+    public static CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables, final Collection<Variable> booleanVariables,
+                                       final CspEncodingContext context, final CspFactory cf) {
+        return decode(model, integerVariables, booleanVariables, Collections.emptyMap(), context, cf);
+    }
+
+    public static CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables, final CspEncodingContext context, final CspFactory cf) {
+        return decode(model, integerVariables, Collections.emptyList(), Collections.emptyMap(), context, cf);
+    }
+
+    public static CspAssignment decode(final Assignment model, final Csp csp, final CspEncodingContext context, final CspFactory cf) {
+        return decode(model, csp.getVisibleIntegerVariables(), csp.getVisibleBooleanVariables(), csp.getReverseSubstitutions(), context, cf);
     }
 
     static int decodeIntVar(final IntegerVariable var, final Assignment model, final CspEncodingContext context) {
@@ -48,6 +55,9 @@ public class OrderDecoding {
         final int ub = domain.ub();
         int value = ub;
         final Map<Integer, Variable> varMap = context.getVariableMap().get(var);
+        if (varMap == null) {
+            return value;
+        }
         int index = 0;
         for (int c = lb; c < ub; c++) {
             if (domain.contains(c)) {

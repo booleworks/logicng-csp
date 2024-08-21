@@ -4,6 +4,7 @@ import com.booleworks.logicng.csp.encodings.CspEncodingContext;
 import com.booleworks.logicng.csp.encodings.OrderDecoding;
 import com.booleworks.logicng.csp.encodings.OrderEncoding;
 import com.booleworks.logicng.csp.encodings.OrderReduction;
+import com.booleworks.logicng.csp.functions.IntegerVariablesFunction;
 import com.booleworks.logicng.csp.predicates.AllDifferentPredicate;
 import com.booleworks.logicng.csp.predicates.ComparisonPredicate;
 import com.booleworks.logicng.csp.predicates.CspPredicate;
@@ -23,6 +24,7 @@ import com.booleworks.logicng.datastructures.Assignment;
 import com.booleworks.logicng.datastructures.EncodingResult;
 import com.booleworks.logicng.formulas.Formula;
 import com.booleworks.logicng.formulas.FormulaFactory;
+import com.booleworks.logicng.formulas.Variable;
 import com.booleworks.logicng.util.Pair;
 
 import java.util.Arrays;
@@ -33,6 +35,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
@@ -469,9 +472,22 @@ public class CspFactory {
         return CspDecomposition.decompose(formula, this);
     }
 
+    public Csp buildCsp(final Formula formula) {
+        final SortedSet<Variable> variables = formula.variables(formulaFactory);
+        final SortedSet<IntegerVariable> integerVariables = IntegerVariablesFunction.integerVariables(formula);
+        final Set<IntegerClause> clauses = decompose(formula).getClauses();
+        return Csp.fromClauses(clauses, integerVariables, variables);
+    }
+
     public Csp buildCsp(final Collection<CspPredicate> predicates) {
-        final Set<IntegerClause> clauses = predicates.stream().flatMap(p -> p.decompose(this).stream()).collect(Collectors.toSet());
-        return Csp.fromClauses(clauses);
+        final SortedSet<IntegerVariable> vars = new TreeSet<>();
+        for (final CspPredicate predicate : predicates) {
+            predicate.variablesInplace(vars);
+        }
+        final Set<IntegerClause> clauses = predicates.stream()
+                .flatMap(p -> p.decompose(this).getClauses().stream())
+                .collect(Collectors.toSet());
+        return Csp.fromClauses(clauses, vars);
     }
 
     public Csp buildCsp(final CspPredicate... predicates) {
@@ -519,13 +535,28 @@ public class CspFactory {
     }
 
     public CspAssignment decode(final Assignment model, final Csp csp, final CspEncodingContext context) {
-        return decode(model, csp.getIntegerVariables(), context);
-    }
-
-    public CspAssignment decode(final Assignment model, final Collection<IntegerVariable> variables, final CspEncodingContext context) {
         switch (context.getAlgorithm()) {
             case Order:
-                return OrderDecoding.decode(model, variables, context, this);
+                return OrderDecoding.decode(model, csp, context, this);
+            default:
+                throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
+        }
+    }
+
+    public CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables,
+                                final Collection<Variable> booleanVariables, final CspEncodingContext context) {
+        switch (context.getAlgorithm()) {
+            case Order:
+                return OrderDecoding.decode(model, integerVariables, booleanVariables, context, this);
+            default:
+                throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
+        }
+    }
+
+    public CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables, final CspEncodingContext context) {
+        switch (context.getAlgorithm()) {
+            case Order:
+                return OrderDecoding.decode(model, integerVariables, context, this);
             default:
                 throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
         }

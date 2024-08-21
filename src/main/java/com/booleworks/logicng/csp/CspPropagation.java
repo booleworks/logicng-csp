@@ -30,7 +30,7 @@ public class CspPropagation {
         if (!restrictions.isEmpty()) {
             final Set<IntegerClause> newClauses =
                     csp.getClauses().stream().map(c -> rebuildClause(c, restrictions)).filter(c -> !c.isValid()).collect(Collectors.toSet());
-            return Csp.fromClauses(newClauses, reverseSubstitutions);
+            return Csp.fromClauses(newClauses, csp.getVisibleIntegerVariables(), csp.getVisibleBooleanVariables(), reverseSubstitutions);
         } else {
             return csp;
         }

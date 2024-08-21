@@ -7,7 +7,9 @@ import com.booleworks.logicng.formulas.FormulaFactory;
 import com.booleworks.logicng.formulas.Literal;
 import com.booleworks.logicng.formulas.Variable;
 
+import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -51,8 +53,8 @@ public class CspEncodingContext {
         return this.variableMap;
     }
 
-    public Set<Variable> getRelevantSatVariables() {
-        return this.variableMap.values().stream().flatMap(m -> m.values().stream()).collect(Collectors.toSet());
+    public Set<Variable> getSatVariables(final Collection<IntegerVariable> variables) {
+        return variables.stream().map(variableMap::get).filter(Objects::nonNull).flatMap(m -> m.values().stream()).collect(Collectors.toSet());
     }
 
     public Set<IntegerVariable> getIntegerVariables() {

@@ -4,8 +4,6 @@ import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.formulas.Literal;
 import com.booleworks.logicng.formulas.Variable;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,39 +12,45 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 public class Csp {
-    private final Set<IntegerVariable> integerVariables;
-    private final Set<Variable> booleanVariables;
-    private final Map<IntegerVariable, IntegerVariable> reverseSubstitutions;
+    private Set<IntegerVariable> visibleIntegerVariables;
+    private Set<IntegerVariable> internalIntegerVariables;
+    private Set<Variable> visibleBooleanVariables;
+    private Set<Variable> internalBooleanVariables;
+    private Map<IntegerVariable, IntegerVariable> reverseSubstitutions;
     private Set<IntegerClause> clauses;
 
     private Csp() {
-        this.integerVariables = new TreeSet<>();
-        this.booleanVariables = new TreeSet<>();
+        this.internalIntegerVariables = new TreeSet<>();
+        this.visibleIntegerVariables = new TreeSet<>();
+        this.internalBooleanVariables = new TreeSet<>();
+        this.visibleBooleanVariables = new TreeSet<>();
         this.clauses = new TreeSet<>();
         this.reverseSubstitutions = new HashMap<>();
     }
 
     private Csp(final Csp other) {
-        this.integerVariables = new TreeSet<>(other.integerVariables);
-        this.booleanVariables = new TreeSet<>(other.booleanVariables);
+        this.internalIntegerVariables = new TreeSet<>(other.internalIntegerVariables);
+        this.visibleIntegerVariables = new TreeSet<>(other.visibleIntegerVariables);
+        this.internalBooleanVariables = new TreeSet<>(other.internalBooleanVariables);
+        this.visibleBooleanVariables = new TreeSet<>(other.visibleBooleanVariables);
         this.clauses = new TreeSet<>(other.clauses);
         this.reverseSubstitutions = new HashMap<>(other.reverseSubstitutions);
     }
 
-    public Csp(final Set<IntegerVariable> integerVariables, final Set<Variable> booleanVariables, final Set<IntegerClause> clauses,
-               final Map<IntegerVariable, IntegerVariable> reverseSubstitutions) {
-        this.integerVariables = integerVariables;
-        this.booleanVariables = booleanVariables;
-        this.clauses = clauses;
-        this.reverseSubstitutions = reverseSubstitutions;
+    public Set<IntegerVariable> getVisibleIntegerVariables() {
+        return visibleIntegerVariables;
     }
 
-    public Set<IntegerVariable> getIntegerVariables() {
-        return integerVariables;
+    public Set<Variable> getVisibleBooleanVariables() {
+        return visibleBooleanVariables;
     }
 
-    public Set<Variable> getBooleanVariables() {
-        return booleanVariables;
+    public Set<IntegerVariable> getInternalIntegerVariables() {
+        return internalIntegerVariables;
+    }
+
+    public Set<Variable> getInternalBooleanVariables() {
+        return internalBooleanVariables;
     }
 
     public Set<IntegerClause> getClauses() {
@@ -60,51 +64,53 @@ public class Csp {
     @Override
     public String toString() {
         return "Csp{" +
-                "integerVariables=" + integerVariables +
-                ", booleanVariables=" + booleanVariables +
+                "visibleIntegerVariables=" + visibleIntegerVariables +
+                ", internIntegerVariables=" + internalIntegerVariables +
+                ", visibleBooleanVariables=" + visibleBooleanVariables +
+                ", internBooleanVariables=" + internalBooleanVariables +
+                ", reverseSubstitutions=" + reverseSubstitutions +
                 ", clauses=" + clauses +
                 '}';
     }
 
     public static Csp fromClauses(final Set<IntegerClause> clauses) {
-        return fromClauses(clauses, Collections.emptyMap());
+        return fromClauses(clauses, Collections.emptySet(), Collections.emptySet(), Collections.emptyMap());
     }
 
-    public static Csp fromClauses(final Set<IntegerClause> clauses, final Map<IntegerVariable, IntegerVariable> reverseSubstitutions) {
+    public static Csp fromClauses(final Set<IntegerClause> clauses, final Set<IntegerVariable> integerVariables) {
+        return fromClauses(clauses, integerVariables, Collections.emptySet(), Collections.emptyMap());
+    }
+
+    public static Csp fromClauses(final Set<IntegerClause> clauses, final Set<IntegerVariable> integerVariables, final Set<Variable> booleanVariables) {
+        return fromClauses(clauses, integerVariables, booleanVariables, Collections.emptyMap());
+    }
+
+    public static Csp fromClauses(final Set<IntegerClause> clauses, final Set<IntegerVariable> integerVariables, final Map<IntegerVariable, IntegerVariable> reverseSubstitutions) {
+        return fromClauses(clauses, integerVariables, Collections.emptySet(), reverseSubstitutions);
+    }
+
+    public static Csp fromClauses(final Set<IntegerClause> clauses, final Set<IntegerVariable> integerVariables, final Set<Variable> booleanVariables,
+                                  final Map<IntegerVariable, IntegerVariable> reverseSubstitutions) {
         final Set<IntegerVariable> intVars = new TreeSet<>();
         final Set<Variable> boolVars = new TreeSet<>();
         for (final IntegerClause clause : clauses) {
             intVars.addAll(clause.getArithmeticLiterals().stream().flatMap(v -> v.getVariables().stream()).collect(Collectors.toSet()));
             boolVars.addAll(clause.getBoolLiterals().stream().map(Literal::variable).collect(Collectors.toSet()));
         }
-        return new Csp(intVars, boolVars, clauses, reverseSubstitutions);
-    }
-
-    public static Csp merge(final CspFactory f, final Csp... csps) {
-        return merge(f, Arrays.asList(csps));
-    }
-
-    public static Csp merge(final CspFactory f, final Collection<Csp> csps) {
-        if (csps.isEmpty()) {
-            return new Csp();
-        } else if (csps.size() == 1) {
-            return csps.iterator().next();
-        } else {
-            final Csp newCsp = new Csp();
-            for (final Csp csp : csps) {
-                newCsp.integerVariables.addAll(csp.integerVariables);
-                newCsp.booleanVariables.addAll(csp.booleanVariables);
-                newCsp.clauses.addAll(csp.clauses);
-                newCsp.reverseSubstitutions.putAll(csp.reverseSubstitutions);
-            }
-            return newCsp;
-        }
+        return new Csp.Builder()
+                .updateInternalIntegerVariables(intVars)
+                .updateInternalBooleanVariables(boolVars)
+                .updateReverseSubstitution(reverseSubstitutions)
+                .updateClauses(clauses)
+                .updateVisibleIntegerVariables(integerVariables)
+                .updateVisibleBooleanVariables(booleanVariables)
+                .build();
     }
 
     public static class Builder {
         private Csp csp;
 
-        public Builder(final CspFactory f) {
+        public Builder() {
             csp = new Csp();
         }
 
@@ -122,12 +128,45 @@ public class Csp {
             return this;
         }
 
-        public boolean addIntegerVariable(final IntegerVariable v) {
-            return csp.integerVariables.add(v);
+        public Builder updateInternalIntegerVariables(final Set<IntegerVariable> variables) {
+            csp.internalIntegerVariables = variables;
+            return this;
         }
 
-        public boolean addBooleanVariable(final Variable v) {
-            return csp.booleanVariables.add(v);
+        public Builder updateVisibleIntegerVariables(final Set<IntegerVariable> variables) {
+            csp.visibleIntegerVariables = variables;
+            return this;
+        }
+
+        public Builder updateInternalBooleanVariables(final Set<Variable> variables) {
+            csp.internalBooleanVariables = variables;
+            return this;
+        }
+
+        public Builder updateVisibleBooleanVariables(final Set<Variable> variables) {
+            csp.visibleBooleanVariables = variables;
+            return this;
+        }
+
+        public Builder updateReverseSubstitution(final Map<IntegerVariable, IntegerVariable> reverseSubstitution) {
+            csp.reverseSubstitutions = reverseSubstitution;
+            return this;
+        }
+
+        public boolean addInternalIntegerVariable(final IntegerVariable v) {
+            return csp.internalIntegerVariables.add(v);
+        }
+
+        public boolean addVisibleIntegerVariable(final IntegerVariable v) {
+            return csp.visibleIntegerVariables.add(v);
+        }
+
+        public boolean addInternalBooleanVariable(final Variable v) {
+            return csp.internalBooleanVariables.add(v);
+        }
+
+        public boolean addVisibleBooleanVariable(final Variable v) {
+            return csp.visibleBooleanVariables.add(v);
         }
 
         public Csp build() {
@@ -136,12 +175,20 @@ public class Csp {
             return csp;
         }
 
-        public Set<IntegerVariable> getIntegerVariables() {
-            return csp.integerVariables;
+        public Set<IntegerVariable> getInternalIntegerVariables() {
+            return csp.internalIntegerVariables;
         }
 
-        public Set<Variable> getBooleanVariables() {
-            return csp.booleanVariables;
+        public Set<IntegerVariable> getVisibleIntegerVariables() {
+            return csp.visibleIntegerVariables;
+        }
+
+        public Set<Variable> getInternalBooleanVariables() {
+            return csp.internalBooleanVariables;
+        }
+
+        public Set<Variable> getVisibleBooleanVariables() {
+            return csp.visibleBooleanVariables;
         }
 
         public Set<IntegerClause> getClauses() {

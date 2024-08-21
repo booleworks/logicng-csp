@@ -20,7 +20,7 @@ import java.util.Set;
 
 public class OrderEncoding {
     public static void encode(final Csp csp, final CspEncodingContext context, final EncodingResult result, final CspFactory cf) {
-        for (final IntegerVariable v : csp.getIntegerVariables()) {
+        for (final IntegerVariable v : csp.getInternalIntegerVariables()) {
             encodeVariable(v, context, result, cf);
         }
         encodeClauses(csp.getClauses(), context, result, cf);

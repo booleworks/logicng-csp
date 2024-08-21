@@ -140,7 +140,7 @@ public class OrderReduction {
             } else {
                 final Variable p = context.newAuxBoolVariable(f);
                 if (csp != null) {
-                    csp.addBooleanVariable(p);
+                    csp.addInternalBooleanVariable(p);
                 }
                 final Literal notP = context.negate(p);
                 final TreeSet<Literal> boolLiterals = new TreeSet<>();
@@ -174,7 +174,7 @@ public class OrderReduction {
             if (simplified.size() > 1) {
                 final IntegerVariable v = context.newAuxIntVariable(AUX_PREFIX1, simplified.getDomain());
                 if (csp != null) {
-                    csp.addIntegerVariable(v);
+                    csp.addInternalIntegerVariable(v);
                 }
                 simplified.subtract(new LinearExpression(v));
                 final IntegerClause aux = new IntegerClause(new LinearLiteral(simplified.build(), LinearLiteral.Operator.EQ));
