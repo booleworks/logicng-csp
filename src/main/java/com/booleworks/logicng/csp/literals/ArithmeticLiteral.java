@@ -5,10 +5,12 @@ import com.booleworks.logicng.csp.terms.IntegerVariable;
 import java.util.Map;
 import java.util.Set;
 
-public abstract class ArithmeticLiteral implements CspLiteral, Comparable<ArithmeticLiteral> {
-    public abstract Set<IntegerVariable> getVariables();
+public interface ArithmeticLiteral {
+    boolean isValid();
 
-    public abstract int[] getBound(IntegerVariable v, Map<IntegerVariable, IntegerVariable> restrictions);
+    boolean isUnsat();
 
-    public abstract ArithmeticLiteral substitute(Map<IntegerVariable, IntegerVariable> assignment);
+    Set<IntegerVariable> getVariables();
+
+    ArithmeticLiteral substitute(Map<IntegerVariable, IntegerVariable> assignment);
 }

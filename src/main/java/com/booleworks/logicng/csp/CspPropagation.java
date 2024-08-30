@@ -1,6 +1,7 @@
 package com.booleworks.logicng.csp;
 
 import com.booleworks.logicng.csp.literals.ArithmeticLiteral;
+import com.booleworks.logicng.csp.literals.LinearLiteral;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 
 import java.util.HashMap;
@@ -47,7 +48,7 @@ public class CspPropagation {
             }
             int[] bound = null;
             for (final ArithmeticLiteral lit : clause.getArithmeticLiterals()) {
-                final int[] b = lit.getBound(currentV, restrictions);
+                final int[] b = getBound(lit, currentV, restrictions);
                 if (b == null) {
                     bound = null;
                     break;
@@ -95,5 +96,70 @@ public class CspPropagation {
             return variable;
         }
         return cf.auxVariable(BOUNDED_AUX_VAR, variable.getName(), d);
+    }
+
+    private static int[] getBound(final ArithmeticLiteral literal, final IntegerVariable v, final Map<IntegerVariable, IntegerVariable> restrictions) {
+        if (literal instanceof LinearLiteral) {
+            final LinearLiteral l = (LinearLiteral) literal;
+            final int a = l.getSum().getA(v);
+            final IntegerDomain d = l.getSum().getDomainExcept(v, restrictions);
+            int lb = v.getDomain().lb();
+            int ub = v.getDomain().ub();
+            switch (l.getOperator()) {
+                case LE:
+                    if (a > 0) {
+                        ub = divfloor(-d.lb(), a);
+                    } else if (a < 0) {
+                        lb = divceil(-d.lb(), a);
+                    }
+                    break;
+                case EQ:
+                    if (a > 0) {
+                        lb = divceil(-d.ub(), a);
+                        ub = divfloor(-d.lb(), a);
+                    } else if (a < 0) {
+                        lb = divceil(-d.lb(), a);
+                        ub = divfloor(-d.ub(), a);
+                    }
+                    break;
+                case NE:
+                    return null;
+            }
+            if (lb > ub) {
+                return null;
+            }
+            return new int[]{lb, ub};
+        } else {
+            throw new RuntimeException("Cannot calculate bound of " + literal.getClass());
+        }
+    }
+
+    /**
+     * ceil(b/a)
+     */
+    static private int divceil(final int b, final int a) {
+        if ((a >= 0 && b >= 0) ||
+                (a < 0 && b < 0)) {
+            return b / a;
+        } else if (a < 0) {
+            return (-b + a + 1) / -a;
+        } else {
+            return (b - a + 1) / a;
+        }
+    }
+
+    /**
+     * floor(b/a)
+     */
+    static private int divfloor(final int b, final int a) {
+        if (a >= 0 && b >= 0) {
+            return b / a;
+        } else if (a < 0 && b < 0) {
+            return -b / -a;
+        } else if (a >= 0) {
+            return (b - a + 1) / a;
+        } else {
+            return (-b + a + 1) / -a;
+        }
     }
 }

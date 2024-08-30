@@ -130,12 +130,12 @@ public class AllDifferentPredicateTest extends ParameterizedCspTest {
                 new IntegerClause(new LinearLiteral(new LinearExpression(coefsAB, 0), LinearLiteral.Operator.NE)),
                 new IntegerClause(new LinearLiteral(new LinearExpression(coefsAC, 0), LinearLiteral.Operator.NE)),
                 new IntegerClause(new LinearLiteral(new LinearExpression(coefsBC, 0), LinearLiteral.Operator.NE)),
-                new IntegerClause(Common.treeSetFrom(), Common.treeSetFrom(
+                new IntegerClause(Common.treeSetFrom(), Common.setFrom(
                         new LinearLiteral(new LinearExpression(-1, a, 2), LinearLiteral.Operator.LE),
                         new LinearLiteral(new LinearExpression(-1, b, 2), LinearLiteral.Operator.LE),
                         new LinearLiteral(new LinearExpression(-1, c, 2), LinearLiteral.Operator.LE)
                 )),
-                new IntegerClause(Common.treeSetFrom(), Common.treeSetFrom(
+                new IntegerClause(Common.treeSetFrom(), Common.setFrom(
                         new LinearLiteral(new LinearExpression(1, a, 0), LinearLiteral.Operator.LE),
                         new LinearLiteral(new LinearExpression(1, b, 0), LinearLiteral.Operator.LE),
                         new LinearLiteral(new LinearExpression(1, c, 0), LinearLiteral.Operator.LE)

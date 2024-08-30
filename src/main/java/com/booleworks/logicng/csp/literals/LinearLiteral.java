@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-public class LinearLiteral extends ArithmeticLiteral {
+public class LinearLiteral implements ArithmeticLiteral {
     private final LinearExpression sum;
     private final Operator op;
 
@@ -33,38 +33,6 @@ public class LinearLiteral extends ArithmeticLiteral {
     @Override
     public Set<IntegerVariable> getVariables() {
         return sum.getVariables();
-    }
-
-    @Override
-    public int[] getBound(final IntegerVariable v, final Map<IntegerVariable, IntegerVariable> restrictions) {
-        final int a = sum.getA(v);
-        final IntegerDomain d = sum.getDomainExcept(v, restrictions);
-        int lb = v.getDomain().lb();
-        int ub = v.getDomain().ub();
-        switch (op) {
-            case LE:
-                if (a > 0) {
-                    ub = divfloor(-d.lb(), a);
-                } else if (a < 0) {
-                    lb = divceil(-d.lb(), a);
-                }
-                break;
-            case EQ:
-                if (a > 0) {
-                    lb = divceil(-d.ub(), a);
-                    ub = divfloor(-d.lb(), a);
-                } else if (a < 0) {
-                    lb = divceil(-d.lb(), a);
-                    ub = divfloor(-d.ub(), a);
-                }
-                break;
-            case NE:
-                return null;
-        }
-        if (lb > ub) {
-            return null;
-        }
-        return new int[]{lb, ub};
     }
 
     public LinearExpression getLinearExpression() {
@@ -145,52 +113,5 @@ public class LinearLiteral extends ArithmeticLiteral {
         int result = sum.hashCode();
         result = 31 * result + op.hashCode();
         return result;
-    }
-
-    @Override
-    public int compareTo(final ArithmeticLiteral other) {
-        if (this == other) {
-            return 0;
-        }
-        if (other == null) {
-            return 1;
-        }
-        if (other instanceof LinearLiteral) {
-            final LinearLiteral o = (LinearLiteral) other;
-            final int c1 = op.compareTo(o.op);
-            return c1 == 0 ? sum.compareTo(o.sum) : c1;
-
-        } else {
-            return -1;
-        }
-    }
-
-    /**
-     * ceil(b/a)
-     */
-    static private int divceil(final int b, final int a) {
-        if ((a >= 0 && b >= 0) ||
-                (a < 0 && b < 0)) {
-            return b / a;
-        } else if (a < 0) {
-            return (-b + a + 1) / -a;
-        } else {
-            return (b - a + 1) / a;
-        }
-    }
-
-    /**
-     * floor(b/a)
-     */
-    static private int divfloor(final int b, final int a) {
-        if (a >= 0 && b >= 0) {
-            return b / a;
-        } else if (a < 0 && b < 0) {
-            return -b / -a;
-        } else if (a >= 0) {
-            return (b - a + 1) / a;
-        } else {
-            return (-b + a + 1) / -a;
-        }
     }
 }

@@ -7,7 +7,7 @@ import com.booleworks.logicng.formulas.Literal;
 import com.booleworks.logicng.formulas.Variable;
 
 import java.util.Collections;
-import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedSet;
@@ -15,22 +15,22 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class IntegerClause implements Comparable<IntegerClause> {
-    private final SortedSet<Literal> boolLiterals;
-    private final SortedSet<ArithmeticLiteral> arithLiterals;
+public class IntegerClause {
+    private final Set<Literal> boolLiterals;
+    private final Set<ArithmeticLiteral> arithLiterals;
 
-    public IntegerClause(final SortedSet<Literal> boolLiterals, final SortedSet<ArithmeticLiteral> arithLiterals) {
+    public IntegerClause(final Set<Literal> boolLiterals, final Set<ArithmeticLiteral> arithLiterals) {
         this.boolLiterals = boolLiterals;
         this.arithLiterals = arithLiterals;
     }
 
     public IntegerClause(final Literal booLiteral) {
-        this(new TreeSet<>(), Collections.emptySortedSet());
+        this(new LinkedHashSet<>(), Collections.emptySortedSet());
         boolLiterals.add(booLiteral);
     }
 
     public IntegerClause(final ArithmeticLiteral arithLiteral) {
-        this(Collections.emptySortedSet(), new TreeSet<>());
+        this(Collections.emptySortedSet(), new LinkedHashSet<>());
         arithLiterals.add(arithLiteral);
     }
 
@@ -39,11 +39,11 @@ public class IntegerClause implements Comparable<IntegerClause> {
         this.arithLiterals = Collections.emptySortedSet();
     }
 
-    public SortedSet<Literal> getBoolLiterals() {
+    public Set<Literal> getBoolLiterals() {
         return boolLiterals;
     }
 
-    public SortedSet<ArithmeticLiteral> getArithmeticLiterals() {
+    public Set<ArithmeticLiteral> getArithmeticLiterals() {
         return arithLiterals;
     }
 
@@ -116,34 +116,8 @@ public class IntegerClause implements Comparable<IntegerClause> {
         return result;
     }
 
-    @Override
-    public int compareTo(final IntegerClause other) {
-        final Iterator<ArithmeticLiteral> leftArithIter = arithLiterals.iterator();
-        final Iterator<ArithmeticLiteral> rightArithIter = other.arithLiterals.iterator();
-        while (leftArithIter.hasNext() && rightArithIter.hasNext()) {
-            final int c = leftArithIter.next().compareTo(rightArithIter.next());
-            if (c != 0) {
-                return c;
-            }
-        }
-        if (arithLiterals.size() < other.arithLiterals.size()) {
-            return -1;
-        } else if (other.arithLiterals.size() < arithLiterals.size()) {
-            return 1;
-        }
-        final Iterator<Literal> leftBoolIter = boolLiterals.iterator();
-        final Iterator<Literal> rightBoolIter = other.boolLiterals.iterator();
-        while (leftBoolIter.hasNext() && rightBoolIter.hasNext()) {
-            final int c = leftBoolIter.next().compareTo(rightBoolIter.next());
-            if (c != 0) {
-                return c;
-            }
-        }
-        return Integer.compare(boolLiterals.size(), other.boolLiterals.size());
-    }
-
     public static CspPredicate.Decomposition factorize(final CspPredicate.Decomposition left, final CspPredicate.Decomposition right) {
-        final Set<IntegerClause> clauses = new TreeSet<>();
+        final Set<IntegerClause> clauses = new LinkedHashSet<>();
         for (final IntegerClause l : left.getClauses()) {
             for (final IntegerClause r : right.getClauses()) {
                 final SortedSet<Literal> newBools = new TreeSet<>(l.boolLiterals);

@@ -7,7 +7,6 @@ import com.booleworks.logicng.csp.IntegerClause;
 import com.booleworks.logicng.csp.IntegerDomain;
 import com.booleworks.logicng.csp.LinearExpression;
 import com.booleworks.logicng.csp.literals.ArithmeticLiteral;
-import com.booleworks.logicng.csp.literals.CspLiteral;
 import com.booleworks.logicng.csp.literals.LinearLiteral;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.datastructures.EncodingResult;
@@ -212,7 +211,7 @@ public class OrderEncoding {
         return clause.size() - simpleClauseSize(clause) <= 1;
     }
 
-    static boolean isSimpleLiteral(final CspLiteral literal) {
+    static boolean isSimpleLiteral(final ArithmeticLiteral literal) {
         if (literal instanceof LinearLiteral) {
             final LinearLiteral l = (LinearLiteral) literal;
             return l.getLinearExpression().getCoef().size() <= 1 && l.getOperator() == LinearLiteral.Operator.LE;

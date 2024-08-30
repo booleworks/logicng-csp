@@ -66,6 +66,7 @@ package com.booleworks.logicng.csp.terms;
 
 import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.IntegerDomain;
+import com.booleworks.logicng.csp.IntegerHolder;
 import com.booleworks.logicng.csp.LinearExpression;
 
 import java.util.Collections;
@@ -75,7 +76,7 @@ import java.util.SortedSet;
 /**
  * An integer variable.
  */
-public final class IntegerVariable extends Term implements Comparable<IntegerVariable> {
+public final class IntegerVariable extends Term implements IntegerHolder {
     private final String name;
     private final IntegerDomain domain;
     private final boolean aux;
@@ -124,20 +125,21 @@ public final class IntegerVariable extends Term implements Comparable<IntegerVar
         return name;
     }
 
+    @Override
     public IntegerDomain getDomain() {
         return domain;
     }
 
-    @Override
-    public int compareTo(final IntegerVariable v) {
-        if (this == v) {
-            return 0;
-        }
-        if (v == null) {
-            return 1;
-        }
-        return name.compareTo(v.getName());
-    }
+    //@Override
+    //public int compareTo(final IntegerVariable v) {
+    //    if (this == v) {
+    //        return 0;
+    //    }
+    //    if (v == null) {
+    //        return 1;
+    //    }
+    //    return name.compareTo(v.getName());
+    //}
 
     @Override
     public boolean equals(final Object other) {

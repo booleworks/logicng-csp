@@ -6,8 +6,10 @@ import com.booleworks.logicng.datastructures.EncodingResult;
 import com.booleworks.logicng.formulas.FormulaFactory;
 import com.booleworks.logicng.formulas.Literal;
 import com.booleworks.logicng.formulas.Variable;
+import com.booleworks.logicng.util.Pair;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -23,16 +25,18 @@ public class CspEncodingContext {
     private final CspEncodingAlgorithm algorithm;
     private int booleanVariables = 0;
     private int integerVariables = 0;
+    private final int base;
+    private final Map<IntegerVariable, List<IntegerVariable>> digits;
+    private final Map<IntegerVariable, Pair<IntegerVariable, Integer>> offsets;
 
-    public CspEncodingContext() {
-        this(CspEncodingAlgorithm.Order);
-    }
-
-    public CspEncodingContext(final CspEncodingAlgorithm algorithm) {
+    private CspEncodingContext(final CspEncodingAlgorithm algorithm, final int base) {
         this.variableMap = new TreeMap<>();
         this.booleanAuxVariables = new TreeSet<>();
         this.integerAuxVariables = new TreeSet<>();
         this.algorithm = algorithm;
+        this.digits = new TreeMap<>();
+        this.offsets = new TreeMap<>();
+        this.base = base;
     }
 
     public CspEncodingContext(final CspEncodingContext context) {
@@ -42,6 +46,18 @@ public class CspEncodingContext {
         this.booleanVariables = context.booleanVariables;
         this.integerVariables = context.integerVariables;
         this.algorithm = context.algorithm;
+        this.digits = new TreeMap<>(context.digits);
+        this.offsets = new TreeMap<>(context.offsets);
+        this.base = context.base;
+    }
+
+    public static CspEncodingContext order() {
+        return new CspEncodingContext(CspEncodingAlgorithm.Order, -1);
+    }
+
+    public static CspEncodingContext compactOrder(final int base) {
+        return new CspEncodingContext(CspEncodingAlgorithm.CompactOrder, base);
+
     }
 
     public Variable intVariableInstance(final IntegerVariable group, final int index, final EncodingResult result) {
@@ -71,6 +87,18 @@ public class CspEncodingContext {
 
     public CspEncodingAlgorithm getAlgorithm() {
         return this.algorithm;
+    }
+
+    public int getBase() {
+        return base;
+    }
+
+    public Map<IntegerVariable, List<IntegerVariable>> getDigits() {
+        return digits;
+    }
+
+    public Map<IntegerVariable, Pair<IntegerVariable, Integer>> getOffsets() {
+        return offsets;
     }
 
     IntegerVariable newAuxIntVariable(final String prefix, final IntegerDomain domain) {

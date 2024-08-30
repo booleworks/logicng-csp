@@ -11,10 +11,8 @@ import com.booleworks.logicng.formulas.Literal;
 import com.booleworks.logicng.formulas.Variable;
 
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -38,9 +36,9 @@ public class OrderReduction {
     }
 
     private static Set<IntegerClause> split(final Set<IntegerClause> clauses, final CspEncodingContext context, final Csp.Builder csp) {
-        final TreeSet<IntegerClause> newClauses = new TreeSet<>();
+        final Set<IntegerClause> newClauses = new LinkedHashSet<>();
         for (final IntegerClause c : clauses) {
-            final SortedSet<ArithmeticLiteral> newArithLits = c.getArithmeticLiterals().stream().map(al -> {
+            final Set<ArithmeticLiteral> newArithLits = c.getArithmeticLiterals().stream().map(al -> {
                 if (al instanceof LinearLiteral) {
                     final LinearLiteral ll = (LinearLiteral) al;
                     final LinearExpression sum = simplifyLinearExpression(new LinearExpression.Builder(ll.getLinearExpression()), true, newClauses, context, csp).build();
@@ -48,16 +46,13 @@ public class OrderReduction {
                 } else {
                     return al;
                 }
-            }).collect(Collector.of(TreeSet::new, TreeSet::add, (left, right) -> {
-                left.addAll(right);
-                return left;
-            }));
+            }).collect(Collectors.toCollection(LinkedHashSet::new));
             newClauses.add(new IntegerClause(c.getBoolLiterals(), newArithLits));
         }
         return newClauses;
     }
 
-    private static Set<IntegerClause> simplify(final Set<IntegerClause> clauses, final CspEncodingContext context, final Csp.Builder csp, final FormulaFactory f) {
+    static Set<IntegerClause> simplify(final Set<IntegerClause> clauses, final CspEncodingContext context, final Csp.Builder csp, final FormulaFactory f) {
         return clauses.stream().flatMap(clause -> {
             if (clause.isValid()) {
                 return null;
@@ -75,7 +70,7 @@ public class OrderReduction {
                 return Stream.of(c);
             } else {
                 assert c.size() == OrderEncoding.simpleClauseSize(c) + 1;
-                final SortedSet<ArithmeticLiteral> simpleLiterals = new TreeSet<>();
+                final Set<ArithmeticLiteral> simpleLiterals = new LinkedHashSet<>();
                 ArithmeticLiteral nonSimpleLiteral = null;
                 for (final ArithmeticLiteral al : c.getArithmeticLiterals()) {
                     if (OrderEncoding.isSimpleLiteral(al)) {
@@ -95,20 +90,20 @@ public class OrderReduction {
     }
 
     private static Set<IntegerClause> reduceLinearLiteralToLinearLE(final LinearLiteral literal,
-                                                                    final SortedSet<ArithmeticLiteral> simpleLiterals, final SortedSet<Literal> boolLiterals,
+                                                                    final Set<ArithmeticLiteral> simpleLiterals, final Set<Literal> boolLiterals,
                                                                     final CspEncodingContext context, final Csp.Builder csp, final FormulaFactory f) {
         switch (literal.getOperator()) {
             case LE:
-                final TreeSet<ArithmeticLiteral> lits = new TreeSet<>(simpleLiterals);
+                final Set<ArithmeticLiteral> lits = new LinkedHashSet<>(simpleLiterals);
                 lits.add(literal);
                 return Collections.singleton(new IntegerClause(boolLiterals, lits));
             case EQ:
-                final TreeSet<ArithmeticLiteral> litsA = new TreeSet<>(simpleLiterals);
+                final Set<ArithmeticLiteral> litsA = new LinkedHashSet<>(simpleLiterals);
                 litsA.add(new LinearLiteral(literal.getLinearExpression(), LinearLiteral.Operator.LE));
                 final IntegerClause c1 = new IntegerClause(boolLiterals, litsA);
                 final LinearExpression.Builder ls = new LinearExpression.Builder(literal.getLinearExpression());
                 ls.multiply(-1);
-                final TreeSet<ArithmeticLiteral> litsB = new TreeSet<>(simpleLiterals);
+                final Set<ArithmeticLiteral> litsB = new LinkedHashSet<>(simpleLiterals);
                 litsB.add(new LinearLiteral(ls.build(), LinearLiteral.Operator.LE));
                 final IntegerClause c2 = new IntegerClause(boolLiterals, litsB);
                 return Set.of(c1, c2);
@@ -118,7 +113,7 @@ public class OrderReduction {
                 final LinearExpression.Builder ls2 = new LinearExpression.Builder(literal.getLinearExpression());
                 ls2.multiply(-1);
                 ls2.setB(ls2.getB() + 1);
-                final TreeSet<ArithmeticLiteral> litsNe = new TreeSet<>(simpleLiterals);
+                final Set<ArithmeticLiteral> litsNe = new LinkedHashSet<>(simpleLiterals);
                 litsNe.add(new LinearLiteral(ls1.build(), LinearLiteral.Operator.LE));
                 litsNe.add(new LinearLiteral(ls2.build(), LinearLiteral.Operator.LE));
                 final IntegerClause newClause = new IntegerClause(Collections.emptySortedSet(), litsNe);
@@ -129,11 +124,11 @@ public class OrderReduction {
         }
     }
 
-    private static Set<IntegerClause> simplifyClause(final IntegerClause clause, final SortedSet<Literal> initBoolLiterals, final CspEncodingContext context,
-                                                     final Csp.Builder csp, final FormulaFactory f) {
-        final TreeSet<IntegerClause> newClauses = new TreeSet<>();
-        final TreeSet<ArithmeticLiteral> newArithLiterals = new TreeSet<>();
-        final TreeSet<Literal> newBoolLiterals = new TreeSet<>(initBoolLiterals);
+    static Set<IntegerClause> simplifyClause(final IntegerClause clause, final Set<Literal> initBoolLiterals, final CspEncodingContext context,
+                                             final Csp.Builder csp, final FormulaFactory f) {
+        final Set<IntegerClause> newClauses = new LinkedHashSet<>();
+        final Set<ArithmeticLiteral> newArithLiterals = new LinkedHashSet<>();
+        final Set<Literal> newBoolLiterals = new LinkedHashSet<>(initBoolLiterals);
         for (final ArithmeticLiteral literal : clause.getArithmeticLiterals()) {
             if (OrderEncoding.isSimpleLiteral(literal)) {
                 newArithLiterals.add(literal);
@@ -143,8 +138,8 @@ public class OrderReduction {
                     csp.addInternalBooleanVariable(p);
                 }
                 final Literal notP = context.negate(p);
-                final TreeSet<Literal> boolLiterals = new TreeSet<>();
-                final TreeSet<ArithmeticLiteral> arithLiterals = new TreeSet<>();
+                final Set<Literal> boolLiterals = new LinkedHashSet<>();
+                final Set<ArithmeticLiteral> arithLiterals = new LinkedHashSet<>();
                 boolLiterals.add(notP);
                 arithLiterals.add(literal);
                 final IntegerClause newClause = new IntegerClause(boolLiterals, arithLiterals);
@@ -157,7 +152,7 @@ public class OrderReduction {
         return newClauses;
     }
 
-    private static LinearExpression.Builder simplifyLinearExpression(final LinearExpression.Builder exp, final boolean first, final SortedSet<IntegerClause> clauses,
+    private static LinearExpression.Builder simplifyLinearExpression(final LinearExpression.Builder exp, final boolean first, final Set<IntegerClause> clauses,
                                                                      final CspEncodingContext context, final Csp.Builder csp) {
         if (exp.size() <= 1 || !exp.isDomainLargerThan(MAX_LINEAR_EXPRESSION_SIZE)) {
             return exp;
@@ -189,7 +184,7 @@ public class OrderReduction {
         return result;
     }
 
-    private static LinearExpression.Builder[] split(final LinearExpression exp, final int m) {
+    static LinearExpression.Builder[] split(final LinearExpression exp, final int m) {
         final LinearExpression.Builder[] es = new LinearExpression.Builder[m];
         for (int i = 0; i < m; ++i) {
             es[i] = new LinearExpression.Builder(0);

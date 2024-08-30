@@ -1,12 +1,14 @@
 package com.booleworks.logicng.csp.terms;
 
 import com.booleworks.logicng.csp.CspFactory;
+import com.booleworks.logicng.csp.IntegerDomain;
+import com.booleworks.logicng.csp.IntegerHolder;
 import com.booleworks.logicng.csp.LinearExpression;
 
 import java.util.Collections;
 import java.util.SortedSet;
 
-public final class IntegerConstant extends Term implements Comparable<IntegerConstant> {
+public final class IntegerConstant extends Term implements IntegerHolder {
     private final int value;
 
     public IntegerConstant(final int value) {
@@ -32,6 +34,11 @@ public final class IntegerConstant extends Term implements Comparable<IntegerCon
     }
 
     @Override
+    public IntegerDomain getDomain() {
+        return IntegerDomain.of(value, value);
+    }
+
+    @Override
     public boolean equals(final Object other) {
         if (this == other) {
             return true;
@@ -52,7 +59,6 @@ public final class IntegerConstant extends Term implements Comparable<IntegerCon
         return String.valueOf(value);
     }
 
-    @Override
     public int compareTo(final IntegerConstant o) {
         return Integer.compare(value, o.value);
     }

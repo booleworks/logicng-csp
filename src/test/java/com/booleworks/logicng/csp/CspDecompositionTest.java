@@ -2,6 +2,8 @@ package com.booleworks.logicng.csp;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.booleworks.logicng.csp.encodings.CspEncodingContext;
+import com.booleworks.logicng.csp.functions.CspModelEnumeration;
 import com.booleworks.logicng.csp.literals.LinearLiteral;
 import com.booleworks.logicng.csp.predicates.CspPredicate;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
@@ -9,11 +11,12 @@ import com.booleworks.logicng.formulas.Formula;
 import com.booleworks.logicng.formulas.FormulaFactory;
 import com.booleworks.logicng.formulas.Variable;
 import com.booleworks.logicng.io.parsers.ParserException;
+import com.booleworks.logicng.solvers.SATSolver;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -83,4 +86,49 @@ public class CspDecompositionTest extends ParameterizedCspTest {
         return new LinearLiteral(new LinearExpression(coefs, 0), LinearLiteral.Operator.EQ);
     }
 
+    @ParameterizedTest
+    @MethodSource("cspFactories")
+    public void testX(final CspFactory cf) {
+        final FormulaFactory f = cf.formulaFactory();
+        final IntegerVariable a = cf.variable("a", -20, 10);
+        final IntegerVariable b = cf.variable("b", 10, 20);
+        final CspPredicate p = cf.ne(cf.max(b, cf.constant(15)), cf.add(a, b, cf.constant(2)));
+        final Csp csp = cf.buildCsp(p);
+        final CspEncodingContext context = new CspEncodingContext();
+        final var encoded = cf.encodeCsp(csp, context);
+        final SATSolver solver = SATSolver.newSolver(f);
+        solver.add(encoded);
+        final List<CspAssignment> models = CspModelEnumeration.enumerate(solver, csp, context, cf);
+
+        final SATSolver solver2 = SATSolver.newSolver(f);
+        final CspEncodingContext context2 = new CspEncodingContext();
+        final var v1 = cf.encodeVariable(a, context2);
+        final var v2 = cf.encodeVariable(b, context2);
+        final var p1 = cf.encodeConstraint(p, context2);
+        solver2.add(v1);
+        solver2.add(v2);
+        solver2.add(p1);
+        final List<CspAssignment> models2 = CspModelEnumeration.enumerate(solver2, List.of(a, b), Collections.emptyList(), context2, cf);
+
+        assertThat(models.size()).isEqualTo(models2.size());
+        assertThat(models).containsExactlyInAnyOrderElementsOf(models2);
+    }
+
+    @ParameterizedTest
+    @MethodSource("cspFactories")
+    public void testY(final CspFactory cf) {
+        final FormulaFactory f = cf.formulaFactory();
+        final IntegerVariable b = cf.variable("b", 0, 10);
+        final IntegerVariable m = cf.variable("m", 5, 10);
+        final Formula formula = f.or(cf.le(m, cf.constant(5)), cf.le(m, b), f.variable("A"));
+        final Csp csp = cf.buildCsp(formula);
+        final CspEncodingContext context = new CspEncodingContext();
+        final var encoded = cf.encodeCsp(csp, context);
+        encoded.forEach(System.out::println);
+        final SATSolver solver = SATSolver.newSolver(f);
+        solver.add(encoded);
+        for (final var model : CspModelEnumeration.enumerate(solver, csp, context, cf)) {
+            System.out.println(model);
+        }
+    }
 }
