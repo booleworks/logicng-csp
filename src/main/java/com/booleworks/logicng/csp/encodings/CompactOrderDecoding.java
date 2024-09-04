@@ -15,7 +15,7 @@ public class CompactOrderDecoding {
     public static CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables,
                                        final Collection<Variable> booleanVariables,
                                        final Map<IntegerVariable, IntegerVariable> reverseSubstitution,
-                                       final CspEncodingContext context,
+                                       final CompactOrderEncodingContext context,
                                        final CspFactory cf) {
         final CspAssignment result = new CspAssignment();
         for (final IntegerVariable v : integerVariables) {
@@ -35,23 +35,23 @@ public class CompactOrderDecoding {
         return result;
     }
 
-    static int decodeIntVar(final IntegerVariable var, final Assignment model, final CspEncodingContext context) {
+    static int decodeIntVar(final IntegerVariable var, final Assignment model, final CompactOrderEncodingContext context) {
         final List<IntegerVariable> digits = context.getDigits().get(var);
         if (digits == null || digits.size() <= 1) {
-            return OrderDecoding.decodeIntVar(var, model, context); //FIXME: Consider substitution
+            return OrderDecoding.decodeIntVar(var, model, context.getOrderContext()); //FIXME: Consider substitution
         } else {
             return decodeBigIntVar(var, model, context);
         }
     }
 
-    static int decodeBigIntVar(final IntegerVariable var, final Assignment model, final CspEncodingContext context) {
+    static int decodeBigIntVar(final IntegerVariable var, final Assignment model, final CompactOrderEncodingContext context) {
         final List<IntegerVariable> digits = context.getDigits().get(var);
         assert digits != null && digits.size() > 1;
         final int b = context.getBase();
         int dbase = 1;
         int value = context.getOffsets().get(var); //FIXME: Consider substitution
         for (final IntegerVariable digit : digits) {
-            final int d = OrderDecoding.decodeIntVar(digit, model, context); //FIXME: Consider substitution
+            final int d = OrderDecoding.decodeIntVar(digit, model, context.getOrderContext()); //FIXME: Consider substitution
             value += dbase * d;
             dbase *= b;
         }

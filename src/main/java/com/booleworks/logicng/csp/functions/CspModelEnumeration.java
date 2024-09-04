@@ -4,7 +4,6 @@ import com.booleworks.logicng.csp.Csp;
 import com.booleworks.logicng.csp.CspAssignment;
 import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.encodings.CspEncodingContext;
-import com.booleworks.logicng.csp.encodings.OrderDecoding;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.formulas.Variable;
 import com.booleworks.logicng.solvers.SATSolver;
@@ -24,9 +23,9 @@ public class CspModelEnumeration {
     public static List<CspAssignment> enumerate(final SATSolver solver, final Collection<IntegerVariable> integerVariables, final Collection<Variable> booleanVariables, final CspEncodingContext context, final CspFactory cf) {
         final Set<Variable> allVars = context.getSatVariables(integerVariables);
         allVars.addAll(booleanVariables);
-        final List<IntegerVariable> additionalVariables = integerVariables.stream().filter(v -> !context.getVariableMap().containsKey(v)).collect(Collectors.toList());
+        final List<IntegerVariable> additionalVariables = integerVariables.stream().filter(v -> !context.isEncoded(v)).collect(Collectors.toList());
         final List<CspAssignment> decodedModels = solver.enumerateAllModels(allVars).stream()
-                .map(m -> OrderDecoding.decode(m.assignment(), integerVariables, booleanVariables, context, cf))
+                .map(m -> cf.decode(m.assignment(), integerVariables, booleanVariables, context))
                 .collect(Collectors.toList());
         if (additionalVariables.isEmpty() || decodedModels.isEmpty()) {
             return decodedModels;

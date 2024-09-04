@@ -1,6 +1,7 @@
 package com.booleworks.logicng.csp.encodings;
 
 import com.booleworks.logicng.csp.Csp;
+import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.IntegerClause;
 import com.booleworks.logicng.csp.LinearExpression;
 import com.booleworks.logicng.csp.literals.ArithmeticLiteral;
@@ -21,27 +22,27 @@ public class OrderReduction {
     public static final int SPLITS = 2;
     public static final String AUX_PREFIX1 = "RS";
 
-    public static Csp reduce(final Csp csp, final CspEncodingContext context, final FormulaFactory f) {
+    public static Csp reduce(final Csp csp, final OrderEncodingContext context, final CspFactory cf) {
         final Csp.Builder newCsp = new Csp.Builder(csp);
 
-        Set<IntegerClause> clauses = split(newCsp.getClauses(), context, newCsp);
-        clauses = simplify(clauses, context, newCsp, f);
-        clauses = toLinearLe(clauses, context, newCsp, f);
+        Set<IntegerClause> clauses = split(newCsp.getClauses(), context, newCsp, cf);
+        clauses = simplify(clauses, context, newCsp, cf.formulaFactory());
+        clauses = toLinearLe(clauses, context, newCsp, cf.formulaFactory());
         newCsp.updateClauses(clauses);
         return newCsp.build();
     }
 
-    public static Set<IntegerClause> reduce(final Set<IntegerClause> clauses, final CspEncodingContext context, final FormulaFactory f) {
-        return toLinearLe(simplify(split(clauses, context, null), context, null, f), context, null, f);
+    public static Set<IntegerClause> reduce(final Set<IntegerClause> clauses, final OrderEncodingContext context, final CspFactory cf) {
+        return toLinearLe(simplify(split(clauses, context, null, cf), context, null, cf.formulaFactory()), context, null, cf.formulaFactory());
     }
 
-    private static Set<IntegerClause> split(final Set<IntegerClause> clauses, final CspEncodingContext context, final Csp.Builder csp) {
+    private static Set<IntegerClause> split(final Set<IntegerClause> clauses, final OrderEncodingContext context, final Csp.Builder csp, final CspFactory cf) {
         final Set<IntegerClause> newClauses = new LinkedHashSet<>();
         for (final IntegerClause c : clauses) {
             final Set<ArithmeticLiteral> newArithLits = c.getArithmeticLiterals().stream().map(al -> {
                 if (al instanceof LinearLiteral) {
                     final LinearLiteral ll = (LinearLiteral) al;
-                    final LinearExpression sum = simplifyLinearExpression(new LinearExpression.Builder(ll.getLinearExpression()), true, newClauses, context, csp).build();
+                    final LinearExpression sum = simplifyLinearExpression(new LinearExpression.Builder(ll.getLinearExpression()), true, newClauses, context, csp, cf).build();
                     return new LinearLiteral(sum, ll.getOperator());
                 } else {
                     return al;
@@ -52,7 +53,7 @@ public class OrderReduction {
         return newClauses;
     }
 
-    private static Set<IntegerClause> simplify(final Set<IntegerClause> clauses, final CspEncodingContext context, final Csp.Builder csp, final FormulaFactory f) {
+    private static Set<IntegerClause> simplify(final Set<IntegerClause> clauses, final OrderEncodingContext context, final Csp.Builder csp, final FormulaFactory f) {
         return clauses.stream().flatMap(clause -> {
             if (clause.isValid()) {
                 return null;
@@ -64,7 +65,7 @@ public class OrderReduction {
         }).collect(Collectors.toSet());
     }
 
-    private static Set<IntegerClause> toLinearLe(final Set<IntegerClause> clauses, final CspEncodingContext context, final Csp.Builder csp, final FormulaFactory f) {
+    private static Set<IntegerClause> toLinearLe(final Set<IntegerClause> clauses, final OrderEncodingContext context, final Csp.Builder csp, final FormulaFactory f) {
         return clauses.stream().flatMap(c -> {
             if (c.size() == OrderEncoding.simpleClauseSize(c)) {
                 return Stream.of(c);
@@ -91,7 +92,7 @@ public class OrderReduction {
 
     private static Set<IntegerClause> reduceLinearLiteralToLinearLE(final LinearLiteral literal,
                                                                     final Set<ArithmeticLiteral> simpleLiterals, final Set<Literal> boolLiterals,
-                                                                    final CspEncodingContext context, final Csp.Builder csp, final FormulaFactory f) {
+                                                                    final OrderEncodingContext context, final Csp.Builder csp, final FormulaFactory f) {
         switch (literal.getOperator()) {
             case LE:
                 final Set<ArithmeticLiteral> lits = new LinkedHashSet<>(simpleLiterals);
@@ -124,7 +125,7 @@ public class OrderReduction {
         }
     }
 
-    private static Set<IntegerClause> simplifyClause(final IntegerClause clause, final Set<Literal> initBoolLiterals, final CspEncodingContext context,
+    private static Set<IntegerClause> simplifyClause(final IntegerClause clause, final Set<Literal> initBoolLiterals, final OrderEncodingContext context,
                                                      final Csp.Builder csp, final FormulaFactory f) {
         final Set<IntegerClause> newClauses = new LinkedHashSet<>();
         final Set<ArithmeticLiteral> newArithLiterals = new LinkedHashSet<>();
@@ -137,7 +138,7 @@ public class OrderReduction {
                 if (csp != null) {
                     csp.addInternalBooleanVariable(p);
                 }
-                final Literal notP = context.negate(p);
+                final Literal notP = p.negate(f);
                 final Set<Literal> boolLiterals = new LinkedHashSet<>();
                 final Set<ArithmeticLiteral> arithLiterals = new LinkedHashSet<>();
                 boolLiterals.add(notP);
@@ -153,7 +154,7 @@ public class OrderReduction {
     }
 
     private static LinearExpression.Builder simplifyLinearExpression(final LinearExpression.Builder exp, final boolean first, final Set<IntegerClause> clauses,
-                                                                     final CspEncodingContext context, final Csp.Builder csp) {
+                                                                     final OrderEncodingContext context, final Csp.Builder csp, final CspFactory cf) {
         if (exp.size() <= 1 || !exp.isDomainLargerThan(MAX_LINEAR_EXPRESSION_SIZE)) {
             return exp;
         }
@@ -165,9 +166,9 @@ public class OrderReduction {
             if (factor > 1) {
                 eMut.divide(factor);
             }
-            LinearExpression.Builder simplified = simplifyLinearExpression(eMut, false, clauses, context, csp);
+            LinearExpression.Builder simplified = simplifyLinearExpression(eMut, false, clauses, context, csp, cf);
             if (simplified.size() > 1) {
-                final IntegerVariable v = context.newAuxIntVariable(AUX_PREFIX1, simplified.getDomain());
+                final IntegerVariable v = context.newAuxIntVariable(AUX_PREFIX1, simplified.getDomain(), cf);
                 if (csp != null) {
                     csp.addInternalIntegerVariable(v);
                 }

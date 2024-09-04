@@ -28,7 +28,7 @@ import java.util.Set;
 public class CompactCSPReduction {
     public static final String AUX_PREFIX = "CRC";
 
-    private static Set<IntegerClause> toCCSP(final Set<IntegerClause> clauses, final Set<IntegerVariable> variables, final Csp.Builder csp, final CspEncodingContext context,
+    private static Set<IntegerClause> toCCSP(final Set<IntegerClause> clauses, final Set<IntegerVariable> variables, final Csp.Builder csp, final CompactOrderEncodingContext context,
                                              final CspFactory cf) {
         final Set<IntegerClause> newClauses = new LinkedHashSet<>();
         for (final IntegerVariable v : variables) {
@@ -80,7 +80,7 @@ public class CompactCSPReduction {
         return newClauses;
     }
 
-    private static Set<IntegerClause> convertToCCSP(final RCSPLiteral literal, final Csp.Builder csp, final CspEncodingContext context, final CspFactory cf) {
+    private static Set<IntegerClause> convertToCCSP(final RCSPLiteral literal, final Csp.Builder csp, final CompactOrderEncodingContext context, final CspFactory cf) {
         if (literal instanceof EqMul) {
             return convertToCCSP((EqMul) literal, csp, context, cf);
         } else if (literal instanceof OpAdd) {
@@ -92,7 +92,7 @@ public class CompactCSPReduction {
         }
     }
 
-    private static Set<IntegerClause> convertToCCSP(final OpXY lit, final Csp.Builder csp, final CspEncodingContext context, final CspFactory cf) {
+    private static Set<IntegerClause> convertToCCSP(final OpXY lit, final Csp.Builder csp, final CompactOrderEncodingContext context, final CspFactory cf) {
         final Set<IntegerClause> ret = new LinkedHashSet<>();
         final int b = context.getBase();
         final IntegerHolder x = lit.getX();
@@ -179,7 +179,7 @@ public class CompactCSPReduction {
         return ret;
     }
 
-    private static Set<IntegerClause> convertToCCSP(final OpAdd lit, final Csp.Builder csp, final CspEncodingContext context, final CspFactory cf) {
+    private static Set<IntegerClause> convertToCCSP(final OpAdd lit, final Csp.Builder csp, final CompactOrderEncodingContext context, final CspFactory cf) {
         final Set<IntegerClause> ret = new LinkedHashSet<>();
         final int b = context.getBase();
         final IntegerHolder x = lit.getX();
@@ -360,7 +360,7 @@ public class CompactCSPReduction {
         return ret;
     }
 
-    private static Set<IntegerClause> convertToCCSP(final EqMul lit, final Csp.Builder csp, final CspEncodingContext context, final CspFactory cf) {
+    private static Set<IntegerClause> convertToCCSP(final EqMul lit, final Csp.Builder csp, final CompactOrderEncodingContext context, final CspFactory cf) {
         final int b = context.getBase();
         final IntegerHolder x = lit.getX();
         final IntegerVariable y = lit.getY();
@@ -510,7 +510,8 @@ public class CompactCSPReduction {
     /**
      * u = b*s+t
      */
-    private static Set<IntegerClause> shiftAddToCCSP(final IntegerHolder u, final IntegerHolder s, final IntegerHolder t, final Csp.Builder csp, final CspEncodingContext context, final CspFactory cf) {
+    private static Set<IntegerClause> shiftAddToCCSP(final IntegerHolder u, final IntegerHolder s, final IntegerHolder t, final Csp.Builder csp, final CompactOrderEncodingContext context,
+                                                     final CspFactory cf) {
         final int b = context.getBase();
         final Map<IntegerConstant, List<Integer>> constDigits = calculateConstDigits(List.of(u, s, t), b);
         final int m = Math.max(nDigits(s, context, constDigits), nDigits(t, context, constDigits));
@@ -554,7 +555,7 @@ public class CompactCSPReduction {
         return ret;
     }
 
-    private static void splitToDigits(final IntegerVariable v, final Csp.Builder csp, final CspEncodingContext context, final CspFactory cf) {
+    private static void splitToDigits(final IntegerVariable v, final Csp.Builder csp, final CompactOrderEncodingContext context, final CspFactory cf) {
         int ub = v.getDomain().ub();
         final int b = context.getBase();
         final int m = (int) Math.ceil(Math.log(ub + 1) / Math.log(b));
@@ -589,7 +590,7 @@ public class CompactCSPReduction {
         return digitsMap;
     }
 
-    private static int nDigits(final IntegerHolder v, final CspEncodingContext context, final Map<IntegerConstant, List<Integer>> constDigits) {
+    private static int nDigits(final IntegerHolder v, final CompactOrderEncodingContext context, final Map<IntegerConstant, List<Integer>> constDigits) {
         if (v instanceof IntegerConstant) {
             return constDigits.get((IntegerConstant) v).size();
         } else {
@@ -608,7 +609,7 @@ public class CompactCSPReduction {
         return digits;
     }
 
-    private static LinearExpression nth(final IntegerHolder v, final int n, final CspEncodingContext context, final Map<IntegerConstant, List<Integer>> constDigits) {
+    private static LinearExpression nth(final IntegerHolder v, final int n, final CompactOrderEncodingContext context, final Map<IntegerConstant, List<Integer>> constDigits) {
         if (v instanceof IntegerConstant) {
             assert constDigits.get((IntegerConstant) v) != null;
             return new LinearExpression(nthValue((IntegerConstant) v, n, constDigits));

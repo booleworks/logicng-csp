@@ -18,14 +18,14 @@ import java.util.Iterator;
 import java.util.Set;
 
 public class OrderEncoding {
-    public static void encode(final Csp csp, final CspEncodingContext context, final EncodingResult result, final CspFactory cf) {
+    public static void encode(final Csp csp, final OrderEncodingContext context, final EncodingResult result, final CspFactory cf) {
         for (final IntegerVariable v : csp.getInternalIntegerVariables()) {
             encodeVariable(v, context, result, cf);
         }
         encodeClauses(csp.getClauses(), context, result, cf);
     }
 
-    public static void encodeVariable(final IntegerVariable v, final CspEncodingContext context, final EncodingResult result, final CspFactory cf) {
+    public static void encodeVariable(final IntegerVariable v, final OrderEncodingContext context, final EncodingResult result, final CspFactory cf) {
         final FormulaFactory f = cf.formulaFactory();
         final IntegerDomain domain = v.getDomain();
         final Formula[] clause = new Formula[2];
@@ -40,7 +40,7 @@ public class OrderEncoding {
         }
     }
 
-    public static void encodeClauses(final Set<IntegerClause> clauses, final CspEncodingContext context, final EncodingResult result, final CspFactory cf) {
+    public static void encodeClauses(final Set<IntegerClause> clauses, final OrderEncodingContext context, final EncodingResult result, final CspFactory cf) {
         for (final IntegerClause c : clauses) {
             if (!c.isValid()) {
                 encodeClause(c, context, result, cf);
@@ -48,7 +48,7 @@ public class OrderEncoding {
         }
     }
 
-    static void encodeClause(final IntegerClause cl, final CspEncodingContext context, final EncodingResult result, final CspFactory cf) {
+    static void encodeClause(final IntegerClause cl, final OrderEncodingContext context, final EncodingResult result, final CspFactory cf) {
         if (!isSimpleClause(cl)) {
             throw new IllegalArgumentException("Cannot encode non-simple clause " + cl);
         }
@@ -77,7 +77,7 @@ public class OrderEncoding {
         }
     }
 
-    static void encodeLitClause(final LinearLiteral lit, Formula[] clause, final CspEncodingContext context, final EncodingResult result, final CspFactory cf) {
+    static void encodeLitClause(final LinearLiteral lit, Formula[] clause, final OrderEncodingContext context, final EncodingResult result, final CspFactory cf) {
         if (lit.getOperator() == LinearLiteral.Operator.EQ || lit.getOperator() == LinearLiteral.Operator.NE) {
             throw new RuntimeException("Invalid operator for order encoding " + lit);
         }
@@ -95,7 +95,7 @@ public class OrderEncoding {
     }
 
     static void encodeLinearExpression(final LinearExpression exp, final IntegerVariable[] vs, final int i, final int s, final Formula[] clause,
-                                       final CspEncodingContext context, final EncodingResult result, final CspFactory cf) {
+                                       final OrderEncodingContext context, final EncodingResult result, final CspFactory cf) {
         if (i >= vs.length - 1) {
             final int a = exp.getA(vs[i]);
             clause[i] = getCodeLE(vs[i], a, -s, context, result, cf.formulaFactory());
@@ -144,7 +144,7 @@ public class OrderEncoding {
         }
     }
 
-    static Formula getCodeLE(final IntegerVariable left, final int right, final CspEncodingContext context, final EncodingResult result, final FormulaFactory f) {
+    static Formula getCodeLE(final IntegerVariable left, final int right, final OrderEncodingContext context, final EncodingResult result, final FormulaFactory f) {
         final IntegerDomain domain = left.getDomain();
         if (right < domain.lb()) {
             return f.falsum();
@@ -155,7 +155,7 @@ public class OrderEncoding {
         return context.intVariableInstance(left, index, result);
     }
 
-    static Formula getCodeLE(final IntegerVariable left, final int a, final int b, final CspEncodingContext context, final EncodingResult result, final FormulaFactory f) {
+    static Formula getCodeLE(final IntegerVariable left, final int a, final int b, final OrderEncodingContext context, final EncodingResult result, final FormulaFactory f) {
         if (a >= 0) {
             final int c;
             if (b >= 0) {
@@ -175,7 +175,7 @@ public class OrderEncoding {
         }
     }
 
-    static Formula getCode(final LinearLiteral lit, final CspEncodingContext context, final EncodingResult result, final FormulaFactory f) {
+    static Formula getCode(final LinearLiteral lit, final OrderEncodingContext context, final EncodingResult result, final FormulaFactory f) {
         if (!isSimpleLiteral(lit)) {
             throw new IllegalArgumentException("Encountered non-simple literal in order encoding " + lit.toString());
         }

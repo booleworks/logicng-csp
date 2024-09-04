@@ -3,6 +3,7 @@ package com.booleworks.logicng.csp;
 import com.booleworks.logicng.csp.encodings.CspEncodingContext;
 import com.booleworks.logicng.csp.encodings.OrderDecoding;
 import com.booleworks.logicng.csp.encodings.OrderEncoding;
+import com.booleworks.logicng.csp.encodings.OrderEncodingContext;
 import com.booleworks.logicng.csp.encodings.OrderReduction;
 import com.booleworks.logicng.csp.functions.IntegerVariablesFunction;
 import com.booleworks.logicng.csp.predicates.AllDifferentPredicate;
@@ -499,8 +500,8 @@ public class CspFactory {
         final EncodingResult result = EncodingResult.resultForFormula(formulaFactory);
         switch (context.getAlgorithm()) {
             case Order:
-                newCsp = OrderReduction.reduce(csp, context, formulaFactory);
-                OrderEncoding.encode(newCsp, context, result, this);
+                newCsp = OrderReduction.reduce(csp, (OrderEncodingContext) context, this);
+                OrderEncoding.encode(newCsp, (OrderEncodingContext) context, result, this);
                 return result.result();
             default:
                 throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
@@ -511,7 +512,7 @@ public class CspFactory {
         final EncodingResult result = EncodingResult.resultForFormula(formulaFactory);
         switch (context.getAlgorithm()) {
             case Order:
-                OrderEncoding.encodeVariable(variable, context, result, this);
+                OrderEncoding.encodeVariable(variable, (OrderEncodingContext) context, result, this);
                 return result.result();
             default:
                 throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
@@ -524,10 +525,10 @@ public class CspFactory {
         switch (context.getAlgorithm()) {
             case Order:
                 for (final IntegerVariable auxVar : decomp.getAuxiliaryIntegerVariables()) {
-                    OrderEncoding.encodeVariable(auxVar, context, result, this);
+                    OrderEncoding.encodeVariable(auxVar, (OrderEncodingContext) context, result, this);
                 }
-                final Set<IntegerClause> newClauses = OrderReduction.reduce(decomp.getClauses(), context, formulaFactory);
-                OrderEncoding.encodeClauses(newClauses, context, result, this);
+                final Set<IntegerClause> newClauses = OrderReduction.reduce(decomp.getClauses(), (OrderEncodingContext) context, this);
+                OrderEncoding.encodeClauses(newClauses, (OrderEncodingContext) context, result, this);
                 return result.result();
             default:
                 throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
@@ -537,7 +538,7 @@ public class CspFactory {
     public CspAssignment decode(final Assignment model, final Csp csp, final CspEncodingContext context) {
         switch (context.getAlgorithm()) {
             case Order:
-                return OrderDecoding.decode(model, csp, context, this);
+                return OrderDecoding.decode(model, csp, (OrderEncodingContext) context, this);
             default:
                 throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
         }
@@ -547,7 +548,7 @@ public class CspFactory {
                                 final Collection<Variable> booleanVariables, final CspEncodingContext context) {
         switch (context.getAlgorithm()) {
             case Order:
-                return OrderDecoding.decode(model, integerVariables, booleanVariables, context, this);
+                return OrderDecoding.decode(model, integerVariables, booleanVariables, (OrderEncodingContext) context, this);
             default:
                 throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
         }
@@ -556,7 +557,7 @@ public class CspFactory {
     public CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables, final CspEncodingContext context) {
         switch (context.getAlgorithm()) {
             case Order:
-                return OrderDecoding.decode(model, integerVariables, context, this);
+                return OrderDecoding.decode(model, integerVariables, (OrderEncodingContext) context, this);
             default:
                 throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
         }
