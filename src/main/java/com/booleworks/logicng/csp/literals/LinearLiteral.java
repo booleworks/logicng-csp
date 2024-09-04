@@ -70,7 +70,7 @@ public class LinearLiteral implements ArithmeticLiteral {
     }
 
     @Override
-    public ArithmeticLiteral substitute(final Map<IntegerVariable, IntegerVariable> assignment) {
+    public LinearLiteral substitute(final Map<IntegerVariable, IntegerVariable> assignment) {
         final SortedMap<IntegerVariable, Integer> newCoefs = new TreeMap<>();
         int replaced = 0;
         for (final IntegerVariable key : sum.getCoef().keySet()) {

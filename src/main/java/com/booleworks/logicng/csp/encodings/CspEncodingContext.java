@@ -6,9 +6,9 @@ import com.booleworks.logicng.datastructures.EncodingResult;
 import com.booleworks.logicng.formulas.FormulaFactory;
 import com.booleworks.logicng.formulas.Literal;
 import com.booleworks.logicng.formulas.Variable;
-import com.booleworks.logicng.util.Pair;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -27,7 +27,9 @@ public class CspEncodingContext {
     private int integerVariables = 0;
     private final int base;
     private final Map<IntegerVariable, List<IntegerVariable>> digits;
-    private final Map<IntegerVariable, Pair<IntegerVariable, Integer>> offsets;
+    private final Map<IntegerVariable, Integer> offsets;
+    private final Map<IntegerVariable, IntegerVariable> reverseSubstitutions;
+    private final Map<IntegerVariable, IntegerVariable> substitutions;
 
     private CspEncodingContext(final CspEncodingAlgorithm algorithm, final int base) {
         this.variableMap = new TreeMap<>();
@@ -36,6 +38,8 @@ public class CspEncodingContext {
         this.algorithm = algorithm;
         this.digits = new TreeMap<>();
         this.offsets = new TreeMap<>();
+        this.substitutions = new TreeMap<>();
+        this.reverseSubstitutions = new TreeMap<>();
         this.base = base;
     }
 
@@ -48,6 +52,8 @@ public class CspEncodingContext {
         this.algorithm = context.algorithm;
         this.digits = new TreeMap<>(context.digits);
         this.offsets = new TreeMap<>(context.offsets);
+        this.substitutions = new TreeMap<>(context.substitutions);
+        this.reverseSubstitutions = new TreeMap<>(context.reverseSubstitutions);
         this.base = context.base;
     }
 
@@ -97,8 +103,53 @@ public class CspEncodingContext {
         return digits;
     }
 
-    public Map<IntegerVariable, Pair<IntegerVariable, Integer>> getOffsets() {
+    public Map<IntegerVariable, Integer> getOffsets() {
         return offsets;
+    }
+
+    public void addSubstitution(IntegerVariable original, IntegerVariable substitute) {
+        substitutions.put(original, substitute);
+        reverseSubstitutions.put(substitute, original);
+    }
+
+    public IntegerVariable getSubstitution(IntegerVariable original) {
+        return substitutions.get(original);
+    }
+
+    public IntegerVariable getSubstitutionOrSelf(IntegerVariable original) {
+        return substitutions.getOrDefault(original, original);
+    }
+
+    public IntegerVariable getSubstitutionAllOrSelf(IntegerVariable original) {
+        IntegerVariable current = original;
+        while (substitutions.containsKey(current)) {
+            current = substitutions.get(current);
+        }
+        return current;
+    }
+
+    public Map<IntegerVariable, IntegerVariable> getSubstitutions() {
+        return Collections.unmodifiableMap(substitutions);
+    }
+
+    public IntegerVariable reverseSubstitution(IntegerVariable substitute) {
+        return reverseSubstitutions.get(substitute);
+    }
+
+    public IntegerVariable reverseSubstitutionOrSelf(IntegerVariable substitute) {
+        return reverseSubstitutions.getOrDefault(substitute, substitute);
+    }
+
+    public IntegerVariable reverseSubstitutionAllOrSelf(IntegerVariable substitute) {
+        IntegerVariable current = substitute;
+        while (reverseSubstitutions.containsKey(current)) {
+            current = reverseSubstitutions.get(current);
+        }
+        return current;
+    }
+
+    public Map<IntegerVariable, IntegerVariable> getReverseSubstitutions() {
+        return Collections.unmodifiableMap(reverseSubstitutions);
     }
 
     IntegerVariable newAuxIntVariable(final String prefix, final IntegerDomain domain) {

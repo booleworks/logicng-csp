@@ -52,7 +52,7 @@ public class OrderReduction {
         return newClauses;
     }
 
-    static Set<IntegerClause> simplify(final Set<IntegerClause> clauses, final CspEncodingContext context, final Csp.Builder csp, final FormulaFactory f) {
+    private static Set<IntegerClause> simplify(final Set<IntegerClause> clauses, final CspEncodingContext context, final Csp.Builder csp, final FormulaFactory f) {
         return clauses.stream().flatMap(clause -> {
             if (clause.isValid()) {
                 return null;
@@ -124,8 +124,8 @@ public class OrderReduction {
         }
     }
 
-    static Set<IntegerClause> simplifyClause(final IntegerClause clause, final Set<Literal> initBoolLiterals, final CspEncodingContext context,
-                                             final Csp.Builder csp, final FormulaFactory f) {
+    private static Set<IntegerClause> simplifyClause(final IntegerClause clause, final Set<Literal> initBoolLiterals, final CspEncodingContext context,
+                                                     final Csp.Builder csp, final FormulaFactory f) {
         final Set<IntegerClause> newClauses = new LinkedHashSet<>();
         final Set<ArithmeticLiteral> newArithLiterals = new LinkedHashSet<>();
         final Set<Literal> newBoolLiterals = new LinkedHashSet<>(initBoolLiterals);

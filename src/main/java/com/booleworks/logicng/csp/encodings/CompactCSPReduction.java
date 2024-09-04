@@ -14,12 +14,10 @@ import com.booleworks.logicng.csp.literals.OpXY;
 import com.booleworks.logicng.csp.literals.RCSPLiteral;
 import com.booleworks.logicng.csp.terms.IntegerConstant;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
-import com.booleworks.logicng.formulas.Literal;
 import com.booleworks.logicng.formulas.Variable;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -49,14 +47,14 @@ public class CompactCSPReduction {
             if (clause.getArithmeticLiterals().isEmpty()) {
                 newClauses.add(clause);
             } else {
-                assert clause.size() - OrderEncoding.simpleClauseSize(clause) <= 1;
+                assert clause.size() - CompactOrderEncoding.simpleClauseSize(clause, context) <= 1;
 
                 final Set<ArithmeticLiteral> simpleLiterals = new LinkedHashSet<>();
                 final Set<IntegerClause> ccspClauses = new LinkedHashSet<>();
                 for (final ArithmeticLiteral al : clause.getArithmeticLiterals()) {
                     final RCSPLiteral ll = (RCSPLiteral) al;
                     final Set<IntegerClause> ccsp = convertToCCSP(ll, csp, context, cf);
-                    if (isSimpleLiteral(ll, context)) {
+                    if (CompactOrderEncoding.isSimpleLiteral(ll, context)) {
                         assert ccsp.size() == 1;
                         final IntegerClause c = ccsp.iterator().next();
                         assert c.getBoolLiterals().isEmpty();
@@ -106,13 +104,12 @@ public class CompactCSPReduction {
             case LE:
                 if (x instanceof IntegerConstant || y instanceof IntegerConstant) {
                     for (int i = 0; i < m; ++i) {
-                        final Set<ArithmeticLiteral> arithLiterals = new LinkedHashSet<>();
-                        final Set<Literal> literals = new LinkedHashSet<>();
-                        arithLiterals.add(LLExpressions.le(nth(x, i, context, constDigits), nth(y, i, context, constDigits)));
+                        final IntegerClause.Builder newClause = new IntegerClause.Builder();
+                        newClause.addArithmeticLiteral(LLExpressions.le(nth(x, i, context, constDigits), nth(y, i, context, constDigits)));
                         for (int j = i + 1; j < m; ++j) {
-                            arithLiterals.add(LLExpressions.le(nth(x, j, context, constDigits), LLExpressions.sub(nth(x, j, context, constDigits), 1)));
+                            newClause.addArithmeticLiteral(LLExpressions.le(nth(x, j, context, constDigits), LLExpressions.sub(nth(x, j, context, constDigits), 1)));
                         }
-                        ret.add(new IntegerClause(literals, arithLiterals));
+                        ret.add(newClause.build());
                     }
                 } else {
                     final Variable[] s = new Variable[m];
@@ -122,31 +119,39 @@ public class CompactCSPReduction {
                     }
                     // -s(i+1) or x(i) <= y(i) (when 0 <= i < m - 1)
                     for (int i = 0; i < m - 1; ++i) {
-                        final Set<ArithmeticLiteral> arithLiterals = new LinkedHashSet<>();
-                        final Set<Literal> literals = new LinkedHashSet<>();
-                        literals.add(s[i + 1].negate(cf.formulaFactory()));
-                        arithLiterals.add(LLExpressions.le(nth(x, i, context, constDigits), nth(y, i, context, constDigits)));
-                        ret.add(new IntegerClause(literals, arithLiterals));
+                        ret.add(new IntegerClause(
+                                s[i + 1].negate(cf.formulaFactory()),
+                                LLExpressions.le(nth(x, i, context, constDigits), nth(y, i, context, constDigits))
+                        ));
                     }
                     // x(i) <= y(i) (when i == m - 1)
-                    ret.add(new IntegerClause(LLExpressions.le(nth(x, m - 1, context, constDigits), nth(y, m - 1, context, constDigits))));
+                    ret.add(new IntegerClause(LLExpressions.le(
+                            nth(x, m - 1, context, constDigits),
+                            nth(y, m - 1, context, constDigits)
+                    )));
 
                     // -s(i+1) or (x(i) <= y(i) - 1) or s(i) (when 1 <= i < m - 1)
                     for (int i = 1; i < m - 1; ++i) {
-                        final Set<ArithmeticLiteral> arithmeticLiterals = new LinkedHashSet<>();
-                        final Set<Literal> literals = new LinkedHashSet<>();
-                        literals.add(s[i + 1].negate(cf.formulaFactory()));
-                        arithmeticLiterals.add(LLExpressions.le(nth(x, i, context, constDigits), LLExpressions.sub(nth(y, i, context, constDigits), 1)));
-                        literals.add(s[i].negate(cf.formulaFactory()));
-                        ret.add(new IntegerClause(literals, arithmeticLiterals));
+                        final IntegerClause.Builder newClause = new IntegerClause.Builder();
+                        newClause.addBooleanLiterals(
+                                s[i + 1].negate(cf.formulaFactory()),
+                                s[i]
+                        );
+                        newClause.addArithmeticLiteral(LLExpressions.le(
+                                nth(x, i, context, constDigits),
+                                LLExpressions.sub(nth(y, i, context, constDigits), 1))
+                        );
+                        ret.add(newClause.build());
                     }
                     if (m > 1) {
                         // (x(i) <= y(i) - 1) or s(i) (when i == m - 1)
-                        final Set<ArithmeticLiteral> arithmeticLiterals = new LinkedHashSet<>();
-                        final Set<Literal> literals = new LinkedHashSet<>();
-                        arithmeticLiterals.add(LLExpressions.le(nth(x, m - 1, context, constDigits), LLExpressions.sub(nth(y, m - 1, context, constDigits), 1)));
-                        literals.add(s[m - 1].negate(cf.formulaFactory()));
-                        ret.add(new IntegerClause(literals, arithmeticLiterals));
+                        ret.add(new IntegerClause(
+                                s[m - 1],
+                                LLExpressions.le(
+                                        nth(x, m - 1, context, constDigits),
+                                        LLExpressions.sub(nth(y, m - 1, context, constDigits), 1)
+                                )
+                        ));
                     }
                 }
                 break;
@@ -157,12 +162,18 @@ public class CompactCSPReduction {
                 }
                 break;
             case NE:
-                final Set<ArithmeticLiteral> arithmeticLiterals = new LinkedHashSet<>();
+                final IntegerClause.Builder newClause = new IntegerClause.Builder();
                 for (int i = 0; i < m; ++i) {
-                    arithmeticLiterals.add(LLExpressions.le(nth(x, i, context, constDigits), LLExpressions.sub(nth(y, i, context, constDigits), 1)));
-                    arithmeticLiterals.add(LLExpressions.ge(LLExpressions.sub(nth(x, i, context, constDigits), 1), nth(y, i, context, constDigits)));
+                    newClause.addArithmeticLiterals(LLExpressions.le(
+                            nth(x, i, context, constDigits),
+                            LLExpressions.sub(nth(y, i, context, constDigits), 1)
+                    ));
+                    newClause.addArithmeticLiterals(LLExpressions.ge(
+                            LLExpressions.sub(nth(x, i, context, constDigits), 1),
+                            nth(y, i, context, constDigits))
+                    );
                 }
-                ret.addAll(OrderReduction.simplifyClause(new IntegerClause(Collections.emptySet(), arithmeticLiterals), Collections.emptySet(), context, csp, cf.formulaFactory()));
+                ret.addAll(CompactOrderReduction.simplifyClause(newClause.build(), context, csp, cf.formulaFactory()));
                 break;
         }
         return ret;
@@ -211,11 +222,10 @@ public class CompactCSPReduction {
 
                 // -s(i+1) or (z(i) + B*c(i+1) <= x(i) + y(i) + c(i)) (when 0 <= i < m - 1)
                 for (int i = 0; i < m - 1; ++i) {
-                    final Set<Literal> boolLiterals = new LinkedHashSet<>();
-                    final Set<ArithmeticLiteral> arithLiterals = new LinkedHashSet<>();
-                    boolLiterals.add(s[i + 1].negate(cf.formulaFactory()));
-                    arithLiterals.add(LLExpressions.le(lhs[i], rhs[i]));
-                    ret.add(new IntegerClause(boolLiterals, arithLiterals));
+                    ret.add(new IntegerClause(
+                            s[i + 1].negate(cf.formulaFactory()),
+                            LLExpressions.le(lhs[i], rhs[i])
+                    ));
                 }
                 //z(i) <= x(i) + y(i) + c(i) (when i == m - 1)
                 ret.add(new IntegerClause(LLExpressions.le(lhs[m - 1], rhs[m - 1])));
@@ -223,33 +233,36 @@ public class CompactCSPReduction {
                 // -s(i+1) or (z(i) + B * c(i + 1) <= x(i) + y(i) + c(i) - 1) or s(i)
                 // (when 1 <= i < m - 1)
                 for (int i = 1; i < m - 1; ++i) {
-                    final Set<Literal> boolLiterals = new LinkedHashSet<>();
-                    final Set<ArithmeticLiteral> arithLiterals = new LinkedHashSet<>();
-                    boolLiterals.add(s[i].negate(cf.formulaFactory()));
-                    arithLiterals.add(LLExpressions.le(lhs[i], LLExpressions.sub(rhs[i], 1)));
-                    ret.add(new IntegerClause(boolLiterals, arithLiterals));
+                    final IntegerClause.Builder newClause = new IntegerClause.Builder();
+                    newClause.addBooleanLiterals(
+                            s[i + 1].negate(cf.formulaFactory()),
+                            s[i]
+                    );
+                    newClause.addArithmeticLiteral(LLExpressions.le(lhs[i], LLExpressions.sub(rhs[i], 1)));
+                    ret.add(newClause.build());
                 }
                 // (z(i) <= x(i) + y(i) + c(i) - 1) or s(i) (when i == m - 1)
                 if (m > 1) {
-                    final Set<Literal> boolLiterals = new LinkedHashSet<>();
-                    final Set<ArithmeticLiteral> arithLiterals = new LinkedHashSet<>();
-                    boolLiterals.add(s[m - 1].negate(cf.formulaFactory()));
-                    arithLiterals.add(LLExpressions.le(lhs[m - 1], LLExpressions.sub(rhs[m - 1], 1)));
-                    ret.add(new IntegerClause(boolLiterals, arithLiterals));
+                    ret.add(new IntegerClause(
+                            s[m - 1],
+                            LLExpressions.le(lhs[m - 1], LLExpressions.sub(rhs[m - 1], 1))
+                    ));
                 }
 
                 for (int i = 0; i < m - 1; ++i) {
                     //c(i+1) <= 0 or x(i) + y(i) + c(i) >= B
-                    final Set<ArithmeticLiteral> ltor = new LinkedHashSet<>();
-                    ltor.add(LLExpressions.le(lle(c[i + 1]), 0));
-                    ltor.add(LLExpressions.ge(rhs[i], b));
+                    final IntegerClause ltor = new IntegerClause(
+                            LLExpressions.le(lle(c[i + 1]), 0),
+                            LLExpressions.ge(rhs[i], b)
+                    );
 
-                    final Set<ArithmeticLiteral> rtol = new LinkedHashSet<>();
-                    rtol.add(LLExpressions.ge(lle(c[i + 1]), 1));
-                    rtol.add(LLExpressions.le(rhs[i], b - 1));
+                    final IntegerClause rtol = new IntegerClause(
+                            LLExpressions.ge(lle(c[i + 1]), 1),
+                            LLExpressions.le(rhs[i], b - 1)
+                    );
 
-                    ret.add(new IntegerClause(Collections.emptySet(), ltor));
-                    ret.add(new IntegerClause(Collections.emptySet(), rtol));
+                    ret.add(ltor);
+                    ret.add(rtol);
                 }
                 break;
             }
@@ -262,11 +275,10 @@ public class CompactCSPReduction {
 
                 // -s(i+1) or (z(i) + B*c(i+1) <= x(i) + y(i) + c(i)) (when 0 <= i < m - 1)
                 for (int i = 0; i < m - 1; i++) {
-                    final Set<ArithmeticLiteral> arithLiterals = new LinkedHashSet<>();
-                    final Set<Literal> boolLiterals = new LinkedHashSet<>();
-                    arithLiterals.add(LLExpressions.le(lhs[i], rhs[i]));
-                    boolLiterals.add(s[i + 1].negate(cf.formulaFactory()));
-                    ret.add(new IntegerClause(boolLiterals, arithLiterals));
+                    ret.add(new IntegerClause(
+                            s[i + 1].negate(cf.formulaFactory()),
+                            LLExpressions.le(lhs[i], rhs[i])
+                    ));
                 }
                 // z(i) <= x(i) + y(i) + c(i) (when i == m - 1)
                 ret.add(new IntegerClause(LLExpressions.le(lhs[m - 1], rhs[m - 1])));
@@ -274,36 +286,38 @@ public class CompactCSPReduction {
                 // -s(i+1) or (z(i) + B * c(i+1) <= x(i) + y(i) + c(i) - 1) or s(i)
                 // (when 1 <= i < m - 1)
                 for (int i = 1; i < m - 1; ++i) {
-                    final Set<ArithmeticLiteral> arithLiterals = new LinkedHashSet<>();
-                    final Set<Literal> booLiterals = new LinkedHashSet<>();
-                    booLiterals.add(s[i + 1].negate(cf.formulaFactory()));
-                    booLiterals.add(s[i]);
-                    arithLiterals.add(LLExpressions.le(lhs[i], LLExpressions.sub(rhs[i], 1)));
-                    ret.add(new IntegerClause(booLiterals, arithLiterals));
+                    final IntegerClause.Builder newClause = new IntegerClause.Builder();
+                    newClause.addBooleanLiterals(
+                            s[i + 1].negate(cf.formulaFactory()),
+                            s[i]
+                    );
+                    newClause.addArithmeticLiteral(LLExpressions.le(lhs[i], LLExpressions.sub(rhs[i], 1)));
+                    ret.add(newClause.build());
                 }
                 // (z(i) <= x(i) + y(i) + c(i) - 1) or s(i) (when i == m - 1)
                 if (m > 1) {
-                    final Set<ArithmeticLiteral> arithLiterals = new LinkedHashSet<>();
-                    final Set<Literal> boolLiterals = new LinkedHashSet<>();
-                    boolLiterals.add(s[m - 1]);
-                    arithLiterals.add(LLExpressions.le(lhs[m - 1], LLExpressions.sub(rhs[m - 1], 1)));
-                    ret.add(new IntegerClause(boolLiterals, arithLiterals));
+                    ret.add(new IntegerClause(
+                            s[m - 1],
+                            LLExpressions.le(LLExpressions.sub(lhs[m - 1], 1), rhs[m - 1])
+                    ));
                 }
 
                 for (int i = 0; i < m - 1; i++) {
                     final LinearExpression cex = lle(c[i + 1]);
                     //c(i + 1) <= 0 x(i) + y(i) + c(i) >= B
-                    final Set<ArithmeticLiteral> ltor = new LinkedHashSet<>();
-                    ltor.add(LLExpressions.le(cex, 0));
-                    ltor.add(LLExpressions.ge(rhs[i], b));
+                    final IntegerClause ltor = new IntegerClause(
+                            LLExpressions.le(cex, 0),
+                            LLExpressions.ge(rhs[i], b)
+                    );
 
                     //c(i+1) >= 1 or x(i) + y(i) + c(i) <= B - 1
-                    final Set<ArithmeticLiteral> rtol = new LinkedHashSet<>();
-                    rtol.add(LLExpressions.ge(cex, 1));
-                    rtol.add(LLExpressions.le(rhs[i], b - 1));
+                    final IntegerClause rtol = new IntegerClause(
+                            LLExpressions.ge(cex, 1),
+                            LLExpressions.le(rhs[i], b - 1)
+                    );
 
-                    ret.add(new IntegerClause(Collections.emptySet(), ltor));
-                    ret.add(new IntegerClause(Collections.emptySet(), rtol));
+                    ret.add(ltor);
+                    ret.add(rtol);
                 }
                 break;
             }
@@ -315,27 +329,30 @@ public class CompactCSPReduction {
                 break;
             }
             case NE: {
-                final Set<ArithmeticLiteral> arithLiterals = new LinkedHashSet<>();
+                final IntegerClause.Builder newClause = new IntegerClause.Builder();
                 for (int i = 0; i < m; ++i) {
-                    arithLiterals.add(LLExpressions.le(lhs[i], LLExpressions.sub(rhs[i], 1)));
-                    arithLiterals.add(LLExpressions.ge(LLExpressions.sub(lhs[i], 1), rhs[i]));
+                    newClause.addArithmeticLiterals(
+                            LLExpressions.le(lhs[i], LLExpressions.sub(rhs[i], 1)),
+                            LLExpressions.ge(LLExpressions.sub(lhs[i], 1), rhs[i])
+                    );
                 }
-                final IntegerClause newClause = new IntegerClause(Collections.emptySet(), arithLiterals);
-                ret.addAll(OrderReduction.simplifyClause(newClause, Collections.emptySet(), context, csp, cf.formulaFactory()));
+                ret.addAll(CompactOrderReduction.simplifyClause(newClause.build(), context, csp, cf.formulaFactory()));
 
                 for (int i = 0; i < m - 1; i++) {
                     // c(i+1) <= 0 or x(i)+y(i)+c(i) >= B
-                    final Set<ArithmeticLiteral> ltor = new LinkedHashSet<>();
-                    ltor.add(LLExpressions.le(lle(c[i + 1]), 0));
-                    ltor.add(LLExpressions.ge(rhs[i], b));
+                    final IntegerClause ltor = new IntegerClause(
+                            LLExpressions.le(lle(c[i + 1]), 0),
+                            LLExpressions.ge(rhs[i], b)
+                    );
 
                     // c(i+1) >= 1 or x(i) + y(i) + c(i) <= B - 1
-                    final Set<ArithmeticLiteral> rtol = new LinkedHashSet<>();
-                    rtol.add(LLExpressions.ge(lle(c[i + 1]), 1));
-                    rtol.add(LLExpressions.le(rhs[i], b - 1));
+                    final IntegerClause rtol = new IntegerClause(
+                            LLExpressions.ge(lle(c[i + 1]), 1),
+                            LLExpressions.le(rhs[i], b - 1)
+                    );
 
-                    ret.add(new IntegerClause(Collections.emptySet(), ltor));
-                    ret.add(new IntegerClause(Collections.emptySet(), rtol));
+                    ret.add(ltor);
+                    ret.add(rtol);
                 }
                 break;
             }
@@ -442,14 +459,16 @@ public class CompactCSPReduction {
 
                 for (int i = 0; i < m; ++i) {
                     for (int a = 0; a < b; ++a) {
-                        final Set<ArithmeticLiteral> arithLiterals = new LinkedHashSet<>();
-                        arithLiterals.add(LLExpressions.le(nth(x, i, context, constDigits), a - 1));
-                        arithLiterals.add(LLExpressions.ge(nth(x, i, context, constDigits), a + 1));
+                        final List<ArithmeticLiteral> als = List.of(
+                                LLExpressions.le(nth(x, i, context, constDigits), a - 1),
+                                LLExpressions.ge(nth(x, i, context, constDigits), a + 1)
+                        );
 
                         final OpXY newLit = new OpXY(OpXY.Operator.EQ, w[i], ya[a]);
                         for (final IntegerClause c : convertToCCSP(newLit, csp, context, cf)) {
-                            arithLiterals.addAll(c.getArithmeticLiterals());
-                            ret.add(new IntegerClause(c.getBoolLiterals(), arithLiterals));
+                            final IntegerClause.Builder newClause = new IntegerClause.Builder(c);
+                            newClause.addArithmeticLiterals(als);
+                            ret.add(newClause.build());
                         }
                     }
                 }
@@ -611,33 +630,4 @@ public class CompactCSPReduction {
         return new LinearExpression(v);
     }
 
-    private static boolean isSimpleLiteral(final ArithmeticLiteral lit, final CspEncodingContext context) {
-        if (lit instanceof OpXY) {
-            final OpXY l = (OpXY) lit;
-            assert !l.getVariables().isEmpty();
-            if (l.getOp() == OpXY.Operator.EQ) {
-                return false;
-            }
-            return l.getVariables().size() == 1 && l.getUpperBound() < context.getBase();
-        } else if (lit instanceof EqMul) {
-            return false;
-        } else if (lit instanceof OpAdd) {
-            return false;
-        }
-        return OrderEncoding.isSimpleLiteral(lit);
-    }
-
-    private static boolean isSimpleClause(final IntegerClause clause, final CspEncodingContext context) {
-        return clause.size() - simpleClauseSize(clause, context) <= 1;
-    }
-
-    private static int simpleClauseSize(final IntegerClause clause, final CspEncodingContext context) {
-        int simpleLiterals = clause.getBoolLiterals().size();
-        for (final ArithmeticLiteral lit : clause.getArithmeticLiterals()) {
-            if (isSimpleLiteral(lit, context)) {
-                ++simpleLiterals;
-            }
-        }
-        return simpleLiterals;
-    }
 }

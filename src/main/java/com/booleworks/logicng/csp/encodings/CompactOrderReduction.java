@@ -16,7 +16,6 @@ import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.formulas.FormulaFactory;
 import com.booleworks.logicng.formulas.Literal;
 import com.booleworks.logicng.formulas.Variable;
-import com.booleworks.logicng.util.Pair;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,13 +24,15 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CompactOrderReduction {
 
     public static final String AUX_PREFIX1 = "CRS";
     public static final String AUX_PREFIX2 = "CRR";
 
-    public static Set<IntegerClause> reduce(final Csp csp, final CspEncodingContext context, final FormulaFactory f) {
+    public static Set<IntegerClause> reduce(final Csp csp, final CspEncodingContext context, final CspFactory cf) {
         adjust();
         toTernary();
         toRCSP();
@@ -41,7 +42,17 @@ public class CompactOrderReduction {
 
     }
 
-    private static Set<IntegerClause> adjust(final Csp csp, final CspEncodingContext context, final CspFactory cf) {
+    /**
+     * Adjust CSP:
+     * - Adjusts variables to be continuous and start at 0 (see {@link CompactOrderReduction#adjustVariable})
+     * - Adjust linear literals / linear sums: Adds the offset of each auxiliary variable to {@code b}.
+     * {@code b_new = b + coef(v_1) * offset(v_1) + ... + coef(v_n) * offset(v_n)}
+     * - Replace all literals in clauses with the adjusted literals.
+     * <p>
+     * Example:
+     * TODO
+     */
+    private static Set<IntegerClause> adjust(final Csp.Builder csp, final CspEncodingContext context, final CspFactory cf) {
         final Set<IntegerClause> adjustedClauses = new LinkedHashSet<>(csp.getClauses());
         for (final IntegerVariable v : csp.getInternalIntegerVariables()) {
             adjustVariable(v, true, adjustedClauses, csp, context, cf);
@@ -52,87 +63,109 @@ public class CompactOrderReduction {
             if (c.getArithmeticLiterals().isEmpty()) {
                 newClauses.add(c);
             } else {
-                final Set<Literal> booleanLiteral = new LinkedHashSet<>(c.getBoolLiterals());
-                final Set<ArithmeticLiteral> arithLiterals = new LinkedHashSet<>();
-
+                final IntegerClause.Builder newClause = IntegerClause.Builder.cloneOnlyBool(c);
                 for (final ArithmeticLiteral lit : c.getArithmeticLiterals()) {
                     if (lit instanceof LinearLiteral) {
-                        final LinearLiteral ll = (LinearLiteral) lit;
+                        final LinearLiteral ll = ((LinearLiteral) lit).substitute(context.getSubstitutions());
                         final LinearExpression ls = ll.getLinearExpression();
                         int b = ls.getB();
-                        for (final var es : ls.getCoef().entrySet()) {
-                            b += offset.get(es.getKey()) * es.getValue();
+                        for (final Map.Entry<IntegerVariable, Integer> es : ls.getCoef().entrySet()) {
+                            b += context.getOffsets().get(es.getKey()) * es.getValue();
                         }
                         final LinearExpression newLs = new LinearExpression(ls.getCoef(), b);
                         final LinearLiteral newLl = new LinearLiteral(newLs, ll.getOperator());
-                        newClauses.add(new IntegerClause(newLl));
+                        newClause.addArithmeticLiteral(newLl);
                     } else {
                         throw new IllegalArgumentException("Reduction not supported for: " + lit.getClass());
                     }
                 }
-                newClauses.add(new IntegerClause(booleanLiteral, arithLiterals));
+                newClauses.add(newClause.build());
             }
         }
         return newClauses;
     }
 
+    /**
+     * Adjust Variable: Makes non-contiguous variable contiguous and offset so that their lower bound is at 0:
+     * - Substitute original variable with auxiliary variable, that has the wanted properties.
+     * - Document the offset of the auxiliary variable inside the encoding context.
+     * - We add clauses that exclude values that are not contained in the domain if the domain is not contiguous.
+     * <p>
+     * This function does not substitute the variables in the existing clauses, but uses the substitute in the created clauses. This caller must make sure the remaining uses of
+     * the original variables are substituted.
+     * <p>
+     * Example:
+     * TODO
+     * <p>
+     * TODO: There are some things I would like to investigate:
+     * - Does the {@code lst + 2 == i} optimization make sense? Seems to me, that at a later stage this will be reduced to LE anyways.
+     * - What is the reason for the {@code useOffset} case distinction?
+     * - Are variables with negative lower bounds represented properly?
+     */
     private static void adjustVariable(final IntegerVariable v, final boolean useOffset, final Set<IntegerClause> newClauses, final Csp.Builder csp, final CspEncodingContext context, final CspFactory cf) {
         final IntegerDomain d = v.getDomain();
+        final int offset = d.lb();
+        final IntegerVariable newVar;
+        if (useOffset) {
+            final IntegerDomain newD = IntegerDomain.of(0, d.ub() - offset);
+            newVar = cf.auxVariable(AUX_PREFIX1, newD);
+            context.addSubstitution(v, newVar);
+            context.getOffsets().put(newVar, offset);
+        } else {
+            final IntegerDomain newD = IntegerDomain.of(0, d.ub());
+            newVar = cf.auxVariable(AUX_PREFIX1, newD);
+            context.addSubstitution(v, newVar);
+            context.getOffsets().put(newVar, offset);
+            final IntegerClause c = new IntegerClause(new LinearLiteral(new LinearExpression(-1, newVar, offset), LinearLiteral.Operator.LE));
+            newClauses.add(c);
+        }
+
         if (!d.isContiguous()) {
             int lst = d.lb() - 1;
             final Iterator<Integer> iter = d.iterator();
             while (iter.hasNext()) {
                 final int i = iter.next();
                 if (lst + 2 == i) {
-                    final IntegerClause c = new IntegerClause(new LinearLiteral(new LinearExpression(1, v, -(lst + 1)), LinearLiteral.Operator.NE));
+                    final IntegerClause c = new IntegerClause(new LinearLiteral(new LinearExpression(1, newVar, -(lst + 1)), LinearLiteral.Operator.NE));
                     newClauses.add(c);
                 } else if (lst + 1 != i) {
                     final Variable b = context.newAuxBoolVariable(cf.formulaFactory());
                     csp.addInternalBooleanVariable(b);
-                    final Set<ArithmeticLiteral> arith1 = new LinkedHashSet<>();
-                    final Set<Literal> bool1 = new LinkedHashSet<>();
-                    arith1.add(new LinearLiteral(new LinearExpression(1, v, -lst), LinearLiteral.Operator.LE));
-                    bool1.add(b.negate(cf.formulaFactory()));
-                    newClauses.add(new IntegerClause(bool1, arith1));
+                    final IntegerClause clause1 = new IntegerClause(
+                            b.negate(cf.formulaFactory()),
+                            new LinearLiteral(new LinearExpression(1, newVar, -lst), LinearLiteral.Operator.LE)
+                    );
+                    newClauses.add(clause1);
 
-                    final Set<ArithmeticLiteral> arith2 = new LinkedHashSet<>();
-                    final Set<Literal> bool2 = new LinkedHashSet<>();
-                    arith1.add(new LinearLiteral(new LinearExpression(-1, v, i), LinearLiteral.Operator.LE));
-                    bool2.add(b);
-                    newClauses.add(new IntegerClause(bool2, arith2));
+                    final IntegerClause clause2 = new IntegerClause(
+                            b,
+                            new LinearLiteral(new LinearExpression(-1, newVar, i), LinearLiteral.Operator.LE)
+                    );
+                    newClauses.add(clause2);
                 }
                 lst = i;
             }
-        }
-        final int offset = d.lb();
-        if (useOffset) {
-            final IntegerDomain newD = IntegerDomain.of(0, d.ub() - offset);
-            final IntegerVariable newVar = cf.auxVariable(AUX_PREFIX1, newD);
-            context.getOffsets().put(v, new Pair(newVar, offset));
-        } else {
-            final IntegerClause c = new IntegerClause(new LinearLiteral(new LinearExpression(-1, v, offset), LinearLiteral.Operator.LE));
-            newClauses.add(c);
-            final IntegerDomain newD = IntegerDomain.of(0, d.ub());
-            final IntegerVariable newVar = cf.auxVariable(AUX_PREFIX1, newD);
-            context.getOffsets().put(v, new Pair(newVar, offset));
         }
     }
 
     private static Set<IntegerClause> toTernary(final Set<IntegerClause> clauses, final Csp.Builder csp, final CspEncodingContext context, final CspFactory cf) {
         final Set<IntegerClause> newClauses = new LinkedHashSet<>();
         for (final IntegerClause c : clauses) {
-            final Set<Literal> booleanLiterals = new LinkedHashSet<>(c.getBoolLiterals());
-            final Set<ArithmeticLiteral> arithLiterals = new LinkedHashSet<>();
+            final IntegerClause.Builder newClause = IntegerClause.Builder.cloneOnlyBool(c);
             for (final ArithmeticLiteral lit : c.getArithmeticLiterals()) {
                 if (lit instanceof LinearLiteral) {
                     final LinearLiteral ll = (LinearLiteral) lit;
-                    final LinearExpression.Builder ls = simplifyToTernary(new LinearExpression.Builder(ll.getLinearExpression()), newClauses, csp, context, cf);
-                    arithLiterals.add(new LinearLiteral(ls.build(), ll.getOperator()));
+                    if (ll.getLinearExpression().size() > 3) {
+                        final LinearExpression.Builder ls = simplifyToTernary(new LinearExpression.Builder(ll.getLinearExpression()), newClauses, csp, context, cf);
+                        newClause.addArithmeticLiteral(new LinearLiteral(ls.build(), ll.getOperator()));
+                    } else {
+                        newClause.addArithmeticLiteral(ll);
+                    }
                 } else {
-                    arithLiterals.add(lit);
+                    newClause.addArithmeticLiteral(lit);
                 }
             }
-            newClauses.add(new IntegerClause(booleanLiterals, arithLiterals));
+            newClauses.add(newClause.build());
         }
         return newClauses;
     }
@@ -208,8 +241,7 @@ public class CompactOrderReduction {
             if (c.getArithmeticLiterals().isEmpty()) {
                 newClauses.add(c);
             } else {
-                final Set<Literal> booleanLiterals = new LinkedHashSet<>(c.getBoolLiterals());
-                final Set<ArithmeticLiteral> arithmeticLiterals = new LinkedHashSet<>();
+                final IntegerClause.Builder newClause = IntegerClause.Builder.cloneOnlyBool(c);
                 for (final ArithmeticLiteral al : c.getArithmeticLiterals()) {
                     if (al instanceof LinearLiteral) {
                         final LinearLiteral ll = (LinearLiteral) al;
@@ -233,9 +265,9 @@ public class CompactOrderReduction {
                                     lhs = av;
                                 }
                                 if (rc == 1) {
-                                    arithmeticLiterals.add(new OpXY(OpXY.Operator.EQ, lhs, rhs));
+                                    newClause.addArithmeticLiteral(new OpXY(OpXY.Operator.EQ, lhs, rhs));
                                 } else {
-                                    arithmeticLiterals.add(new EqMul(lhs, cf.constant(rc), rhs));
+                                    newClause.addArithmeticLiterals(new EqMul(lhs, cf.constant(rc), rhs));
                                 }
                                 continue;
                             }
@@ -247,9 +279,9 @@ public class CompactOrderReduction {
                                 a = Math.abs(a);
                                 b = Math.abs(b);
                                 if (a == 1) {
-                                    arithmeticLiterals.add(new OpXY(OpXY.Operator.EQ, x, cf.constant(b)));
+                                    newClause.addArithmeticLiterals(new OpXY(OpXY.Operator.EQ, x, cf.constant(b)));
                                 } else {
-                                    arithmeticLiterals.add(new EqMul(cf.constant(b), cf.constant(a), x));
+                                    newClause.addArithmeticLiterals(new EqMul(cf.constant(b), cf.constant(a), x));
                                 }
                                 continue;
                             }
@@ -340,13 +372,13 @@ public class CompactOrderReduction {
                             }
                         }
                         if (lit != null) {
-                            arithmeticLiterals.add(lit);
+                            newClause.addArithmeticLiterals(lit);
                         }
                     } else {
                         throw new IllegalArgumentException("Cannot reduce " + al.getClass());
                     }
                 }
-                newClauses.add(new IntegerClause(booleanLiterals, arithmeticLiterals));
+                newClauses.add(newClause.build());
             }
         }
         return newClauses;
@@ -397,18 +429,41 @@ public class CompactOrderReduction {
     }
 
     private static List<IntegerHolder> getHolders(final LinearExpression.Builder e, final CspFactory cf) {
-        final List<IntegerHolder> ret = new ArrayList<>();
-        for (final IntegerVariable v : e.getVariables()) {
-            ret.add(v);
-        }
+        final List<IntegerHolder> ret = new ArrayList<>(e.getVariables());
         if (e.size() == 0 || e.getB() > 0) {
             ret.add(cf.constant(e.getB()));
         }
         return ret;
     }
 
-    private static Set<IntegerClause> simplify(final Set<IntegerClause> clauses, final CspEncodingContext context, final Csp.Builder csp, final FormulaFactory f) {
-        return OrderReduction.simplify(clauses, context, csp, f);
+    static Set<IntegerClause> simplify(final Set<IntegerClause> clauses, final CspEncodingContext context, final Csp.Builder csp, final FormulaFactory f) {
+        return clauses.stream().flatMap(clause -> {
+            if (clause.isValid()) {
+                return null;
+            } else if (CompactOrderEncoding.isSimpleClause(clause, context)) {
+                return Stream.of(clause);
+            } else {
+                return simplifyClause(clause, context, csp, f).stream();
+            }
+        }).collect(Collectors.toSet());
     }
 
+    static Set<IntegerClause> simplifyClause(final IntegerClause clause, final CspEncodingContext context, final Csp.Builder csp, final FormulaFactory f) {
+        final Set<IntegerClause> newClauses = new LinkedHashSet<>();
+        final IntegerClause.Builder c = IntegerClause.Builder.cloneOnlyBool(clause);
+        for (final ArithmeticLiteral literal : clause.getArithmeticLiterals()) {
+            if (CompactOrderEncoding.isSimpleLiteral(literal, context)) {
+                c.addArithmeticLiteral(literal);
+            } else {
+                final Variable p = context.newAuxBoolVariable(f);
+                csp.addInternalBooleanVariable(p);
+                final Literal notP = context.negate(p);
+                final IntegerClause newClause = new IntegerClause(notP, literal);
+                newClauses.add(newClause);
+                c.addBooleanLiteral(p);
+            }
+        }
+        newClauses.add(c.build());
+        return newClauses;
+    }
 }

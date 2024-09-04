@@ -6,8 +6,10 @@ import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.formulas.Literal;
 import com.booleworks.logicng.formulas.Variable;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedSet;
@@ -24,14 +26,24 @@ public class IntegerClause {
         this.arithLiterals = arithLiterals;
     }
 
-    public IntegerClause(final Literal booLiteral) {
-        this(new LinkedHashSet<>(), Collections.emptySortedSet());
-        boolLiterals.add(booLiteral);
+    public IntegerClause(final Literal boolLiteral) {
+        this(Collections.singleton(boolLiteral), Collections.emptySet());
     }
 
     public IntegerClause(final ArithmeticLiteral arithLiteral) {
-        this(Collections.emptySortedSet(), new LinkedHashSet<>());
-        arithLiterals.add(arithLiteral);
+        this(Collections.emptySet(), Collections.singleton(arithLiteral));
+    }
+
+    public IntegerClause(final Literal... booleanLiterals) {
+        this(new LinkedHashSet<>(List.of(booleanLiterals)), Collections.emptySet());
+    }
+
+    public IntegerClause(final ArithmeticLiteral... arithmeticLiterals) {
+        this(Collections.emptySet(), new LinkedHashSet<>(List.of(arithmeticLiterals)));
+    }
+
+    public IntegerClause(final Literal boolLiteral, final ArithmeticLiteral arithmeticLiteral) {
+        this(Collections.singleton(boolLiteral), Collections.singleton(arithmeticLiteral));
     }
 
     public IntegerClause() {
@@ -132,5 +144,64 @@ public class IntegerClause {
         intVars.addAll(right.getAuxiliaryIntegerVariables());
         boolVars.addAll(right.getAuxiliaryBooleanVariables());
         return new CspPredicate.Decomposition(clauses, intVars, boolVars);
+    }
+
+    public static class Builder {
+        IntegerClause clause;
+
+        public Builder() {
+            clause = new IntegerClause(new LinkedHashSet<>(), new LinkedHashSet<>());
+        }
+
+        public Builder(final IntegerClause clause) {
+            this.clause = new IntegerClause(new LinkedHashSet<>(clause.getBoolLiterals()), new LinkedHashSet<>(clause.getArithmeticLiterals()));
+        }
+
+        private Builder(final Set<Literal> boolLiterals, final Set<ArithmeticLiteral> arithLiterals) {
+            this.clause = new IntegerClause(boolLiterals, arithLiterals);
+        }
+
+        public static Builder cloneOnlyBool(final IntegerClause clause) {
+            return new Builder(new LinkedHashSet<>(clause.getBoolLiterals()), new LinkedHashSet<>());
+        }
+
+        public static Builder cloneOnlyArith(final IntegerClause clause) {
+            return new Builder(new LinkedHashSet<>(), new LinkedHashSet<>(clause.getArithmeticLiterals()));
+        }
+
+        public Builder addBooleanLiteral(final Literal literal) {
+            clause.boolLiterals.add(literal);
+            return this;
+        }
+
+        public Builder addArithmeticLiteral(final ArithmeticLiteral literal) {
+            clause.arithLiterals.add(literal);
+            return this;
+        }
+
+        public Builder addBooleanLiterals(final Collection<Literal> literals) {
+            clause.boolLiterals.addAll(literals);
+            return this;
+        }
+
+        public Builder addBooleanLiterals(final Literal... literals) {
+            return addBooleanLiterals(List.of(literals));
+        }
+
+        public Builder addArithmeticLiterals(final Collection<ArithmeticLiteral> literals) {
+            clause.arithLiterals.addAll(literals);
+            return this;
+        }
+
+        public Builder addArithmeticLiterals(final ArithmeticLiteral... literals) {
+            clause.arithLiterals.addAll(List.of(literals));
+            return this;
+        }
+
+        public IntegerClause build() {
+            final IntegerClause ret = clause;
+            clause = null;
+            return ret;
+        }
     }
 }
