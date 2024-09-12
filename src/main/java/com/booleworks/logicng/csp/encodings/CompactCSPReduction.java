@@ -24,11 +24,14 @@ public class CompactCSPReduction {
     public static final String AUX_CCSP = "COE_CCSP";
     public static final String AUX_DIGIT = "COE_DIGIT";
 
-    static Set<IntegerClause> toCCSP(final Set<IntegerClause> clauses, final List<IntegerVariable> variables, final CompactOrderEncodingContext context,
-                                     final CspFactory cf) {
+    static ReductionResult toCCSP(final Set<IntegerClause> clauses, final List<IntegerVariable> variables, final CompactOrderEncodingContext context,
+                                  final CspFactory cf) {
         final Set<IntegerClause> newClauses = new LinkedHashSet<>();
+        final List<IntegerVariable> frontierVariables = new ArrayList<>();
         for (final IntegerVariable v : variables) {
-            context.addDigits(v, splitToDigits(v, context, cf));
+            final List<IntegerVariable> digits = splitToDigits(v, context, cf);
+            context.addDigits(v, digits);
+            frontierVariables.addAll(digits);
             final int lb = v.getDomain().lb();
             final int ub = v.getDomain().ub();
             final int m = context.getDigits(v).size();
@@ -49,7 +52,7 @@ public class CompactCSPReduction {
                 final Set<IntegerClause> ccspClauses = new LinkedHashSet<>();
                 for (final ArithmeticLiteral al : clause.getArithmeticLiterals()) {
                     final RCSPLiteral ll = (RCSPLiteral) al;
-                    final Set<IntegerClause> ccsp = convertToCCSP(ll, context, cf);
+                    final Set<IntegerClause> ccsp = convertToCCSP(ll, frontierVariables, context, cf);
                     if (CompactOrderEncoding.isSimpleLiteral(ll, context)) {
                         assert ccsp.size() == 1;
                         final IntegerClause c = ccsp.iterator().next();
@@ -73,14 +76,15 @@ public class CompactCSPReduction {
                 newClauses.addAll(newCcspClauses);
             }
         }
-        return newClauses;
+        return new ReductionResult(newClauses, frontierVariables);
     }
 
-    private static Set<IntegerClause> convertToCCSP(final RCSPLiteral literal, final CompactOrderEncodingContext context, final CspFactory cf) {
+    private static Set<IntegerClause> convertToCCSP(final RCSPLiteral literal, final List<IntegerVariable> frontierVariables, final CompactOrderEncodingContext context,
+                                                    final CspFactory cf) {
         if (literal instanceof EqMul) {
-            return convertToCCSP((EqMul) literal, context, cf);
+            return convertToCCSP((EqMul) literal, frontierVariables, context, cf);
         } else if (literal instanceof OpAdd) {
-            return convertToCCSP((OpAdd) literal, context, cf);
+            return convertToCCSP((OpAdd) literal, frontierVariables, context, cf);
         } else if (literal instanceof OpXY) {
             return convertToCCSP((OpXY) literal, context, cf);
         } else {
@@ -154,7 +158,8 @@ public class CompactCSPReduction {
         return ret;
     }
 
-    private static Set<IntegerClause> convertToCCSP(final OpAdd lit, final CompactOrderEncodingContext context, final CspFactory cf) {
+    private static Set<IntegerClause> convertToCCSP(final OpAdd lit, final List<IntegerVariable> frontierVariables, final CompactOrderEncodingContext context,
+                                                    final CspFactory cf) {
         final Set<IntegerClause> ret = new LinkedHashSet<>();
         final int b = context.getBase();
         final IntegerHolder x = lit.getX();
@@ -164,7 +169,7 @@ public class CompactCSPReduction {
         final LinearExpression[] c = new LinearExpression[m];
 
         for (int i = 1; i < m; ++i) {
-            c[i] = new LinearExpression(newCCSPVariable(IntegerDomain.of(0, 1), context, cf));
+            c[i] = new LinearExpression(newCCSPVariable(IntegerDomain.of(0, 1), frontierVariables, context, cf));
         }
 
         // lhs = { z_0 + c_1 * b, ..., z_{m-1} }
@@ -283,7 +288,8 @@ public class CompactCSPReduction {
         return ret;
     }
 
-    private static Set<IntegerClause> convertToCCSP(final EqMul lit, final CompactOrderEncodingContext context, final CspFactory cf) {
+    private static Set<IntegerClause> convertToCCSP(final EqMul lit, final List<IntegerVariable> frontierVariables, final CompactOrderEncodingContext context,
+                                                    final CspFactory cf) {
         final int b = context.getBase();
         final IntegerHolder x = lit.getX();
         final IntegerVariable y = lit.getY();
@@ -302,7 +308,7 @@ public class CompactCSPReduction {
             final int a = ((IntegerConstant) x).getValue();
             for (int i = 0; i < m; ++i) {
                 final IntegerDomain d = IntegerDomain.of(0, a * nth(y, i, context).getDomain().ub());
-                final IntegerVariable vi = newCCSPVariable(d, context, cf);
+                final IntegerVariable vi = newCCSPVariable(d, frontierVariables, context, cf);
                 v[i] = vi;
             }
 
@@ -316,7 +322,7 @@ public class CompactCSPReduction {
             final LinearExpression[] c = new LinearExpression[m];
             final IntegerDomain d = IntegerDomain.of(0, 1);
             for (int i = 2; i < m; ++i) {
-                c[i] = new LinearExpression(newCCSPVariable(d, context, cf));
+                c[i] = new LinearExpression(newCCSPVariable(d, frontierVariables, context, cf));
             }
 
             for (int i = 0; i < m; ++i) {
@@ -351,19 +357,19 @@ public class CompactCSPReduction {
                 } else {
                     d = IntegerDomain.of(0, Math.min((b - 1) * uby, ubz));
                 }
-                w[i] = newCCSPVariable(d, context, cf);
+                w[i] = newCCSPVariable(d, frontierVariables, context, cf);
                 ubz /= b;
             }
 
             if (x instanceof IntegerConstant) {
                 for (int i = 0; i < m; ++i) {
                     final EqMul newLit = new EqMul(w[i], cf.constant(nthValue((IntegerConstant) x, i, context)), y);
-                    ret.addAll(convertToCCSP(newLit, context, cf));
+                    ret.addAll(convertToCCSP(newLit, frontierVariables, context, cf));
                 }
             } else {
                 final IntegerVariable[] ya = new IntegerVariable[b];
                 for (int a = 0; a < b; ++a) {
-                    ya[a] = newCCSPVariable(IntegerDomain.of(0, a * uby), context, cf);
+                    ya[a] = newCCSPVariable(IntegerDomain.of(0, a * uby), frontierVariables, context, cf);
                 }
 
                 for (int i = 0; i < m; ++i) {
@@ -384,7 +390,7 @@ public class CompactCSPReduction {
 
                 for (int a = 0; a < b; ++a) {
                     final EqMul newLit = new EqMul(ya[a], cf.constant(a), y);
-                    ret.addAll(convertToCCSP(newLit, context, cf));
+                    ret.addAll(convertToCCSP(newLit, frontierVariables, context, cf));
                 }
             }
 
@@ -393,7 +399,7 @@ public class CompactCSPReduction {
             zi[m - 1] = w[m - 1];
             for (int i = m - 2; i > 0; --i) {
                 final IntegerDomain d = IntegerDomain.of(0, b * zi[i + 1].getDomain().ub() + w[i].getDomain().ub());
-                final IntegerVariable zii = newCCSPVariable(d, context, cf);
+                final IntegerVariable zii = newCCSPVariable(d, frontierVariables, context, cf);
                 zi[i] = zii;
             }
             zi[0] = z;
@@ -405,7 +411,7 @@ public class CompactCSPReduction {
                 ret.add(new IntegerClause(ge(exp1, exp2)));
             } else {
                 for (int i = 0; i < m - 1; ++i) {
-                    ret.addAll(shiftAddToCCSP(zi[i], zi[i + 1], w[i], context, cf));
+                    ret.addAll(shiftAddToCCSP(zi[i], zi[i + 1], w[i], frontierVariables, context, cf));
                 }
             }
         }
@@ -415,8 +421,8 @@ public class CompactCSPReduction {
     /**
      * u = b*s+t
      */
-    private static Set<IntegerClause> shiftAddToCCSP(final IntegerHolder u, final IntegerHolder s, final IntegerHolder t, final CompactOrderEncodingContext context,
-                                                     final CspFactory cf) {
+    private static Set<IntegerClause> shiftAddToCCSP(final IntegerHolder u, final IntegerHolder s, final IntegerHolder t,
+                                                     final List<IntegerVariable> frontierVariables, final CompactOrderEncodingContext context, final CspFactory cf) {
         final int b = context.getBase();
         final int m = 1 + Math.max(nDigits(s, context, cf), nDigits(t, context, cf));
         final Set<IntegerClause> ret = new LinkedHashSet<>();
@@ -424,7 +430,7 @@ public class CompactCSPReduction {
         final LinearExpression[] c = new LinearExpression[m];
         final IntegerDomain d = IntegerDomain.of(0, 1);
         for (int i = 2; i < m; i++) {
-            c[i] = new LinearExpression(newCCSPVariable(d, context, cf));
+            c[i] = new LinearExpression(newCCSPVariable(d, frontierVariables, context, cf));
         }
 
         for (int i = 0; i < m; ++i) {
@@ -481,13 +487,6 @@ public class CompactCSPReduction {
         }
     }
 
-    private static List<IntegerVariable> calculateOrGetDigits(final IntegerVariable v, final CompactOrderEncodingContext context, final CspFactory cf) {
-        if (!context.hasDigits(v)) {
-            context.addDigits(v, splitToDigits(v, context, cf));
-        }
-        return context.getDigits(v);
-    }
-
     private static List<Integer> calculateOrGetConstDigits(final IntegerConstant c, final CompactOrderEncodingContext context, final CspFactory cf) {
         if (!context.hasConstDigits(c)) {
             context.addConstDigits(c, intToDigits(c, context.getBase()));
@@ -524,9 +523,12 @@ public class CompactCSPReduction {
         return context.getConstDigits(v).size() > n ? context.getConstDigits(v).get(n) : 0;
     }
 
-    private static IntegerVariable newCCSPVariable(final IntegerDomain d, final CompactOrderEncodingContext context, final CspFactory cf) {
+    private static IntegerVariable newCCSPVariable(final IntegerDomain d, final List<IntegerVariable> frontierVariables, final CompactOrderEncodingContext context,
+                                                   final CspFactory cf) {
         final IntegerVariable v = context.newCCSPVariable(d, cf);
-        context.addDigits(v, splitToDigits(v, context, cf));
+        final List<IntegerVariable> digits = splitToDigits(v, context, cf);
+        context.addDigits(v, digits);
+        frontierVariables.addAll(digits);
         return v;
     }
 

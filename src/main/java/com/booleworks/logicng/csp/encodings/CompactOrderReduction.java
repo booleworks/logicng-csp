@@ -1,6 +1,5 @@
 package com.booleworks.logicng.csp.encodings;
 
-import com.booleworks.logicng.csp.Csp;
 import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.IntegerClause;
 import com.booleworks.logicng.csp.IntegerDomain;
@@ -34,29 +33,21 @@ public class CompactOrderReduction {
     public static final String AUX_RCSP = "COE_RCSP";
     public static final String AUX_SIMPLE = "COE_SIMPLE";
 
-    public static Csp reduce(final Csp csp, final CompactOrderEncodingContext context, final CspFactory cf) {
-        return Csp.fromClauses(reduce(csp.getClauses(), csp.getInternalIntegerVariables(), context, cf), csp.getVisibleIntegerVariables(), csp.getVisibleBooleanVariables());
-    }
-
-    public static Set<IntegerClause> reduce(final Set<IntegerClause> clauses, final Set<IntegerVariable> integerVariables, final CompactOrderEncodingContext context,
-                                            final CspFactory cf) {
+    static ReductionResult reduce(final Set<IntegerClause> clauses, final Set<IntegerVariable> integerVariables, final CompactOrderEncodingContext context,
+                                  final CspFactory cf) {
         Set<IntegerClause> newClauses;
         newClauses = adjust(clauses, integerVariables, context, cf);
         newClauses = toTernary(newClauses, context, cf);
         newClauses = toRCSP(newClauses, context, cf);
-
-        //TODO?
-        //TODO: Build a set with all integer variables
         newClauses = simplify(newClauses, context, cf.formulaFactory());
 
-        int size = context.getAdjustedVariables().size() + context.getTernarySimplificationVariables().size() + context.getRCSPVariables().size();
-        List<IntegerVariable> currentVariables = new ArrayList<>(size);
+        final int size = context.getAdjustedVariables().size() + context.getTernarySimplificationVariables().size() + context.getRCSPVariables().size();
+        final List<IntegerVariable> currentVariables = new ArrayList<>(size);
         currentVariables.addAll(context.getAdjustedVariables());
         currentVariables.addAll(context.getTernarySimplificationVariables());
         currentVariables.addAll(context.getRCSPVariables());
 
-        newClauses = CompactCSPReduction.toCCSP(newClauses, currentVariables, context, cf);
-        return newClauses;
+        return CompactCSPReduction.toCCSP(newClauses, currentVariables, context, cf);
     }
 
     /**

@@ -7,6 +7,7 @@ import com.booleworks.logicng.csp.CspAssignment;
 import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.ParameterizedCspTest;
 import com.booleworks.logicng.csp.encodings.CspEncodingContext;
+import com.booleworks.logicng.csp.encodings.OrderEncodingContext;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.formulas.Formula;
 import com.booleworks.logicng.formulas.FormulaFactory;
@@ -29,7 +30,7 @@ public class CspModelEnumerationTest extends ParameterizedCspTest {
         final IntegerVariable c = cf.variable("c", -5, 12);
         final Formula formula = cf.eq(cf.add(a, c), b);
         final Csp csp = cf.buildCsp(formula);
-        final CspEncodingContext context = CspEncodingContext.order();
+        final OrderEncodingContext context = CspEncodingContext.order();
         final SATSolver solver = SATSolver.newSolver(f);
         solver.add(cf.encodeCsp(csp, context));
         final List<CspAssignment> models = CspModelEnumeration.enumerate(solver, csp, context, cf);
@@ -53,7 +54,7 @@ public class CspModelEnumerationTest extends ParameterizedCspTest {
         final Variable c = f.variable("C");
         final Formula formula = f.or(a, f.and(b, c));
         final Csp csp = cf.buildCsp(formula);
-        final CspEncodingContext context = CspEncodingContext.order();
+        final OrderEncodingContext context = CspEncodingContext.order();
         final SATSolver solver = SATSolver.newSolver(f);
         solver.add(cf.encodeCsp(csp, context));
         final List<CspAssignment> models = CspModelEnumeration.enumerate(solver, csp, context, cf);

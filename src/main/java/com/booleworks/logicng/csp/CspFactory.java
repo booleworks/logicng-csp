@@ -3,12 +3,10 @@ package com.booleworks.logicng.csp;
 import com.booleworks.logicng.csp.encodings.CompactOrderDecoding;
 import com.booleworks.logicng.csp.encodings.CompactOrderEncoding;
 import com.booleworks.logicng.csp.encodings.CompactOrderEncodingContext;
-import com.booleworks.logicng.csp.encodings.CompactOrderReduction;
 import com.booleworks.logicng.csp.encodings.CspEncodingContext;
 import com.booleworks.logicng.csp.encodings.OrderDecoding;
 import com.booleworks.logicng.csp.encodings.OrderEncoding;
 import com.booleworks.logicng.csp.encodings.OrderEncodingContext;
-import com.booleworks.logicng.csp.encodings.OrderReduction;
 import com.booleworks.logicng.csp.functions.IntegerVariablesFunction;
 import com.booleworks.logicng.csp.predicates.AllDifferentPredicate;
 import com.booleworks.logicng.csp.predicates.ComparisonPredicate;
@@ -504,12 +502,10 @@ public class CspFactory {
         final EncodingResult result = EncodingResult.resultForFormula(formulaFactory);
         switch (context.getAlgorithm()) {
             case Order:
-                newCsp = OrderReduction.reduce(csp, (OrderEncodingContext) context, this);
-                OrderEncoding.encode(newCsp, (OrderEncodingContext) context, result, this);
+                OrderEncoding.encode(csp, (OrderEncodingContext) context, result, this);
                 return result.result();
             case CompactOrder:
-                newCsp = CompactOrderReduction.reduce(csp, (CompactOrderEncodingContext) context, this);
-                CompactOrderEncoding.encode(newCsp, (CompactOrderEncodingContext) context, result, this);
+                CompactOrderEncoding.encode(csp, (CompactOrderEncodingContext) context, result, this);
                 return result.result();
             default:
                 throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
@@ -535,8 +531,7 @@ public class CspFactory {
                 for (final IntegerVariable auxVar : decomp.getAuxiliaryIntegerVariables()) {
                     OrderEncoding.encodeVariable(auxVar, (OrderEncodingContext) context, result, this);
                 }
-                final Set<IntegerClause> newClauses = OrderReduction.reduce(decomp.getClauses(), (OrderEncodingContext) context, this);
-                OrderEncoding.encodeClauses(newClauses, (OrderEncodingContext) context, result, this);
+                OrderEncoding.encodeClauses(decomp.getClauses(), (OrderEncodingContext) context, result, this);
                 return result.result();
             default:
                 throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());

@@ -14,24 +14,25 @@ import java.util.Set;
 
 public class CompactOrderEncoding {
     public static void encode(final Csp csp, final CompactOrderEncodingContext context, final EncodingResult result, final CspFactory cf) {
-        for (final IntegerVariable v : csp.getInternalIntegerVariables()) {
+        final ReductionResult reduced = CompactOrderReduction.reduce(csp.getClauses(), csp.getInternalIntegerVariables(), context, cf);
+        for (final IntegerVariable v : reduced.getFrontierAuxiliaryVariables()) {
             encodeVariable(v, context, result, cf);
         }
-        encodeClauses(csp.getClauses(), context, result, cf);
+        encodeClauses(reduced.getClauses(), context, result, cf);
     }
 
-    public static void encodeVariable(final IntegerVariable v, final CompactOrderEncodingContext context, final EncodingResult result, final CspFactory cf) {
+    static void encodeVariable(final IntegerVariable v, final CompactOrderEncodingContext context, final EncodingResult result, final CspFactory cf) {
         assert context.getDigits(v) == null || context.getDigits(v).size() == 1;
         OrderEncoding.encodeVariable(v, context.getOrderContext(), result, cf);
     }
 
-    public static void encodeClauses(final Set<IntegerClause> clauses, final CompactOrderEncodingContext context, final EncodingResult result, final CspFactory cf) {
+    static void encodeClauses(final Set<IntegerClause> clauses, final CompactOrderEncodingContext context, final EncodingResult result, final CspFactory cf) {
         for (final IntegerClause c : clauses) {
             encodeClause(c, context, result, cf);
         }
     }
 
-    public static void encodeClause(final IntegerClause clause, final CompactOrderEncodingContext context, final EncodingResult result, final CspFactory cf) {
+    static void encodeClause(final IntegerClause clause, final CompactOrderEncodingContext context, final EncodingResult result, final CspFactory cf) {
         OrderEncoding.encodeClause(clause, context.getOrderContext(), result, cf);
     }
 

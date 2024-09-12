@@ -41,7 +41,11 @@ public class OrderEncoding {
     }
 
     public static void encodeClauses(final Set<IntegerClause> clauses, final OrderEncodingContext context, final EncodingResult result, final CspFactory cf) {
-        for (final IntegerClause c : clauses) {
+        final ReductionResult reduced = OrderReduction.reduce(clauses, context, cf);
+        for (final IntegerVariable v : reduced.getFrontierAuxiliaryVariables()) {
+            encodeVariable(v, context, result, cf);
+        }
+        for (final IntegerClause c : reduced.getClauses()) {
             if (!c.isValid()) {
                 encodeClause(c, context, result, cf);
             }
