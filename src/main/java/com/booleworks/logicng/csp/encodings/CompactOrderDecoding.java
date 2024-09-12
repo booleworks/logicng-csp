@@ -1,27 +1,28 @@
 package com.booleworks.logicng.csp.encodings;
 
+import com.booleworks.logicng.csp.Csp;
 import com.booleworks.logicng.csp.CspAssignment;
 import com.booleworks.logicng.csp.CspFactory;
+import com.booleworks.logicng.csp.datastructures.IntegerVariableSubstitution;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.datastructures.Assignment;
 import com.booleworks.logicng.formulas.Literal;
 import com.booleworks.logicng.formulas.Variable;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 public class CompactOrderDecoding {
     public static CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables,
                                        final Collection<Variable> booleanVariables,
-                                       final Map<IntegerVariable, IntegerVariable> reverseSubstitution,
+                                       final IntegerVariableSubstitution propagateSubstitution,
                                        final CompactOrderEncodingContext context,
                                        final CspFactory cf) {
         final CspAssignment result = new CspAssignment();
         for (final IntegerVariable v : integerVariables) {
-            final int value = decodeIntVar(v, model, context);
-            //FIXME: I don't understand the substitution. In my mind, the user passes the original variables and not the substitute.
-            result.addIntAssignment(reverseSubstitution.getOrDefault(v, v), value);
+            final int value = decodeIntVar(propagateSubstitution.getOrSelf(v), model, context);
+            result.addIntAssignment(v, value);
         }
         for (final Variable v : booleanVariables) {
             if (model.positiveVariables().contains(v)) {
@@ -35,23 +36,37 @@ public class CompactOrderDecoding {
         return result;
     }
 
+    public static CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables, final Collection<Variable> booleanVariables,
+                                       final CompactOrderEncodingContext context, final CspFactory cf) {
+        return decode(model, integerVariables, booleanVariables, new IntegerVariableSubstitution(), context, cf);
+    }
+
+    public static CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables, final CompactOrderEncodingContext context, final CspFactory cf) {
+        return decode(model, integerVariables, Collections.emptyList(), new IntegerVariableSubstitution(), context, cf);
+    }
+
+    public static CspAssignment decode(final Assignment model, final Csp csp, final CompactOrderEncodingContext context, final CspFactory cf) {
+        return decode(model, csp.getVisibleIntegerVariables(), csp.getVisibleBooleanVariables(), csp.getPropagateSubstitutions(), context, cf);
+    }
+
     static int decodeIntVar(final IntegerVariable var, final Assignment model, final CompactOrderEncodingContext context) {
-        final List<IntegerVariable> digits = context.getDigits().get(var);
+        final IntegerVariable adjusted = context.getAdjustedVariableOrSelf(var);
+        final List<IntegerVariable> digits = context.getDigits(adjusted);
         if (digits == null || digits.size() <= 1) {
-            return OrderDecoding.decodeIntVar(var, model, context.getOrderContext()); //FIXME: Consider substitution
+            return OrderDecoding.decodeIntVar(adjusted, model, context.getOrderContext());
         } else {
-            return decodeBigIntVar(var, model, context);
+            return decodeBigIntVar(adjusted, model, context);
         }
     }
 
     static int decodeBigIntVar(final IntegerVariable var, final Assignment model, final CompactOrderEncodingContext context) {
-        final List<IntegerVariable> digits = context.getDigits().get(var);
+        final List<IntegerVariable> digits = context.getDigits(var);
         assert digits != null && digits.size() > 1;
         final int b = context.getBase();
         int dbase = 1;
-        int value = context.getOffsets().get(var); //FIXME: Consider substitution
+        int value = context.hasOffset(var) ? context.getOffset(var) : 0;
         for (final IntegerVariable digit : digits) {
-            final int d = OrderDecoding.decodeIntVar(digit, model, context.getOrderContext()); //FIXME: Consider substitution
+            final int d = OrderDecoding.decodeIntVar(digit, model, context.getOrderContext());
             value += dbase * d;
             dbase *= b;
         }

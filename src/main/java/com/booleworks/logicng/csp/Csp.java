@@ -1,12 +1,12 @@
 package com.booleworks.logicng.csp;
 
+import com.booleworks.logicng.csp.datastructures.IntegerVariableSubstitution;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.formulas.Literal;
 import com.booleworks.logicng.formulas.Variable;
 
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -16,7 +16,7 @@ public class Csp {
     private Set<IntegerVariable> internalIntegerVariables;
     private Set<Variable> visibleBooleanVariables;
     private Set<Variable> internalBooleanVariables;
-    private Map<IntegerVariable, IntegerVariable> reverseSubstitutions;
+    private IntegerVariableSubstitution propagateSubstitutions;
     private Set<IntegerClause> clauses;
 
     private Csp() {
@@ -24,8 +24,8 @@ public class Csp {
         this.visibleIntegerVariables = new TreeSet<>();
         this.internalBooleanVariables = new TreeSet<>();
         this.visibleBooleanVariables = new TreeSet<>();
-        this.clauses = new TreeSet<>();
-        this.reverseSubstitutions = new HashMap<>();
+        this.clauses = new LinkedHashSet<>();
+        this.propagateSubstitutions = new IntegerVariableSubstitution();
     }
 
     private Csp(final Csp other) {
@@ -33,8 +33,8 @@ public class Csp {
         this.visibleIntegerVariables = new TreeSet<>(other.visibleIntegerVariables);
         this.internalBooleanVariables = new TreeSet<>(other.internalBooleanVariables);
         this.visibleBooleanVariables = new TreeSet<>(other.visibleBooleanVariables);
-        this.clauses = new TreeSet<>(other.clauses);
-        this.reverseSubstitutions = new HashMap<>(other.reverseSubstitutions);
+        this.clauses = new LinkedHashSet<>(other.clauses);
+        this.propagateSubstitutions = new IntegerVariableSubstitution(other.propagateSubstitutions);
     }
 
     public Set<IntegerVariable> getVisibleIntegerVariables() {
@@ -57,8 +57,8 @@ public class Csp {
         return clauses;
     }
 
-    public Map<IntegerVariable, IntegerVariable> getReverseSubstitutions() {
-        return reverseSubstitutions;
+    public IntegerVariableSubstitution getPropagateSubstitutions() {
+        return propagateSubstitutions;
     }
 
     @Override
@@ -68,29 +68,29 @@ public class Csp {
                 ", internIntegerVariables=" + internalIntegerVariables +
                 ", visibleBooleanVariables=" + visibleBooleanVariables +
                 ", internBooleanVariables=" + internalBooleanVariables +
-                ", reverseSubstitutions=" + reverseSubstitutions +
+                ", propagateSubstitutions=" + propagateSubstitutions +
                 ", clauses=" + clauses +
                 '}';
     }
 
     public static Csp fromClauses(final Set<IntegerClause> clauses) {
-        return fromClauses(clauses, Collections.emptySet(), Collections.emptySet(), Collections.emptyMap());
+        return fromClauses(clauses, Collections.emptySet(), Collections.emptySet(), new IntegerVariableSubstitution());
     }
 
     public static Csp fromClauses(final Set<IntegerClause> clauses, final Set<IntegerVariable> integerVariables) {
-        return fromClauses(clauses, integerVariables, Collections.emptySet(), Collections.emptyMap());
+        return fromClauses(clauses, integerVariables, Collections.emptySet(), new IntegerVariableSubstitution());
     }
 
     public static Csp fromClauses(final Set<IntegerClause> clauses, final Set<IntegerVariable> integerVariables, final Set<Variable> booleanVariables) {
-        return fromClauses(clauses, integerVariables, booleanVariables, Collections.emptyMap());
+        return fromClauses(clauses, integerVariables, booleanVariables, new IntegerVariableSubstitution());
     }
 
-    public static Csp fromClauses(final Set<IntegerClause> clauses, final Set<IntegerVariable> integerVariables, final Map<IntegerVariable, IntegerVariable> reverseSubstitutions) {
-        return fromClauses(clauses, integerVariables, Collections.emptySet(), reverseSubstitutions);
+    public static Csp fromClauses(final Set<IntegerClause> clauses, final Set<IntegerVariable> integerVariables, final IntegerVariableSubstitution propagateSubstitutions) {
+        return fromClauses(clauses, integerVariables, Collections.emptySet(), propagateSubstitutions);
     }
 
     public static Csp fromClauses(final Set<IntegerClause> clauses, final Set<IntegerVariable> integerVariables, final Set<Variable> booleanVariables,
-                                  final Map<IntegerVariable, IntegerVariable> reverseSubstitutions) {
+                                  final IntegerVariableSubstitution propagateSubstitutions) {
         final Set<IntegerVariable> intVars = new TreeSet<>();
         final Set<Variable> boolVars = new TreeSet<>();
         for (final IntegerClause clause : clauses) {
@@ -100,7 +100,7 @@ public class Csp {
         return new Csp.Builder()
                 .updateInternalIntegerVariables(intVars)
                 .updateInternalBooleanVariables(boolVars)
-                .updateReverseSubstitution(reverseSubstitutions)
+                .updatePropagateSubstitutions(propagateSubstitutions)
                 .updateClauses(clauses)
                 .updateVisibleIntegerVariables(integerVariables)
                 .updateVisibleBooleanVariables(booleanVariables)
@@ -148,8 +148,8 @@ public class Csp {
             return this;
         }
 
-        public Builder updateReverseSubstitution(final Map<IntegerVariable, IntegerVariable> reverseSubstitution) {
-            csp.reverseSubstitutions = reverseSubstitution;
+        public Builder updatePropagateSubstitutions(final IntegerVariableSubstitution substitution) {
+            csp.propagateSubstitutions = substitution;
             return this;
         }
 

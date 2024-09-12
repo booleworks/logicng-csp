@@ -10,7 +10,6 @@ import com.booleworks.logicng.csp.literals.OpXY;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.datastructures.EncodingResult;
 
-import java.util.List;
 import java.util.Set;
 
 public class CompactOrderEncoding {
@@ -22,10 +21,8 @@ public class CompactOrderEncoding {
     }
 
     public static void encodeVariable(final IntegerVariable v, final CompactOrderEncodingContext context, final EncodingResult result, final CspFactory cf) {
-        final List<IntegerVariable> digits = context.getDigits().get(v);
-        if (digits == null || digits.size() <= 1) {
-            OrderEncoding.encodeVariable(v, context.getOrderContext(), result, cf);
-        }
+        assert context.getDigits(v) == null || context.getDigits(v).size() == 1;
+        OrderEncoding.encodeVariable(v, context.getOrderContext(), result, cf);
     }
 
     public static void encodeClauses(final Set<IntegerClause> clauses, final CompactOrderEncodingContext context, final EncodingResult result, final CspFactory cf) {

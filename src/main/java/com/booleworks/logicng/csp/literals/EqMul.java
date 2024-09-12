@@ -2,9 +2,9 @@ package com.booleworks.logicng.csp.literals;
 
 import com.booleworks.logicng.csp.IntegerDomain;
 import com.booleworks.logicng.csp.IntegerHolder;
+import com.booleworks.logicng.csp.datastructures.IntegerVariableSubstitution;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -22,19 +22,19 @@ public class EqMul implements RCSPLiteral {
     }
 
     @Override
-    public ArithmeticLiteral substitute(final Map<IntegerVariable, IntegerVariable> assignment) {
-        final IntegerVariable newY = assignment.getOrDefault(y, y);
+    public ArithmeticLiteral substitute(final IntegerVariableSubstitution assignment) {
+        final IntegerVariable newY = assignment.getOrSelf(y);
         final IntegerHolder newX;
         final IntegerHolder newZ;
         if (this.x instanceof IntegerVariable) {
             final IntegerVariable x = (IntegerVariable) this.x;
-            newX = assignment.getOrDefault(x, x);
+            newX = assignment.getOrSelf(x);
         } else {
             newX = this.x;
         }
         if (this.z instanceof IntegerVariable) {
             final IntegerVariable z = (IntegerVariable) this.z;
-            newZ = assignment.getOrDefault(z, z);
+            newZ = assignment.getOrSelf(z);
         } else {
             newZ = this.z;
         }

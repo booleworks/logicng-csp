@@ -7,29 +7,31 @@ import com.booleworks.logicng.datastructures.EncodingResult;
 import com.booleworks.logicng.formulas.FormulaFactory;
 import com.booleworks.logicng.formulas.Variable;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 public class OrderEncodingContext implements CspEncodingContext {
     private final Map<IntegerVariable, Map<Integer, Variable>> variableMap;
-    private final Set<Variable> booleanAuxVariables;
-    private final Set<IntegerVariable> integerAuxVariables;
+    private final List<Variable> simplifyBoolVariables;
+    private final List<IntegerVariable> simplifyIntVariables;
 
     OrderEncodingContext() {
         this.variableMap = new TreeMap<>();
-        this.booleanAuxVariables = new TreeSet<>();
-        this.integerAuxVariables = new TreeSet<>();
+        this.simplifyBoolVariables = new ArrayList<>();
+        this.simplifyIntVariables = new ArrayList<>();
     }
 
     OrderEncodingContext(final OrderEncodingContext context) {
         this.variableMap = new TreeMap<>(context.variableMap);
-        this.booleanAuxVariables = new TreeSet<>(context.booleanAuxVariables);
-        this.integerAuxVariables = new TreeSet<>(context.integerAuxVariables);
+        this.simplifyBoolVariables = new ArrayList<>(context.simplifyBoolVariables);
+        this.simplifyIntVariables = new ArrayList<>(context.simplifyIntVariables);
     }
 
     @Override
@@ -37,25 +39,25 @@ public class OrderEncodingContext implements CspEncodingContext {
         return CspEncodingAlgorithm.Order;
     }
 
-    IntegerVariable newAuxIntVariable(final String prefix, final IntegerDomain domain, final CspFactory cf) {
-        final IntegerVariable var = cf.auxVariable(prefix, domain);
-        this.integerAuxVariables.add(var);
+    IntegerVariable addSimplifyIntVariable(final IntegerDomain domain, final CspFactory cf) {
+        final IntegerVariable var = cf.auxVariable(OrderReduction.AUX_SIMPLE, domain);
+        this.simplifyIntVariables.add(var);
         return var;
     }
 
-    Variable newAuxBoolVariable(final FormulaFactory f) {
+    Variable addSimplifyBooleanVariable(final FormulaFactory f) {
         final Variable var = f.newAuxVariable(CSP_AUX_LNG_VARIABLE);
-        this.booleanAuxVariables.add(var);
+        this.simplifyBoolVariables.add(var);
         return var;
     }
 
-    public Variable intVariableInstance(final IntegerVariable group, final int index, final EncodingResult result) {
+    Variable intVariableInstance(final IntegerVariable group, final int index, final EncodingResult result) {
         final Map<Integer, Variable> intMap = this.variableMap.computeIfAbsent(group, k -> new TreeMap<>());
         return intMap.computeIfAbsent(index, i -> result.newVariable(CSP_AUX_LNG_VARIABLE));
     }
 
     public Map<IntegerVariable, Map<Integer, Variable>> getVariableMap() {
-        return this.variableMap;
+        return Collections.unmodifiableMap(this.variableMap);
     }
 
     @Override
@@ -63,6 +65,7 @@ public class OrderEncodingContext implements CspEncodingContext {
         return variables.stream().map(variableMap::get).filter(Objects::nonNull).flatMap(m -> m.values().stream()).collect(Collectors.toSet());
     }
 
+    @Override
     public boolean isEncoded(final IntegerVariable v) {
         return variableMap.containsKey(v);
     }
@@ -71,11 +74,11 @@ public class OrderEncodingContext implements CspEncodingContext {
         return this.variableMap.keySet();
     }
 
-    public Set<Variable> getBooleanAuxVariables() {
-        return this.booleanAuxVariables;
+    public List<Variable> getSimplifyBoolVariables() {
+        return this.simplifyBoolVariables;
     }
 
-    public Set<IntegerVariable> getIntegerAuxVariables() {
-        return this.integerAuxVariables;
+    public List<IntegerVariable> getSimplifyIntVariables() {
+        return this.simplifyIntVariables;
     }
 }

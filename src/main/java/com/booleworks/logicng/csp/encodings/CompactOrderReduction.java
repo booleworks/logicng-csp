@@ -30,23 +30,39 @@ import java.util.stream.Stream;
 public class CompactOrderReduction {
 
     public static final String AUX_ADJUST = "COE_ADJUST";
-    public static final String AUX_SIMPL = "COE_SIMPL";
+    public static final String AUX_TERNARY = "COE_TERNARY";
     public static final String AUX_RCSP = "COE_RCSP";
+    public static final String AUX_SIMPLE = "COE_SIMPLE";
 
-    public static Set<IntegerClause> reduce(final Csp csp, final CompactOrderEncodingContext context, final CspFactory cf) {
-        adjust();
-        toTernary();
-        toRCSP();
+    public static Csp reduce(final Csp csp, final CompactOrderEncodingContext context, final CspFactory cf) {
+        return Csp.fromClauses(reduce(csp.getClauses(), csp.getInternalIntegerVariables(), context, cf), csp.getVisibleIntegerVariables(), csp.getVisibleBooleanVariables());
+    }
 
-        simplify();
-        CompactCSPReduction.toCCSP();
+    public static Set<IntegerClause> reduce(final Set<IntegerClause> clauses, final Set<IntegerVariable> integerVariables, final CompactOrderEncodingContext context,
+                                            final CspFactory cf) {
+        Set<IntegerClause> newClauses;
+        newClauses = adjust(clauses, integerVariables, context, cf);
+        newClauses = toTernary(newClauses, context, cf);
+        newClauses = toRCSP(newClauses, context, cf);
 
+        //TODO?
+        //TODO: Build a set with all integer variables
+        newClauses = simplify(newClauses, context, cf.formulaFactory());
+
+        int size = context.getAdjustedVariables().size() + context.getTernarySimplificationVariables().size() + context.getRCSPVariables().size();
+        List<IntegerVariable> currentVariables = new ArrayList<>(size);
+        currentVariables.addAll(context.getAdjustedVariables());
+        currentVariables.addAll(context.getTernarySimplificationVariables());
+        currentVariables.addAll(context.getRCSPVariables());
+
+        newClauses = CompactCSPReduction.toCCSP(newClauses, currentVariables, context, cf);
+        return newClauses;
     }
 
     /**
      * <h1>Behaviour</h1>
      * <p>
-     * Adjusts variables to be continuous and start at 0 (see {@link CompactOrderReduction#adjustVariable})
+     * Adjusts variables to be continuous and start at 0 (see {@link CompactOrderReduction#createAdjustedVariable})
      * <p>
      * Adjust linear literals / linear sums: Adds the offset of each auxiliary variable to {@code b}.
      * {@code b_new = b + coef(v_1) * offset(v_1) + ... + coef(v_n) * offset(v_n)}
@@ -56,12 +72,12 @@ public class CompactOrderReduction {
      * <h1>Example</h1>
      * TODO
      */
-    private static Set<IntegerClause> adjust(final Csp.Builder csp, final CompactOrderEncodingContext context, final CspFactory cf) {
-        final Set<IntegerClause> adjustedClauses = new LinkedHashSet<>(csp.getClauses());
-        for (final IntegerVariable v : csp.getInternalIntegerVariables()) {
-            final IntegerVariable adjustedVar = createAdjustedVariable(v.getDomain(), AUX_ADJUST, true, adjustedClauses, csp, context, cf);
-            context.addSubstitution(v, adjustedVar);
-
+    private static Set<IntegerClause> adjust(final Set<IntegerClause> clauses, final Set<IntegerVariable> variables, final CompactOrderEncodingContext context,
+                                             final CspFactory cf) {
+        final Set<IntegerClause> adjustedClauses = new LinkedHashSet<>(clauses);
+        for (final IntegerVariable v : variables) {
+            final IntegerVariable adjustedVar = createAdjustedVariable(v.getDomain(), AUX_ADJUST, true, adjustedClauses, context, cf);
+            context.addAdjustedVariable(v, adjustedVar);
         }
 
         final Set<IntegerClause> newClauses = new LinkedHashSet<>();
@@ -72,11 +88,11 @@ public class CompactOrderReduction {
                 final IntegerClause.Builder newClause = IntegerClause.Builder.cloneOnlyBool(c);
                 for (final ArithmeticLiteral lit : c.getArithmeticLiterals()) {
                     if (lit instanceof LinearLiteral) {
-                        final LinearLiteral ll = ((LinearLiteral) lit).substitute(context.getSubstitutions());
+                        final LinearLiteral ll = ((LinearLiteral) lit).substitute(context.getAdjustedVariablesSubstitution());
                         final LinearExpression ls = ll.getLinearExpression();
                         int b = ls.getB();
                         for (final Map.Entry<IntegerVariable, Integer> es : ls.getCoef().entrySet()) {
-                            b += context.getOffsets().get(es.getKey()) * es.getValue();
+                            b += context.getOffset(es.getKey()) * es.getValue();
                         }
                         final LinearExpression newLs = new LinearExpression(ls.getCoef(), b);
                         final LinearLiteral newLl = new LinearLiteral(newLs, ll.getOperator());
@@ -104,25 +120,23 @@ public class CompactOrderReduction {
      * TODO
      * <p>
      * TODO: There are some things I would like to investigate:
-     * - Does the {@code lst + 2 == i} optimization make sense? Seems to me, that at a later stage this will be reduced to LE anyways.
      * - What is the reason for the {@code useOffset} case distinction?
      * - Are variables with negative lower bounds represented properly?
      */
     private static IntegerVariable createAdjustedVariable(final IntegerDomain d, final String prefix, final boolean useOffset, final Set<IntegerClause> additionalClauses,
-                                                          final Csp.Builder csp, final CompactOrderEncodingContext context, final CspFactory cf) {
+                                                          final CompactOrderEncodingContext context, final CspFactory cf) {
         final int offset = d.lb();
         final IntegerVariable newVar;
         if (useOffset) {
             final IntegerDomain newD = IntegerDomain.of(0, d.ub() - offset);
-            newVar = cf.auxVariable(prefix, newD);
-            context.getOffsets().put(newVar, offset);
+            newVar = context.newAdjustedVariable(prefix, newD, cf);
         } else {
             final IntegerDomain newD = IntegerDomain.of(0, d.ub());
-            newVar = cf.auxVariable(prefix, newD);
-            context.getOffsets().put(newVar, offset);
+            newVar = context.newAdjustedVariable(prefix, newD, cf);
             final IntegerClause c = new IntegerClause(new LinearLiteral(new LinearExpression(-1, newVar, offset), LinearLiteral.Operator.LE));
             additionalClauses.add(c);
         }
+        context.addOffset(newVar, offset);
 
         if (!d.isContiguous()) {
             int lst = d.lb() - 1;
@@ -133,8 +147,7 @@ public class CompactOrderReduction {
                     final IntegerClause c = new IntegerClause(new LinearLiteral(new LinearExpression(1, newVar, -(lst + 1)), LinearLiteral.Operator.NE));
                     additionalClauses.add(c);
                 } else if (lst + 1 != i) {
-                    final Variable b = context.newAuxBoolVariable(cf.formulaFactory());
-                    csp.addInternalBooleanVariable(b);
+                    final Variable b = context.newAdjustedBoolVariable(cf.formulaFactory());
                     final IntegerClause clause1 = new IntegerClause(
                             b.negate(cf.formulaFactory()),
                             new LinearLiteral(new LinearExpression(1, newVar, -lst), LinearLiteral.Operator.LE)
@@ -156,7 +169,7 @@ public class CompactOrderReduction {
     /**
      * Convert arithmetic literals to arithmetic literals with less or equal 3 variables. Substitutes new literals in the returned clauses
      */
-    private static Set<IntegerClause> toTernary(final Set<IntegerClause> clauses, final Csp.Builder csp, final CompactOrderEncodingContext context, final CspFactory cf) {
+    private static Set<IntegerClause> toTernary(final Set<IntegerClause> clauses, final CompactOrderEncodingContext context, final CspFactory cf) {
         final Set<IntegerClause> newClauses = new LinkedHashSet<>();
         for (final IntegerClause c : clauses) {
             final IntegerClause.Builder newClause = IntegerClause.Builder.cloneOnlyBool(c);
@@ -164,7 +177,7 @@ public class CompactOrderReduction {
                 if (lit instanceof LinearLiteral) {
                     final LinearLiteral ll = (LinearLiteral) lit;
                     if (ll.getLinearExpression().size() > 3) {
-                        final LinearExpression.Builder ls = simplifyToTernary(new LinearExpression.Builder(ll.getLinearExpression()), newClauses, csp, context, cf);
+                        final LinearExpression.Builder ls = simplifyToTernary(new LinearExpression.Builder(ll.getLinearExpression()), newClauses, context, cf);
                         newClause.addArithmeticLiteral(new LinearLiteral(ls.build(), ll.getOperator()));
                     } else {
                         newClause.addArithmeticLiteral(ll);
@@ -178,8 +191,8 @@ public class CompactOrderReduction {
         return newClauses;
     }
 
-    private static LinearExpression.Builder simplifyToTernary(final LinearExpression.Builder exp, final Set<IntegerClause> clauses, final Csp.Builder csp,
-                                                              final CompactOrderEncodingContext context, final CspFactory cf) {
+    private static LinearExpression.Builder simplifyToTernary(final LinearExpression.Builder exp, final Set<IntegerClause> clauses, final CompactOrderEncodingContext context,
+                                                              final CspFactory cf) {
         if (exp.size() <= 3) {
             return exp;
         }
@@ -210,12 +223,12 @@ public class CompactOrderReduction {
 
         final LinearExpression.Builder e = new LinearExpression.Builder(b);
         for (final LinearExpression.Builder ei : OrderReduction.split(lhs.build(), lhs_len)) {
-            final LinearExpression.Builder simplified = simplifyToTernaryExpression(ei, clauses, csp, context, cf);
+            final LinearExpression.Builder simplified = simplifyToTernaryExpression(ei, clauses, context, cf);
             e.add(simplified.build());
         }
 
         for (final LinearExpression.Builder ei : OrderReduction.split(rhs.build(), rhs_len)) {
-            final LinearExpression.Builder simplified = simplifyToTernaryExpression(ei, clauses, csp, context, cf);
+            final LinearExpression.Builder simplified = simplifyToTernaryExpression(ei, clauses, context, cf);
             simplified.multiply(-1);
             e.add(simplified.build());
         }
@@ -223,14 +236,13 @@ public class CompactOrderReduction {
         return e;
     }
 
-    private static LinearExpression.Builder simplifyToTernaryExpression(final LinearExpression.Builder exp, final Set<IntegerClause> clauses, final Csp.Builder csp,
+    private static LinearExpression.Builder simplifyToTernaryExpression(final LinearExpression.Builder exp, final Set<IntegerClause> clauses,
                                                                         final CompactOrderEncodingContext context, final CspFactory cf) {
         final int factor = exp.factor();
         final LinearExpression.Builder normalized = exp.normalize();
-        LinearExpression.Builder simplified = simplifyToTernary(normalized, clauses, csp, context, cf);
+        LinearExpression.Builder simplified = simplifyToTernary(normalized, clauses, context, cf);
         if (simplified.size() > 1) {
-            final IntegerVariable v = createAdjustedVariable(simplified.getDomain(), AUX_SIMPL, false, clauses, csp, context, cf);
-            csp.addInternalIntegerVariable(v);
+            final IntegerVariable v = createAdjustedVariable(simplified.getDomain(), AUX_TERNARY, false, clauses, context, cf);
             final LinearExpression.Builder ls = new LinearExpression.Builder(v);
             ls.subtract(simplified.build());
             simplified = new LinearExpression.Builder(v);
@@ -244,7 +256,7 @@ public class CompactOrderReduction {
         return simplified;
     }
 
-    private static Set<IntegerClause> toRCSP(final Set<IntegerClause> clauses, final Csp.Builder csp, final CspFactory cf) {
+    private static Set<IntegerClause> toRCSP(final Set<IntegerClause> clauses, final CompactOrderEncodingContext context, final CspFactory cf) {
         final Set<IntegerClause> newClauses = new LinkedHashSet<>();
         for (final IntegerClause c : clauses) {
             if (c.getArithmeticLiterals().isEmpty()) {
@@ -267,8 +279,7 @@ public class CompactOrderReduction {
                                 final int rc = Math.abs(ls.getA(rhs));
                                 if (lc > 1) {
                                     final IntegerDomain dom = lhs.getDomain().mul(lc);
-                                    final IntegerVariable av = cf.auxVariable(AUX_RCSP, dom);
-                                    csp.addInternalIntegerVariable(av);
+                                    final IntegerVariable av = context.newRCSPVariable(dom, cf);
                                     final ArithmeticLiteral lit = new EqMul(av, cf.constant(lc), lhs);
                                     newClauses.add(new IntegerClause(lit));
                                     lhs = av;
@@ -316,8 +327,7 @@ public class CompactOrderReduction {
                             a = Math.abs(a);
                             assert v.getDomain().lb() == 0;
                             final IntegerDomain dom = v.getDomain().mul(a);
-                            final IntegerVariable av = cf.auxVariable(AUX_RCSP, dom);
-                            csp.addInternalIntegerVariable(av);
+                            final IntegerVariable av = context.newRCSPVariable(dom, cf);
                             final ArithmeticLiteral lit = new EqMul(av, cf.constant(a), v);
                             newClauses.add(new IntegerClause(lit));
                             if (es.getValue() > 0) {
@@ -345,15 +355,14 @@ public class CompactOrderReduction {
                         assert rsize <= 4;
 
                         if (rsize >= 3) {
-                            rhs = simplifyForRCSP(rhs, newClauses, 2, csp, cf);
+                            rhs = simplifyForRCSP(rhs, newClauses, 2, context, cf);
                         } else if (rsize == 2 && lsize == 2) {
                             if (rhs.getB() == 0) {
-                                rhs = simplifyForRCSP(rhs, newClauses, 1, csp, cf);
+                                rhs = simplifyForRCSP(rhs, newClauses, 1, context, cf);
                             } else {
                                 final IntegerDomain dom = IntegerDomain.of(0, rhs.getDomain().ub());
                                 final List<IntegerHolder> rh = getHolders(rhs, cf);
-                                final IntegerVariable ax = cf.auxVariable(AUX_RCSP, dom);
-                                csp.addInternalIntegerVariable(ax);
+                                final IntegerVariable ax = context.newRCSPVariable(dom, cf);
                                 final ArithmeticLiteral geB = new OpXY(OpXY.Operator.LE, cf.constant(rhs.getB()), ax);
                                 final ArithmeticLiteral eqAdd = new OpAdd(OpAdd.Operator.EQ, ax, rh.get(0), rh.get(1));
                                 newClauses.add(new IntegerClause(geB));
@@ -393,7 +402,8 @@ public class CompactOrderReduction {
         return newClauses;
     }
 
-    private static LinearExpression.Builder simplifyForRCSP(final LinearExpression.Builder e, final Set<IntegerClause> clauses, final int maxlen, final Csp.Builder csp, final CspFactory cf) {
+    private static LinearExpression.Builder simplifyForRCSP(final LinearExpression.Builder e, final Set<IntegerClause> clauses, final int maxlen,
+                                                            final CompactOrderEncodingContext context, final CspFactory cf) {
         final int esize = e.size() + (e.getB() == 0 ? 0 : 1);
         if (esize <= maxlen) {
             return e;
@@ -405,8 +415,8 @@ public class CompactOrderReduction {
 
         final IntegerHolder v0 = holders.get(0);
         final IntegerHolder v1 = holders.get(1);
-        final IntegerVariable w0 = cf.auxVariable(AUX_RCSP, v0.getDomain().add(v1.getDomain()));
-        csp.addInternalIntegerVariable(w0);
+        final IntegerDomain d = v0.getDomain().add(v1.getDomain());
+        final IntegerVariable w0 = context.newRCSPVariable(d, cf);
         final ArithmeticLiteral lit0 = new OpAdd(OpAdd.Operator.EQ, w0, v0, v1);
         final IntegerClause clause0 = new IntegerClause(lit0);
         clauses.add(clause0);
@@ -426,8 +436,8 @@ public class CompactOrderReduction {
             assert holders.size() == 4;
             final IntegerHolder v2 = holders.get(2);
             final IntegerHolder v3 = holders.get(3);
-            final IntegerVariable w1 = cf.auxVariable(AUX_RCSP, v2.getDomain().add(v3.getDomain()));
-            csp.addInternalIntegerVariable(w1);
+            final IntegerDomain d2 = v2.getDomain().add(v3.getDomain());
+            final IntegerVariable w1 = context.newRCSPVariable(d2, cf);
             final ArithmeticLiteral lit1 = new OpAdd(OpAdd.Operator.EQ, w1, v2, v3);
             final IntegerClause clause1 = new IntegerClause(lit1);
             clauses.add(clause1);
@@ -445,27 +455,26 @@ public class CompactOrderReduction {
         return ret;
     }
 
-    static Set<IntegerClause> simplify(final Set<IntegerClause> clauses, final CompactOrderEncodingContext context, final Csp.Builder csp, final FormulaFactory f) {
+    static Set<IntegerClause> simplify(final Set<IntegerClause> clauses, final CompactOrderEncodingContext context, final FormulaFactory f) {
         return clauses.stream().flatMap(clause -> {
             if (clause.isValid()) {
                 return null;
             } else if (CompactOrderEncoding.isSimpleClause(clause, context)) {
                 return Stream.of(clause);
             } else {
-                return simplifyClause(clause, context, csp, f).stream();
+                return simplifyClause(clause, context, f).stream();
             }
         }).collect(Collectors.toSet());
     }
 
-    static Set<IntegerClause> simplifyClause(final IntegerClause clause, final CompactOrderEncodingContext context, final Csp.Builder csp, final FormulaFactory f) {
+    static Set<IntegerClause> simplifyClause(final IntegerClause clause, final CompactOrderEncodingContext context, final FormulaFactory f) {
         final Set<IntegerClause> newClauses = new LinkedHashSet<>();
         final IntegerClause.Builder c = IntegerClause.Builder.cloneOnlyBool(clause);
         for (final ArithmeticLiteral literal : clause.getArithmeticLiterals()) {
             if (CompactOrderEncoding.isSimpleLiteral(literal, context)) {
                 c.addArithmeticLiteral(literal);
             } else {
-                final Variable p = context.newAuxBoolVariable(f);
-                csp.addInternalBooleanVariable(p);
+                final Variable p = context.getOrderContext().addSimplifyBooleanVariable(f);
                 final Literal notP = p.negate(f);
                 final IntegerClause newClause = new IntegerClause(notP, literal);
                 newClauses.add(newClause);

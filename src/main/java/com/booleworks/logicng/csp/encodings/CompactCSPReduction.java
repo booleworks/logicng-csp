@@ -1,6 +1,5 @@
 package com.booleworks.logicng.csp.encodings;
 
-import com.booleworks.logicng.csp.Csp;
 import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.IntegerClause;
 import com.booleworks.logicng.csp.IntegerDomain;
@@ -17,30 +16,27 @@ import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.formulas.Variable;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class CompactCSPReduction {
-    public static final String AUX_PREFIX = "CRC";
+    public static final String AUX_CCSP = "COE_CCSP";
+    public static final String AUX_DIGIT = "COE_DIGIT";
 
-    private static Set<IntegerClause> toCCSP(final Set<IntegerClause> clauses, final Set<IntegerVariable> variables, final Csp.Builder csp, final CompactOrderEncodingContext context,
-                                             final CspFactory cf) {
+    static Set<IntegerClause> toCCSP(final Set<IntegerClause> clauses, final List<IntegerVariable> variables, final CompactOrderEncodingContext context,
+                                     final CspFactory cf) {
         final Set<IntegerClause> newClauses = new LinkedHashSet<>();
         for (final IntegerVariable v : variables) {
-            splitToDigits(v, csp, context, cf);
+            context.addDigits(v, splitToDigits(v, context, cf));
             final int lb = v.getDomain().lb();
             final int ub = v.getDomain().ub();
-            final int m = context.getDigits().get(v).size();
+            final int m = context.getDigits(v).size();
             if (m > 1 || ub <= Math.pow(context.getBase(), m) - 1) {
-                newClauses.addAll(convertToCCSP(new OpXY(OpXY.Operator.LE, v, cf.constant(ub)), csp, context, cf));
+                newClauses.addAll(convertToCCSP(new OpXY(OpXY.Operator.LE, v, cf.constant(ub)), context, cf));
             }
             if (m > 1 && lb != 0) {
-                newClauses.addAll(convertToCCSP(new OpXY(OpXY.Operator.LE, cf.constant(lb), v), csp, context, cf));
+                newClauses.addAll(convertToCCSP(new OpXY(OpXY.Operator.LE, cf.constant(lb), v), context, cf));
             }
         }
         for (final IntegerClause clause : clauses) {
@@ -53,7 +49,7 @@ public class CompactCSPReduction {
                 final Set<IntegerClause> ccspClauses = new LinkedHashSet<>();
                 for (final ArithmeticLiteral al : clause.getArithmeticLiterals()) {
                     final RCSPLiteral ll = (RCSPLiteral) al;
-                    final Set<IntegerClause> ccsp = convertToCCSP(ll, csp, context, cf);
+                    final Set<IntegerClause> ccsp = convertToCCSP(ll, context, cf);
                     if (CompactOrderEncoding.isSimpleLiteral(ll, context)) {
                         assert ccsp.size() == 1;
                         final IntegerClause c = ccsp.iterator().next();
@@ -80,251 +76,187 @@ public class CompactCSPReduction {
         return newClauses;
     }
 
-    private static Set<IntegerClause> convertToCCSP(final RCSPLiteral literal, final Csp.Builder csp, final CompactOrderEncodingContext context, final CspFactory cf) {
+    private static Set<IntegerClause> convertToCCSP(final RCSPLiteral literal, final CompactOrderEncodingContext context, final CspFactory cf) {
         if (literal instanceof EqMul) {
-            return convertToCCSP((EqMul) literal, csp, context, cf);
+            return convertToCCSP((EqMul) literal, context, cf);
         } else if (literal instanceof OpAdd) {
-            return convertToCCSP((OpAdd) literal, csp, context, cf);
+            return convertToCCSP((OpAdd) literal, context, cf);
         } else if (literal instanceof OpXY) {
-            return convertToCCSP((OpXY) literal, csp, context, cf);
+            return convertToCCSP((OpXY) literal, context, cf);
         } else {
             throw new RuntimeException("Unknown RCSP Literal: " + literal.getClass());
         }
     }
 
-    private static Set<IntegerClause> convertToCCSP(final OpXY lit, final Csp.Builder csp, final CompactOrderEncodingContext context, final CspFactory cf) {
+    private static Set<IntegerClause> convertToCCSP(final OpXY lit, final CompactOrderEncodingContext context, final CspFactory cf) {
         final Set<IntegerClause> ret = new LinkedHashSet<>();
-        final int b = context.getBase();
         final IntegerHolder x = lit.getX();
         final IntegerHolder y = lit.getY();
-        final Map<IntegerConstant, List<Integer>> constDigits = calculateConstDigits(List.of(x, y), b);
-        final int m = Math.max(nDigits(x, context, constDigits), nDigits(y, context, constDigits));
+        final int m = Math.max(nDigits(x, context, cf), nDigits(y, context, cf));
 
         switch (lit.getOp()) {
             case LE:
                 if (x instanceof IntegerConstant || y instanceof IntegerConstant) {
                     for (int i = 0; i < m; ++i) {
                         final IntegerClause.Builder newClause = new IntegerClause.Builder();
-                        newClause.addArithmeticLiteral(LLExpressions.le(nth(x, i, context, constDigits), nth(y, i, context, constDigits)));
+                        newClause.addArithmeticLiteral(le(nth(x, i, context), nth(y, i, context)));
                         for (int j = i + 1; j < m; ++j) {
-                            newClause.addArithmeticLiteral(LLExpressions.le(nth(x, j, context, constDigits), LLExpressions.sub(nth(x, j, context, constDigits), 1)));
+                            newClause.addArithmeticLiteral(le(nth(x, j, context), sub(nth(y, j, context), 1)));
                         }
                         ret.add(newClause.build());
                     }
                 } else {
                     final Variable[] s = new Variable[m];
                     for (int i = 1; i < m; ++i) {
-                        s[i] = context.newAuxBoolVariable(cf.formulaFactory());
-                        csp.addInternalBooleanVariable(s[i]);
+                        s[i] = context.newCCSPBoolVariable(cf.formulaFactory());
                     }
                     // -s(i+1) or x(i) <= y(i) (when 0 <= i < m - 1)
                     for (int i = 0; i < m - 1; ++i) {
                         ret.add(new IntegerClause(
                                 s[i + 1].negate(cf.formulaFactory()),
-                                LLExpressions.le(nth(x, i, context, constDigits), nth(y, i, context, constDigits))
+                                le(nth(x, i, context), nth(y, i, context))
                         ));
                     }
                     // x(i) <= y(i) (when i == m - 1)
-                    ret.add(new IntegerClause(LLExpressions.le(
-                            nth(x, m - 1, context, constDigits),
-                            nth(y, m - 1, context, constDigits)
-                    )));
+                    ret.add(new IntegerClause(le(nth(x, m - 1, context), nth(y, m - 1, context))));
 
                     // -s(i+1) or (x(i) <= y(i) - 1) or s(i) (when 1 <= i < m - 1)
                     for (int i = 1; i < m - 1; ++i) {
                         final IntegerClause.Builder newClause = new IntegerClause.Builder();
-                        newClause.addBooleanLiterals(
-                                s[i + 1].negate(cf.formulaFactory()),
-                                s[i]
-                        );
-                        newClause.addArithmeticLiteral(LLExpressions.le(
-                                nth(x, i, context, constDigits),
-                                LLExpressions.sub(nth(y, i, context, constDigits), 1))
-                        );
+                        newClause.addBooleanLiterals(s[i + 1].negate(cf.formulaFactory()), s[i]);
+                        newClause.addArithmeticLiteral(le(nth(x, i, context), sub(nth(y, i, context), 1)));
                         ret.add(newClause.build());
                     }
                     if (m > 1) {
                         // (x(i) <= y(i) - 1) or s(i) (when i == m - 1)
                         ret.add(new IntegerClause(
                                 s[m - 1],
-                                LLExpressions.le(
-                                        nth(x, m - 1, context, constDigits),
-                                        LLExpressions.sub(nth(y, m - 1, context, constDigits), 1)
-                                )
+                                le(nth(x, m - 1, context), sub(nth(y, m - 1, context), 1))
                         ));
                     }
                 }
                 break;
             case EQ:
                 for (int i = 0; i < m; ++i) {
-                    ret.add(new IntegerClause(LLExpressions.le(nth(x, i, context, constDigits), nth(y, i, context, constDigits))));
-                    ret.add(new IntegerClause(LLExpressions.ge(nth(x, i, context, constDigits), nth(y, i, context, constDigits))));
+                    ret.add(new IntegerClause(le(nth(x, i, context), nth(y, i, context))));
+                    ret.add(new IntegerClause(ge(nth(x, i, context), nth(y, i, context))));
                 }
                 break;
             case NE:
                 final IntegerClause.Builder newClause = new IntegerClause.Builder();
                 for (int i = 0; i < m; ++i) {
-                    newClause.addArithmeticLiterals(LLExpressions.le(
-                            nth(x, i, context, constDigits),
-                            LLExpressions.sub(nth(y, i, context, constDigits), 1)
-                    ));
-                    newClause.addArithmeticLiterals(LLExpressions.ge(
-                            LLExpressions.sub(nth(x, i, context, constDigits), 1),
-                            nth(y, i, context, constDigits))
-                    );
+                    newClause.addArithmeticLiterals(le(nth(x, i, context), sub(nth(y, i, context), 1)));
+                    newClause.addArithmeticLiterals(ge(sub(nth(x, i, context), 1), nth(y, i, context)));
                 }
-                ret.addAll(CompactOrderReduction.simplifyClause(newClause.build(), context, csp, cf.formulaFactory()));
+                ret.addAll(CompactOrderReduction.simplifyClause(newClause.build(), context, cf.formulaFactory()));
                 break;
         }
         return ret;
     }
 
-    private static Set<IntegerClause> convertToCCSP(final OpAdd lit, final Csp.Builder csp, final CompactOrderEncodingContext context, final CspFactory cf) {
+    private static Set<IntegerClause> convertToCCSP(final OpAdd lit, final CompactOrderEncodingContext context, final CspFactory cf) {
         final Set<IntegerClause> ret = new LinkedHashSet<>();
         final int b = context.getBase();
         final IntegerHolder x = lit.getX();
         final IntegerHolder y = lit.getY();
         final IntegerHolder z = lit.getZ();
-        final Map<IntegerConstant, List<Integer>> constDigits = calculateConstDigits(List.of(x, y, z), b);
+        final int m = Math.max(Math.max(nDigits(x, context, cf), nDigits(y, context, cf)), nDigits(z, context, cf));
+        final LinearExpression[] c = new LinearExpression[m];
 
-        final int m = Math.max(Math.max(nDigits(x, context, constDigits), nDigits(y, context, constDigits)), nDigits(z, context, constDigits));
-        final IntegerVariable[] c = new IntegerVariable[m];
         for (int i = 1; i < m; ++i) {
-            c[i] = cf.auxVariable(AUX_PREFIX, IntegerDomain.of(0, 1));
-            csp.addInternalIntegerVariable(c[i]);
+            c[i] = new LinearExpression(newCCSPVariable(IntegerDomain.of(0, 1), context, cf));
         }
 
+        // lhs = { z_0 + c_1 * b, ..., z_{m-1} }
         final LinearExpression[] lhs = new LinearExpression[m];
         for (int i = 0; i < m - 1; ++i) {
-            lhs[i] = LLExpressions.add(
-                    nth(z, i, context, constDigits),
-                    LLExpressions.mul(lle(c[i + 1]), b));
+            lhs[i] = add(nth(z, i, context), mul(c[i + 1], b));
         }
-        lhs[m - 1] = nth(z, m - 1, context, constDigits);
+        lhs[m - 1] = nth(z, m - 1, context);
 
+        // rhs = { x_0 + y_0, x_1 + y_1 + c_1, ... }
         final LinearExpression[] rhs = new LinearExpression[m];
-        rhs[0] = LLExpressions.add(nth(x, 0, context, constDigits), nth(y, 0, context, constDigits));
+        rhs[0] = add(nth(x, 0, context), nth(y, 0, context));
         for (int i = 1; i < m; ++i) {
-            rhs[i] = LLExpressions.add(
-                    nth(x, i, context, constDigits),
-                    nth(y, i, context, constDigits),
-                    lle(c[i])
-            );
+            rhs[i] = add(nth(x, i, context), nth(y, i, context), c[i]);
         }
 
         switch (lit.getOp()) {
             case LE: {
                 final Variable[] s = new Variable[m];
                 for (int i = 1; i < m; ++i) {
-                    s[i] = context.newAuxBoolVariable(cf.formulaFactory());
-                    csp.addInternalBooleanVariable(s[i]);
+                    s[i] = context.newCCSPBoolVariable(cf.formulaFactory());
                 }
 
                 // -s(i+1) or (z(i) + B*c(i+1) <= x(i) + y(i) + c(i)) (when 0 <= i < m - 1)
                 for (int i = 0; i < m - 1; ++i) {
                     ret.add(new IntegerClause(
                             s[i + 1].negate(cf.formulaFactory()),
-                            LLExpressions.le(lhs[i], rhs[i])
+                            le(lhs[i], rhs[i])
                     ));
                 }
                 //z(i) <= x(i) + y(i) + c(i) (when i == m - 1)
-                ret.add(new IntegerClause(LLExpressions.le(lhs[m - 1], rhs[m - 1])));
+                ret.add(new IntegerClause(le(lhs[m - 1], rhs[m - 1])));
 
                 // -s(i+1) or (z(i) + B * c(i + 1) <= x(i) + y(i) + c(i) - 1) or s(i)
                 // (when 1 <= i < m - 1)
                 for (int i = 1; i < m - 1; ++i) {
                     final IntegerClause.Builder newClause = new IntegerClause.Builder();
-                    newClause.addBooleanLiterals(
-                            s[i + 1].negate(cf.formulaFactory()),
-                            s[i]
-                    );
-                    newClause.addArithmeticLiteral(LLExpressions.le(lhs[i], LLExpressions.sub(rhs[i], 1)));
+                    newClause.addBooleanLiterals(s[i + 1].negate(cf.formulaFactory()), s[i]);
+                    newClause.addArithmeticLiteral(le(lhs[i], sub(rhs[i], 1)));
                     ret.add(newClause.build());
                 }
                 // (z(i) <= x(i) + y(i) + c(i) - 1) or s(i) (when i == m - 1)
                 if (m > 1) {
-                    ret.add(new IntegerClause(
-                            s[m - 1],
-                            LLExpressions.le(lhs[m - 1], LLExpressions.sub(rhs[m - 1], 1))
-                    ));
+                    ret.add(new IntegerClause(s[m - 1], le(lhs[m - 1], sub(rhs[m - 1], 1))));
                 }
 
                 for (int i = 0; i < m - 1; ++i) {
                     //c(i+1) <= 0 or x(i) + y(i) + c(i) >= B
-                    final IntegerClause ltor = new IntegerClause(
-                            LLExpressions.le(lle(c[i + 1]), 0),
-                            LLExpressions.ge(rhs[i], b)
-                    );
-
-                    final IntegerClause rtol = new IntegerClause(
-                            LLExpressions.ge(lle(c[i + 1]), 1),
-                            LLExpressions.le(rhs[i], b - 1)
-                    );
-
-                    ret.add(ltor);
-                    ret.add(rtol);
+                    ret.add(new IntegerClause(le(c[i + 1], 0), ge(rhs[i], b)));
+                    ret.add(new IntegerClause(ge(c[i + 1], 1), le(rhs[i], b - 1)));
                 }
                 break;
             }
             case GE: {
                 final Variable[] s = new Variable[m];
                 for (int i = 1; i < m; i++) {
-                    s[i] = context.newAuxBoolVariable(cf.formulaFactory());
-                    csp.addInternalBooleanVariable(s[i]);
+                    s[i] = context.newCCSPBoolVariable(cf.formulaFactory());
                 }
 
                 // -s(i+1) or (z(i) + B*c(i+1) <= x(i) + y(i) + c(i)) (when 0 <= i < m - 1)
                 for (int i = 0; i < m - 1; i++) {
-                    ret.add(new IntegerClause(
-                            s[i + 1].negate(cf.formulaFactory()),
-                            LLExpressions.le(lhs[i], rhs[i])
-                    ));
+                    ret.add(new IntegerClause(s[i + 1].negate(cf.formulaFactory()), le(lhs[i], rhs[i])));
                 }
-                // z(i) <= x(i) + y(i) + c(i) (when i == m - 1)
-                ret.add(new IntegerClause(LLExpressions.le(lhs[m - 1], rhs[m - 1])));
+                // z(i) >= x(i) + y(i) + c(i) (when i == m - 1)
+                ret.add(new IntegerClause(ge(lhs[m - 1], rhs[m - 1])));
 
                 // -s(i+1) or (z(i) + B * c(i+1) <= x(i) + y(i) + c(i) - 1) or s(i)
                 // (when 1 <= i < m - 1)
                 for (int i = 1; i < m - 1; ++i) {
                     final IntegerClause.Builder newClause = new IntegerClause.Builder();
-                    newClause.addBooleanLiterals(
-                            s[i + 1].negate(cf.formulaFactory()),
-                            s[i]
-                    );
-                    newClause.addArithmeticLiteral(LLExpressions.le(lhs[i], LLExpressions.sub(rhs[i], 1)));
+                    newClause.addBooleanLiterals(s[i + 1].negate(cf.formulaFactory()), s[i]);
+                    newClause.addArithmeticLiteral(ge(sub(lhs[i], 1), rhs[i]));
                     ret.add(newClause.build());
                 }
                 // (z(i) <= x(i) + y(i) + c(i) - 1) or s(i) (when i == m - 1)
                 if (m > 1) {
-                    ret.add(new IntegerClause(
-                            s[m - 1],
-                            LLExpressions.le(LLExpressions.sub(lhs[m - 1], 1), rhs[m - 1])
-                    ));
+                    ret.add(new IntegerClause(s[m - 1], ge(sub(lhs[m - 1], 1), rhs[m - 1])));
                 }
 
                 for (int i = 0; i < m - 1; i++) {
-                    final LinearExpression cex = lle(c[i + 1]);
-                    //c(i + 1) <= 0 x(i) + y(i) + c(i) >= B
-                    final IntegerClause ltor = new IntegerClause(
-                            LLExpressions.le(cex, 0),
-                            LLExpressions.ge(rhs[i], b)
-                    );
+                    //c(i + 1) <= 0 or x(i) + y(i) + c(i) >= B
+                    ret.add(new IntegerClause(le(c[i + 1], 0), ge(rhs[i], b)));
 
                     //c(i+1) >= 1 or x(i) + y(i) + c(i) <= B - 1
-                    final IntegerClause rtol = new IntegerClause(
-                            LLExpressions.ge(cex, 1),
-                            LLExpressions.le(rhs[i], b - 1)
-                    );
-
-                    ret.add(ltor);
-                    ret.add(rtol);
+                    ret.add(new IntegerClause(ge(c[i + 1], 1), le(rhs[i], b - 1)));
                 }
                 break;
             }
             case EQ: {
                 for (int i = 0; i < m; ++i) {
-                    ret.add(new IntegerClause(LLExpressions.le(lhs[i], rhs[i])));
-                    ret.add(new IntegerClause(LLExpressions.ge(lhs[i], rhs[i])));
+                    ret.add(new IntegerClause(le(lhs[i], rhs[i])));
+                    ret.add(new IntegerClause(ge(lhs[i], rhs[i])));
                 }
                 break;
             }
@@ -332,27 +264,18 @@ public class CompactCSPReduction {
                 final IntegerClause.Builder newClause = new IntegerClause.Builder();
                 for (int i = 0; i < m; ++i) {
                     newClause.addArithmeticLiterals(
-                            LLExpressions.le(lhs[i], LLExpressions.sub(rhs[i], 1)),
-                            LLExpressions.ge(LLExpressions.sub(lhs[i], 1), rhs[i])
+                            le(lhs[i], sub(rhs[i], 1)),
+                            ge(sub(lhs[i], 1), rhs[i])
                     );
                 }
-                ret.addAll(CompactOrderReduction.simplifyClause(newClause.build(), context, csp, cf.formulaFactory()));
+                ret.addAll(CompactOrderReduction.simplifyClause(newClause.build(), context, cf.formulaFactory()));
 
                 for (int i = 0; i < m - 1; i++) {
-                    // c(i+1) <= 0 or x(i)+y(i)+c(i) >= B
-                    final IntegerClause ltor = new IntegerClause(
-                            LLExpressions.le(lle(c[i + 1]), 0),
-                            LLExpressions.ge(rhs[i], b)
-                    );
+                    // carry(i+1) <= 0 or x(i)+y(i)+carry(i) >= B
+                    ret.add(new IntegerClause(le(c[i + 1], 0), ge(rhs[i], b)));
 
-                    // c(i+1) >= 1 or x(i) + y(i) + c(i) <= B - 1
-                    final IntegerClause rtol = new IntegerClause(
-                            LLExpressions.ge(lle(c[i + 1]), 1),
-                            LLExpressions.le(rhs[i], b - 1)
-                    );
-
-                    ret.add(ltor);
-                    ret.add(rtol);
+                    // carry(i+1) >= 1 or x(i) + y(i) + carry(i) <= B - 1
+                    ret.add(new IntegerClause(ge(c[i + 1], 1), le(rhs[i], b - 1)));
                 }
                 break;
             }
@@ -360,72 +283,61 @@ public class CompactCSPReduction {
         return ret;
     }
 
-    private static Set<IntegerClause> convertToCCSP(final EqMul lit, final Csp.Builder csp, final CompactOrderEncodingContext context, final CspFactory cf) {
+    private static Set<IntegerClause> convertToCCSP(final EqMul lit, final CompactOrderEncodingContext context, final CspFactory cf) {
         final int b = context.getBase();
         final IntegerHolder x = lit.getX();
         final IntegerVariable y = lit.getY();
         final IntegerHolder z = lit.getZ();
-        final Map<IntegerConstant, List<Integer>> constDigits = calculateConstDigits(List.of(lit.getX(), lit.getY(), lit.getZ()), b);
-        final int m = Math.max(Math.max(nDigits(x, context, constDigits), nDigits(y, context, constDigits)), nDigits(z, context, constDigits));
+        final int m = Math.max(Math.max(nDigits(x, context, cf), nDigits(y, context, cf)), nDigits(z, context, cf));
         final Set<IntegerClause> ret = new LinkedHashSet<>();
 
         if (x instanceof IntegerConstant && ((IntegerConstant) x).getValue() < b) {
             if (((IntegerConstant) x).getValue() == 0) {
                 assert z instanceof IntegerVariable;
-                return convertToCCSP(new OpXY(OpXY.Operator.LE, z, cf.constant(0)), csp, context, cf);
+                return convertToCCSP(new OpXY(OpXY.Operator.LE, z, cf.constant(0)), context, cf);
             } else if (((IntegerConstant) x).getValue() == 1) {
-                return convertToCCSP(new OpXY(OpXY.Operator.EQ, z, y), csp, context, cf);
+                return convertToCCSP(new OpXY(OpXY.Operator.EQ, z, y), context, cf);
             }
             final IntegerHolder[] v = new IntegerHolder[m];
             final int a = ((IntegerConstant) x).getValue();
             for (int i = 0; i < m; ++i) {
-                final IntegerDomain d = IntegerDomain.of(0, a * nth(y, i, context, constDigits).getDomain().ub());
-                final IntegerVariable vi = cf.auxVariable(AUX_PREFIX, d);
-                csp.addInternalIntegerVariable(vi);
-                splitToDigits(vi, csp, context, cf);
+                final IntegerDomain d = IntegerDomain.of(0, a * nth(y, i, context).getDomain().ub());
+                final IntegerVariable vi = newCCSPVariable(d, context, cf);
                 v[i] = vi;
             }
 
             for (int i = 0; i < m; ++i) {
-                ret.add(new IntegerClause(LLExpressions.le(
-                        LLExpressions.add(LLExpressions.mul(nth(v[i], 1, context, constDigits), b), nth(v[i], 0, context, constDigits)),
-                        LLExpressions.mul(nth(y, i, context, constDigits), a)
-                )));
-                ret.add(new IntegerClause(LLExpressions.ge(
-                        LLExpressions.add(LLExpressions.mul(nth(v[i], 1, context, constDigits), b), nth(v[0], 0, context, constDigits)),
-                        LLExpressions.mul(nth(y, i, context, constDigits), a)
-                )));
+                final LinearExpression left = add(mul(nth(v[i], 1, context), b), nth(v[i], 0, context));
+                final LinearExpression right = mul(nth(y, i, context), a);
+                ret.add(new IntegerClause(le(left, right)));
+                ret.add(new IntegerClause(ge(left, right)));
             }
 
-            final IntegerVariable[] c = new IntegerVariable[m];
+            final LinearExpression[] c = new LinearExpression[m];
             final IntegerDomain d = IntegerDomain.of(0, 1);
             for (int i = 2; i < m; ++i) {
-                c[i] = cf.auxVariable(AUX_PREFIX, d);
-                csp.addInternalIntegerVariable(c[i]);
+                c[i] = new LinearExpression(newCCSPVariable(d, context, cf));
             }
 
             for (int i = 0; i < m; ++i) {
                 final LinearExpression lhs;
                 if (i == 0 || i == m - 1) {
-                    lhs = nth(z, i, context, constDigits);
+                    lhs = nth(z, i, context);
                 } else {
-                    lhs = LLExpressions.add(nth(z, i, context, constDigits), nth(v[i - 1], 1, context, constDigits));
+                    lhs = add(nth(z, i, context), mul(c[i + 1], b));
                 }
 
                 final LinearExpression rhs;
                 if (i == 0) {
-                    rhs = nth(v[i], 0, context, constDigits);
+                    rhs = nth(v[i], 0, context);
                 } else if (i == 1) {
-                    rhs = LLExpressions.add(nth(v[i], 0, context, constDigits), nth(v[i - 1], 1, context, constDigits));
+                    rhs = add(nth(v[i], 0, context), nth(v[i - 1], 1, context));
                 } else {
-                    rhs = LLExpressions.add(
-                            LLExpressions.add(nth(v[i], 0, context, constDigits), nth(v[i - 1], 1, context, constDigits)),
-                            lle(c[i])
-                    );
+                    rhs = add(nth(v[i], 0, context), nth(v[i - 1], 1, context), c[i]);
                 }
 
-                ret.add(new IntegerClause(LLExpressions.le(lhs, rhs)));
-                ret.add(new IntegerClause(LLExpressions.ge(lhs, rhs)));
+                ret.add(new IntegerClause(le(lhs, rhs)));
+                ret.add(new IntegerClause(ge(lhs, rhs)));
             }
         } else {
             // z = xy
@@ -435,37 +347,34 @@ public class CompactCSPReduction {
             for (int i = 0; i < m; ++i) {
                 final IntegerDomain d;
                 if (x instanceof IntegerConstant) {
-                    d = IntegerDomain.of(0, Math.min(nthValue((IntegerConstant) x, i, constDigits) * uby, ubz));
+                    d = IntegerDomain.of(0, Math.min(nthValue((IntegerConstant) x, i, context) * uby, ubz));
                 } else {
                     d = IntegerDomain.of(0, Math.min((b - 1) * uby, ubz));
                 }
-                w[i] = cf.auxVariable(AUX_PREFIX, d);
-                csp.addInternalIntegerVariable(w[i]);
-                splitToDigits(w[i], csp, context, cf);
+                w[i] = newCCSPVariable(d, context, cf);
                 ubz /= b;
             }
+
             if (x instanceof IntegerConstant) {
                 for (int i = 0; i < m; ++i) {
-                    final EqMul newLit = new EqMul(w[i], cf.constant(nthValue((IntegerConstant) x, i, constDigits)), y);
-                    ret.addAll(convertToCCSP(newLit, csp, context, cf));
+                    final EqMul newLit = new EqMul(w[i], cf.constant(nthValue((IntegerConstant) x, i, context)), y);
+                    ret.addAll(convertToCCSP(newLit, context, cf));
                 }
             } else {
                 final IntegerVariable[] ya = new IntegerVariable[b];
                 for (int a = 0; a < b; ++a) {
-                    ya[a] = cf.auxVariable(AUX_PREFIX, IntegerDomain.of(0, a * uby));
-                    splitToDigits(ya[a], csp, context, cf);
-                    csp.addInternalIntegerVariable(ya[a]);
+                    ya[a] = newCCSPVariable(IntegerDomain.of(0, a * uby), context, cf);
                 }
 
                 for (int i = 0; i < m; ++i) {
                     for (int a = 0; a < b; ++a) {
                         final List<ArithmeticLiteral> als = List.of(
-                                LLExpressions.le(nth(x, i, context, constDigits), a - 1),
-                                LLExpressions.ge(nth(x, i, context, constDigits), a + 1)
+                                le(nth(x, i, context), a - 1),
+                                ge(nth(x, i, context), a + 1)
                         );
 
                         final OpXY newLit = new OpXY(OpXY.Operator.EQ, w[i], ya[a]);
-                        for (final IntegerClause c : convertToCCSP(newLit, csp, context, cf)) {
+                        for (final IntegerClause c : convertToCCSP(newLit, context, cf)) {
                             final IntegerClause.Builder newClause = new IntegerClause.Builder(c);
                             newClause.addArithmeticLiterals(als);
                             ret.add(newClause.build());
@@ -475,7 +384,7 @@ public class CompactCSPReduction {
 
                 for (int a = 0; a < b; ++a) {
                     final EqMul newLit = new EqMul(ya[a], cf.constant(a), y);
-                    ret.addAll(convertToCCSP(newLit, csp, context, cf));
+                    ret.addAll(convertToCCSP(newLit, context, cf));
                 }
             }
 
@@ -484,23 +393,19 @@ public class CompactCSPReduction {
             zi[m - 1] = w[m - 1];
             for (int i = m - 2; i > 0; --i) {
                 final IntegerDomain d = IntegerDomain.of(0, b * zi[i + 1].getDomain().ub() + w[i].getDomain().ub());
-                final IntegerVariable zii = cf.auxVariable(AUX_PREFIX, d);
-                splitToDigits(zii, csp, context, cf);
-                csp.addInternalIntegerVariable(zii);
+                final IntegerVariable zii = newCCSPVariable(d, context, cf);
                 zi[i] = zii;
             }
             zi[0] = z;
 
             if (m == 1) {
-                final LinearExpression exp1 = nth(z, 0, context, constDigits);
-                final LinearExpression exp2 = nth(w[0], 0, context, constDigits);
-                final LinearLiteral lit1 = LLExpressions.le(exp1, exp2);
-                final LinearLiteral lit2 = LLExpressions.ge(exp1, exp2);
-                ret.add(new IntegerClause(lit1));
-                ret.add(new IntegerClause(lit2));
+                final LinearExpression exp1 = nth(z, 0, context);
+                final LinearExpression exp2 = nth(w[0], 0, context);
+                ret.add(new IntegerClause(le(exp1, exp2)));
+                ret.add(new IntegerClause(ge(exp1, exp2)));
             } else {
                 for (int i = 0; i < m - 1; ++i) {
-                    ret.addAll(shiftAddToCCSP(zi[i], zi[i + 1], w[i], csp, context, cf));
+                    ret.addAll(shiftAddToCCSP(zi[i], zi[i + 1], w[i], context, cf));
                 }
             }
         }
@@ -510,57 +415,48 @@ public class CompactCSPReduction {
     /**
      * u = b*s+t
      */
-    private static Set<IntegerClause> shiftAddToCCSP(final IntegerHolder u, final IntegerHolder s, final IntegerHolder t, final Csp.Builder csp, final CompactOrderEncodingContext context,
+    private static Set<IntegerClause> shiftAddToCCSP(final IntegerHolder u, final IntegerHolder s, final IntegerHolder t, final CompactOrderEncodingContext context,
                                                      final CspFactory cf) {
         final int b = context.getBase();
-        final Map<IntegerConstant, List<Integer>> constDigits = calculateConstDigits(List.of(u, s, t), b);
-        final int m = Math.max(nDigits(s, context, constDigits), nDigits(t, context, constDigits));
+        final int m = 1 + Math.max(nDigits(s, context, cf), nDigits(t, context, cf));
         final Set<IntegerClause> ret = new LinkedHashSet<>();
 
-        final IntegerVariable[] c = new IntegerVariable[m];
+        final LinearExpression[] c = new LinearExpression[m];
         final IntegerDomain d = IntegerDomain.of(0, 1);
         for (int i = 2; i < m; i++) {
-            c[i] = cf.auxVariable(AUX_PREFIX, d);
-            csp.addInternalIntegerVariable(c[i]);
+            c[i] = new LinearExpression(newCCSPVariable(d, context, cf));
         }
 
         for (int i = 0; i < m; ++i) {
             final LinearExpression lhs;
             if (i == 0 || i == m - 1) {
-                lhs = nth(u, i, context, constDigits);
+                lhs = nth(u, i, context);
             } else {
-                lhs = LLExpressions.add(
-                        nth(u, i, context, constDigits),
-                        LLExpressions.mul(lle(c[i + 1]), b)
-                );
+                lhs = add(nth(u, i, context), mul(c[i + 1], b));
             }
 
             final LinearExpression rhs;
             if (i == 0) {
-                rhs = nth(t, i, context, constDigits);
+                rhs = nth(t, i, context);
             } else if (i == 1) {
-                rhs = LLExpressions.add(nth(t, i, context, constDigits), nth(s, i - 1, context, constDigits));
+                rhs = add(nth(t, 1, context), nth(s, 0, context));
             } else if (i == m - 1) {
-                rhs = LLExpressions.add(nth(s, i - 1, context, constDigits), lle(c[i]));
+                rhs = add(nth(s, i - 1, context), c[i]);
             } else {
-                rhs = LLExpressions.add(
-                        LLExpressions.add(nth(t, i, context, constDigits), nth(s, i - 1, context, constDigits)),
-                        lle(c[i])
-                );
+                rhs = add(nth(t, i, context), nth(s, i - 1, context), c[i]);
             }
 
-            ret.add(new IntegerClause(LLExpressions.le(lhs, rhs)));
-            ret.add(new IntegerClause(LLExpressions.ge(lhs, rhs)));
+            ret.add(new IntegerClause(le(lhs, rhs)));
+            ret.add(new IntegerClause(ge(lhs, rhs)));
         }
         return ret;
     }
 
-    private static void splitToDigits(final IntegerVariable v, final Csp.Builder csp, final CompactOrderEncodingContext context, final CspFactory cf) {
+    private static List<IntegerVariable> splitToDigits(final IntegerVariable v, final CompactOrderEncodingContext context, final CspFactory cf) {
         int ub = v.getDomain().ub();
         final int b = context.getBase();
         final int m = (int) Math.ceil(Math.log(ub + 1) / Math.log(b));
 
-        final Set<IntegerVariable> digits = new HashSet<>();
         final List<IntegerVariable> vs = new ArrayList<>(m);
         if (m == 1) {
             vs.add(v);
@@ -569,33 +465,34 @@ public class CompactCSPReduction {
                 assert ub > 0;
                 final int ubi = (i == m - 1) ? ub : b - 1;
                 final IntegerDomain dom = IntegerDomain.of(0, ubi);
-                final IntegerVariable dv = cf.auxVariable(AUX_PREFIX, dom);
+                final IntegerVariable dv = context.newAuxiliaryDigitVariable(dom, cf);
                 vs.add(dv);
-                csp.addInternalIntegerVariable(dv);
-                digits.add(dv);
                 ub /= b;
             }
         }
-        context.getDigits().put(v, vs);
+        return vs;
     }
 
-    private static Map<IntegerConstant, List<Integer>> calculateConstDigits(final Collection<IntegerHolder> vars, final int b) {
-        final Map<IntegerConstant, List<Integer>> digitsMap = new HashMap<>();
-        for (final IntegerHolder v : vars) {
-            if (v instanceof IntegerConstant) {
-                final List<Integer> digits = intToDigits((IntegerConstant) v, b);
-                digitsMap.put((IntegerConstant) v, digits);
-            }
-        }
-        return digitsMap;
-    }
-
-    private static int nDigits(final IntegerHolder v, final CompactOrderEncodingContext context, final Map<IntegerConstant, List<Integer>> constDigits) {
+    private static int nDigits(final IntegerHolder v, final CompactOrderEncodingContext context, final CspFactory cf) {
         if (v instanceof IntegerConstant) {
-            return constDigits.get((IntegerConstant) v).size();
+            return calculateOrGetConstDigits((IntegerConstant) v, context, cf).size();
         } else {
-            return context.getDigits().size();
+            return context.getDigits((IntegerVariable) v).size();
         }
+    }
+
+    private static List<IntegerVariable> calculateOrGetDigits(final IntegerVariable v, final CompactOrderEncodingContext context, final CspFactory cf) {
+        if (!context.hasDigits(v)) {
+            context.addDigits(v, splitToDigits(v, context, cf));
+        }
+        return context.getDigits(v);
+    }
+
+    private static List<Integer> calculateOrGetConstDigits(final IntegerConstant c, final CompactOrderEncodingContext context, final CspFactory cf) {
+        if (!context.hasConstDigits(c)) {
+            context.addConstDigits(c, intToDigits(c, context.getBase()));
+        }
+        return context.getConstDigits(c);
     }
 
     private static List<Integer> intToDigits(final IntegerConstant c, final int b) {
@@ -609,12 +506,12 @@ public class CompactCSPReduction {
         return digits;
     }
 
-    private static LinearExpression nth(final IntegerHolder v, final int n, final CompactOrderEncodingContext context, final Map<IntegerConstant, List<Integer>> constDigits) {
+    private static LinearExpression nth(final IntegerHolder v, final int n, final CompactOrderEncodingContext context) {
         if (v instanceof IntegerConstant) {
-            assert constDigits.get((IntegerConstant) v) != null;
-            return new LinearExpression(nthValue((IntegerConstant) v, n, constDigits));
+            assert context.getConstDigits((IntegerConstant) v) != null;
+            return new LinearExpression(nthValue((IntegerConstant) v, n, context));
         } else {
-            final List<IntegerVariable> digits = context.getDigits().get((IntegerVariable) v);
+            final List<IntegerVariable> digits = context.getDigits((IntegerVariable) v);
             if (digits.size() > n) {
                 return new LinearExpression(digits.get(n));
             } else {
@@ -623,12 +520,59 @@ public class CompactCSPReduction {
         }
     }
 
-    private static int nthValue(final IntegerConstant v, final int n, final Map<IntegerConstant, List<Integer>> constDigits) {
-        return constDigits.get(v).size() > n ? constDigits.get(v).get(n) : 0;
+    private static int nthValue(final IntegerConstant v, final int n, final CompactOrderEncodingContext context) {
+        return context.getConstDigits(v).size() > n ? context.getConstDigits(v).get(n) : 0;
     }
 
-    private static LinearExpression lle(final IntegerVariable v) {
-        return new LinearExpression(v);
+    private static IntegerVariable newCCSPVariable(final IntegerDomain d, final CompactOrderEncodingContext context, final CspFactory cf) {
+        final IntegerVariable v = context.newCCSPVariable(d, cf);
+        context.addDigits(v, splitToDigits(v, context, cf));
+        return v;
     }
 
+    public static LinearLiteral le(final LinearExpression lhs, final LinearExpression rhs) {
+        final LinearExpression l = LinearExpression.subtract(lhs, rhs);
+        return new LinearLiteral(l, LinearLiteral.Operator.LE);
+    }
+
+    public static LinearLiteral le(final LinearExpression lhs, final int e) {
+        final LinearExpression.Builder l = new LinearExpression.Builder(lhs);
+        l.setB(l.getB() - e);
+        return new LinearLiteral(l.build(), LinearLiteral.Operator.LE);
+    }
+
+    public static LinearLiteral ge(final LinearExpression lhs, final LinearExpression rhs) {
+        return le(rhs, lhs);
+    }
+
+    public static LinearLiteral ge(final LinearExpression lhs, final int e) {
+        final LinearExpression.Builder l = new LinearExpression.Builder(lhs);
+        l.setB(l.getB() - e);
+        l.multiply(-1);
+        return new LinearLiteral(l.build(), LinearLiteral.Operator.LE);
+    }
+
+    public static LinearExpression add(final LinearExpression... es) {
+        final LinearExpression.Builder l = new LinearExpression.Builder(0);
+        for (final LinearExpression e : es) {
+            l.add(e);
+        }
+        return l.build();
+    }
+
+    public static LinearExpression add(final LinearExpression lhs, final int e) {
+        final LinearExpression.Builder l = new LinearExpression.Builder(lhs);
+        l.setB(l.getB() + e);
+        return l.build();
+    }
+
+    public static LinearExpression sub(final LinearExpression lhs, final int e) {
+        return add(lhs, e);
+    }
+
+    public static LinearExpression mul(final LinearExpression lhs, final int c) {
+        final LinearExpression.Builder l = new LinearExpression.Builder(lhs);
+        l.multiply(c);
+        return l.build();
+    }
 }

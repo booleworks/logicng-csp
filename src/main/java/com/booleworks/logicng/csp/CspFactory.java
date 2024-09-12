@@ -1,5 +1,9 @@
 package com.booleworks.logicng.csp;
 
+import com.booleworks.logicng.csp.encodings.CompactOrderDecoding;
+import com.booleworks.logicng.csp.encodings.CompactOrderEncoding;
+import com.booleworks.logicng.csp.encodings.CompactOrderEncodingContext;
+import com.booleworks.logicng.csp.encodings.CompactOrderReduction;
 import com.booleworks.logicng.csp.encodings.CspEncodingContext;
 import com.booleworks.logicng.csp.encodings.OrderDecoding;
 import com.booleworks.logicng.csp.encodings.OrderEncoding;
@@ -503,6 +507,10 @@ public class CspFactory {
                 newCsp = OrderReduction.reduce(csp, (OrderEncodingContext) context, this);
                 OrderEncoding.encode(newCsp, (OrderEncodingContext) context, result, this);
                 return result.result();
+            case CompactOrder:
+                newCsp = CompactOrderReduction.reduce(csp, (CompactOrderEncodingContext) context, this);
+                CompactOrderEncoding.encode(newCsp, (CompactOrderEncodingContext) context, result, this);
+                return result.result();
             default:
                 throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
         }
@@ -539,6 +547,8 @@ public class CspFactory {
         switch (context.getAlgorithm()) {
             case Order:
                 return OrderDecoding.decode(model, csp, (OrderEncodingContext) context, this);
+            case CompactOrder:
+                return CompactOrderDecoding.decode(model, csp, (CompactOrderEncodingContext) context, this);
             default:
                 throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
         }
@@ -549,6 +559,8 @@ public class CspFactory {
         switch (context.getAlgorithm()) {
             case Order:
                 return OrderDecoding.decode(model, integerVariables, booleanVariables, (OrderEncodingContext) context, this);
+            case CompactOrder:
+                return CompactOrderDecoding.decode(model, integerVariables, booleanVariables, (CompactOrderEncodingContext) context, this);
             default:
                 throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
         }
@@ -558,6 +570,8 @@ public class CspFactory {
         switch (context.getAlgorithm()) {
             case Order:
                 return OrderDecoding.decode(model, integerVariables, (OrderEncodingContext) context, this);
+            case CompactOrder:
+                return CompactOrderDecoding.decode(model, integerVariables, (CompactOrderEncodingContext) context, this);
             default:
                 throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
         }

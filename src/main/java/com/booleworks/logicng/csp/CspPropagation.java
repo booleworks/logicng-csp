@@ -1,14 +1,12 @@
 package com.booleworks.logicng.csp;
 
+import com.booleworks.logicng.csp.datastructures.IntegerVariableSubstitution;
 import com.booleworks.logicng.csp.literals.ArithmeticLiteral;
 import com.booleworks.logicng.csp.literals.LinearLiteral;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -17,13 +15,15 @@ public class CspPropagation {
     public static String BOUNDED_AUX_VAR = "PROPAGATION";
 
     public static Csp propagate(final Csp csp, final CspFactory cf) {
-        final Map<IntegerVariable, IntegerVariable> restrictions = new TreeMap<>();
-        final Map<IntegerVariable, IntegerVariable> reverseSubstitutions = new HashMap<>();
+        if (!csp.getPropagateSubstitutions().isEmpty()) {
+            throw new IllegalArgumentException("Propagating a CSP more than once is not supported");
+        }
+        final IntegerVariableSubstitution restrictions = new IntegerVariableSubstitution(csp.getPropagateSubstitutions());
         boolean changed = true;
         while (changed) {
             changed = false;
             for (final IntegerClause clause : csp.getClauses()) {
-                if (calculateNewBounds(clause, restrictions, reverseSubstitutions, cf)) {
+                if (calculateNewBounds(clause, restrictions, cf)) {
                     changed = true;
                 }
             }
@@ -31,18 +31,17 @@ public class CspPropagation {
         if (!restrictions.isEmpty()) {
             final Set<IntegerClause> newClauses =
                     csp.getClauses().stream().map(c -> rebuildClause(c, restrictions)).filter(c -> !c.isValid()).collect(Collectors.toSet());
-            return Csp.fromClauses(newClauses, csp.getVisibleIntegerVariables(), csp.getVisibleBooleanVariables(), reverseSubstitutions);
+            return Csp.fromClauses(newClauses, csp.getVisibleIntegerVariables(), csp.getVisibleBooleanVariables(), restrictions);
         } else {
             return csp;
         }
     }
 
-    private static boolean calculateNewBounds(final IntegerClause clause, final Map<IntegerVariable, IntegerVariable> restrictions,
-                                              final Map<IntegerVariable, IntegerVariable> reverseSubstitutions, final CspFactory cf) {
+    private static boolean calculateNewBounds(final IntegerClause clause, final IntegerVariableSubstitution restrictions, final CspFactory cf) {
         boolean changed = false;
         for (final IntegerVariable v : clause.getCommonVariables()) {
             assert clause.getBoolLiterals().isEmpty();
-            final IntegerVariable currentV = restrictions.getOrDefault(v, v);
+            final IntegerVariable currentV = restrictions.getOrSelf(v);
             if (currentV.isUnsatisfiable()) {
                 continue;
             }
@@ -62,11 +61,10 @@ public class CspPropagation {
                 }
             }
             if (bound != null && bound[0] <= bound[1]) {
-                final IntegerVariable oldVar = restrictions.getOrDefault(v, v);
+                final IntegerVariable oldVar = restrictions.getOrSelf(v);
                 final IntegerVariable newVar = boundVariable(oldVar, bound[0], bound[1], cf);
                 if (newVar != oldVar) {
-                    reverseSubstitutions.put(newVar, v);
-                    restrictions.put(v, newVar);
+                    restrictions.add(v, newVar);
                     changed = true;
                 }
             }
@@ -74,7 +72,7 @@ public class CspPropagation {
         return changed;
     }
 
-    private static IntegerClause rebuildClause(final IntegerClause clause, final Map<IntegerVariable, IntegerVariable> assignment) {
+    private static IntegerClause rebuildClause(final IntegerClause clause, final IntegerVariableSubstitution assignment) {
         final TreeSet<ArithmeticLiteral> newLits = clause.getArithmeticLiterals().stream()
                 .map(l -> l.substitute(assignment))
                 .filter(Objects::nonNull)
@@ -98,7 +96,7 @@ public class CspPropagation {
         return cf.auxVariable(BOUNDED_AUX_VAR, variable.getName(), d);
     }
 
-    private static int[] getBound(final ArithmeticLiteral literal, final IntegerVariable v, final Map<IntegerVariable, IntegerVariable> restrictions) {
+    private static int[] getBound(final ArithmeticLiteral literal, final IntegerVariable v, final IntegerVariableSubstitution restrictions) {
         if (literal instanceof LinearLiteral) {
             final LinearLiteral l = (LinearLiteral) literal;
             final int a = l.getSum().getA(v);

@@ -2,9 +2,9 @@ package com.booleworks.logicng.csp.literals;
 
 import com.booleworks.logicng.csp.IntegerDomain;
 import com.booleworks.logicng.csp.LinearExpression;
+import com.booleworks.logicng.csp.datastructures.IntegerVariableSubstitution;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -70,7 +70,7 @@ public class LinearLiteral implements ArithmeticLiteral {
     }
 
     @Override
-    public LinearLiteral substitute(final Map<IntegerVariable, IntegerVariable> assignment) {
+    public LinearLiteral substitute(final IntegerVariableSubstitution assignment) {
         final SortedMap<IntegerVariable, Integer> newCoefs = new TreeMap<>();
         int replaced = 0;
         for (final IntegerVariable key : sum.getCoef().keySet()) {

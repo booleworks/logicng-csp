@@ -2,9 +2,9 @@ package com.booleworks.logicng.csp.literals;
 
 import com.booleworks.logicng.csp.IntegerDomain;
 import com.booleworks.logicng.csp.IntegerHolder;
+import com.booleworks.logicng.csp.datastructures.IntegerVariableSubstitution;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -110,21 +110,21 @@ public class OpAdd implements RCSPLiteral {
     }
 
     @Override
-    public ArithmeticLiteral substitute(final Map<IntegerVariable, IntegerVariable> assignment) {
+    public ArithmeticLiteral substitute(final IntegerVariableSubstitution assignment) {
         IntegerHolder newX = this.x;
         IntegerHolder newY = this.y;
         IntegerHolder newZ = this.z;
         if (this.x instanceof IntegerVariable) {
             final IntegerVariable x = (IntegerVariable) this.x;
-            newX = assignment.getOrDefault(x, x);
+            newX = assignment.getOrSelf(x);
         }
         if (this.y instanceof IntegerVariable) {
             final IntegerVariable y = (IntegerVariable) this.y;
-            newY = assignment.getOrDefault(y, y);
+            newY = assignment.getOrSelf(y);
         }
         if (this.z instanceof IntegerVariable) {
             final IntegerVariable z = (IntegerVariable) this.z;
-            newZ = assignment.getOrDefault(z, z);
+            newZ = assignment.getOrSelf(z);
         }
         if (this.x == newX && this.y == newY && this.z == newZ) {
             return this;

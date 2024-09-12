@@ -29,7 +29,7 @@ public class CspModelEnumerationTest extends ParameterizedCspTest {
         final IntegerVariable c = cf.variable("c", -5, 12);
         final Formula formula = cf.eq(cf.add(a, c), b);
         final Csp csp = cf.buildCsp(formula);
-        final CspEncodingContext context = new CspEncodingContext();
+        final CspEncodingContext context = CspEncodingContext.order();
         final SATSolver solver = SATSolver.newSolver(f);
         solver.add(cf.encodeCsp(csp, context));
         final List<CspAssignment> models = CspModelEnumeration.enumerate(solver, csp, context, cf);
@@ -53,7 +53,7 @@ public class CspModelEnumerationTest extends ParameterizedCspTest {
         final Variable c = f.variable("C");
         final Formula formula = f.or(a, f.and(b, c));
         final Csp csp = cf.buildCsp(formula);
-        final CspEncodingContext context = new CspEncodingContext();
+        final CspEncodingContext context = CspEncodingContext.order();
         final SATSolver solver = SATSolver.newSolver(f);
         solver.add(cf.encodeCsp(csp, context));
         final List<CspAssignment> models = CspModelEnumeration.enumerate(solver, csp, context, cf);

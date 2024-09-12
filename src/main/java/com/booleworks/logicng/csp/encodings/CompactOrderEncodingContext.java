@@ -2,33 +2,51 @@ package com.booleworks.logicng.csp.encodings;
 
 import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.IntegerDomain;
+import com.booleworks.logicng.csp.datastructures.IntegerVariableSubstitution;
+import com.booleworks.logicng.csp.terms.IntegerConstant;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.formulas.FormulaFactory;
 import com.booleworks.logicng.formulas.Variable;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CompactOrderEncodingContext implements CspEncodingContext {
     public static final int DEFAULT_BASE = 10;
     private final OrderEncodingContext orderContext;
     private final int base;
     private final Map<IntegerVariable, List<IntegerVariable>> digits;
+    private final Map<IntegerConstant, List<Integer>> constDigits;
+    private final List<IntegerVariable> auxiliaryDigitVariables;
     private final Map<IntegerVariable, Integer> offsets;
-    private final Map<IntegerVariable, IntegerVariable> reverseSubstitutions;
-    private final Map<IntegerVariable, IntegerVariable> substitutions;
+    private final IntegerVariableSubstitution adjustedVariablesSubstitution;
+    private final List<IntegerVariable> adjustedVariables;
+    private final List<Variable> adjustedBoolVariables;
+    private final List<IntegerVariable> ternarySimplificationVariables;
+    private final List<IntegerVariable> rcspVariables;
+    private final List<IntegerVariable> ccspVariables;
+    private final List<Variable> ccspBoolVariables;
 
     public CompactOrderEncodingContext(final int base) {
         this.base = base;
         this.orderContext = CspEncodingContext.order();
-        this.digits = new TreeMap<>();
-        this.offsets = new TreeMap<>();
-        this.reverseSubstitutions = new TreeMap<>();
-        this.substitutions = new TreeMap<>();
+        this.digits = new HashMap<>();
+        this.constDigits = new HashMap<>();
+        this.auxiliaryDigitVariables = new ArrayList<>();
+        this.offsets = new HashMap<>();
+        this.adjustedVariablesSubstitution = new IntegerVariableSubstitution();
+        this.adjustedVariables = new ArrayList<>();
+        this.adjustedBoolVariables = new ArrayList<>();
+        this.ternarySimplificationVariables = new ArrayList<>();
+        this.rcspVariables = new ArrayList<>();
+        this.ccspVariables = new ArrayList<>();
+        this.ccspBoolVariables = new ArrayList<>();
     }
 
     public CompactOrderEncodingContext() {
@@ -38,92 +56,162 @@ public class CompactOrderEncodingContext implements CspEncodingContext {
     public CompactOrderEncodingContext(final CompactOrderEncodingContext context) {
         this.base = context.base;
         this.orderContext = new OrderEncodingContext(context.orderContext);
-        this.digits = new TreeMap<>(context.digits);
-        this.offsets = new TreeMap<>(context.offsets);
-        this.reverseSubstitutions = new TreeMap<>(context.reverseSubstitutions);
-        this.substitutions = new TreeMap<>(context.substitutions);
+        this.digits = new HashMap<>(context.digits);
+        this.constDigits = new HashMap<>(context.constDigits);
+        this.auxiliaryDigitVariables = new ArrayList<>(context.auxiliaryDigitVariables);
+        this.offsets = new HashMap<>(context.offsets);
+        this.adjustedVariablesSubstitution = new IntegerVariableSubstitution(context.adjustedVariablesSubstitution);
+        this.adjustedVariables = new ArrayList<>(context.adjustedVariables);
+        this.adjustedBoolVariables = new ArrayList<>(context.adjustedBoolVariables);
+        this.ternarySimplificationVariables = new ArrayList<>(context.ternarySimplificationVariables);
+        this.rcspVariables = new ArrayList<>(context.rcspVariables);
+        this.ccspVariables = new ArrayList<>(context.ccspVariables);
+        this.ccspBoolVariables = new ArrayList<>(context.ccspBoolVariables);
     }
 
     public int getBase() {
         return base;
     }
 
-    public Map<IntegerVariable, List<IntegerVariable>> getDigits() {
-        return digits;
+    public void addDigits(final IntegerVariable v, final List<IntegerVariable> digits) {
+        this.digits.put(v, digits);
     }
 
-    public Map<IntegerVariable, Integer> getOffsets() {
-        return offsets;
+    IntegerVariable newAuxiliaryDigitVariable(final IntegerDomain d, final CspFactory cf) {
+        final IntegerVariable v = cf.auxVariable(CompactCSPReduction.AUX_DIGIT, d);
+        auxiliaryDigitVariables.add(v);
+        return v;
+    }
+
+    public List<IntegerVariable> getAuxiliaryDigitVariables() {
+        return auxiliaryDigitVariables;
+    }
+
+    public boolean hasDigits(final IntegerVariable v) {
+        return this.digits.containsKey(v);
+    }
+
+    public List<IntegerVariable> getDigits(final IntegerVariable v) {
+        return digits.get(v);
+    }
+
+    void addConstDigits(final IntegerConstant c, final List<Integer> digits) {
+        this.constDigits.put(c, digits);
+    }
+
+    public boolean hasConstDigits(final IntegerConstant c) {
+        return constDigits.containsKey(c);
+    }
+
+    public List<Integer> getConstDigits(final IntegerConstant c) {
+        return constDigits.get(c);
+    }
+
+    public boolean hasOffset(final IntegerVariable v) {
+        return offsets.containsKey(v);
+    }
+
+    public int getOffset(final IntegerVariable v) {
+        return offsets.get(v);
+    }
+
+    public void addOffset(final IntegerVariable v, final int offset) {
+        offsets.put(v, offset);
     }
 
     public OrderEncodingContext getOrderContext() {
         return orderContext;
     }
 
-    public void addSubstitution(final IntegerVariable original, final IntegerVariable substitute) {
-        substitutions.put(original, substitute);
-        reverseSubstitutions.put(substitute, original);
+    IntegerVariable newAdjustedVariable(final String prefix, final IntegerDomain d, final CspFactory cf) {
+        final IntegerVariable v = cf.auxVariable(prefix, d);
+        adjustedVariables.add(v);
+        return v;
     }
 
-    public IntegerVariable getSubstitution(final IntegerVariable original) {
-        return substitutions.get(original);
+    public List<IntegerVariable> getAdjustedVariables() {
+        return adjustedVariables;
     }
 
-    public IntegerVariable getSubstitutionOrSelf(final IntegerVariable original) {
-        return substitutions.getOrDefault(original, original);
+    void addAdjustedVariable(final IntegerVariable original, final IntegerVariable substitute) {
+        adjustedVariablesSubstitution.add(original, substitute);
     }
 
-    public IntegerVariable getSubstitutionAllOrSelf(final IntegerVariable original) {
-        IntegerVariable current = original;
-        while (substitutions.containsKey(current)) {
-            current = substitutions.get(current);
-        }
-        return current;
+    public IntegerVariable getAdjustedVariable(final IntegerVariable original) {
+        return adjustedVariablesSubstitution.get(original);
     }
 
-    public Map<IntegerVariable, IntegerVariable> getSubstitutions() {
-        return Collections.unmodifiableMap(substitutions);
+    public IntegerVariable getAdjustedVariableOrSelf(final IntegerVariable original) {
+        return adjustedVariablesSubstitution.getOrSelf(original);
     }
 
-    public IntegerVariable reverseSubstitution(final IntegerVariable substitute) {
-        return reverseSubstitutions.get(substitute);
+    public List<IntegerVariable> mapToAdjustedVariableOrSelf(final Collection<IntegerVariable> originals) {
+        return originals.stream().map(adjustedVariablesSubstitution::getOrSelf).collect(Collectors.toList());
     }
 
-    public IntegerVariable reverseSubstitutionOrSelf(final IntegerVariable substitute) {
-        return reverseSubstitutions.getOrDefault(substitute, substitute);
+    public IntegerVariableSubstitution getAdjustedVariablesSubstitution() {
+        return adjustedVariablesSubstitution;
     }
 
-    public IntegerVariable reverseSubstitutionAllOrSelf(final IntegerVariable substitute) {
-        IntegerVariable current = substitute;
-        while (reverseSubstitutions.containsKey(current)) {
-            current = reverseSubstitutions.get(current);
-        }
-        return current;
+    Variable newAdjustedBoolVariable(final FormulaFactory f) {
+        final Variable var = f.newAuxVariable(CSP_AUX_LNG_VARIABLE);
+        adjustedBoolVariables.add(var);
+        return var;
     }
 
-    public Map<IntegerVariable, IntegerVariable> getReverseSubstitutions() {
-        return Collections.unmodifiableMap(reverseSubstitutions);
+    public List<Variable> getAdjustedBoolVariables() {
+        return adjustedBoolVariables;
     }
 
-    public IntegerVariable newAuxIntVariable(final String prefix, final IntegerDomain domain, final CspFactory cf) {
-        return orderContext.newAuxIntVariable(prefix, domain, cf);
+    IntegerVariable newTernarySimplificationVariable(final IntegerDomain d, final CspFactory cf) {
+        final IntegerVariable v = cf.auxVariable(CompactOrderReduction.AUX_TERNARY, d);
+        ternarySimplificationVariables.add(v);
+        return v;
     }
 
-    public Variable newAuxBoolVariable(final FormulaFactory f) {
-        return orderContext.newAuxBoolVariable(f);
+    public List<IntegerVariable> getTernarySimplificationVariables() {
+        return ternarySimplificationVariables;
     }
 
-    public Set<Variable> getBooleanAuxVariables() {
-        return orderContext.getBooleanAuxVariables();
+    IntegerVariable newRCSPVariable(final IntegerDomain d, final CspFactory cf) {
+        final IntegerVariable v = cf.auxVariable(CompactOrderReduction.AUX_RCSP, d);
+        rcspVariables.add(v);
+        return v;
     }
 
-    public Set<IntegerVariable> getIntegerAuxVariables() {
-        return orderContext.getIntegerAuxVariables();
+    public List<IntegerVariable> getRCSPVariables() {
+        return rcspVariables;
+    }
+
+    IntegerVariable newCCSPVariable(final IntegerDomain d, final CspFactory cf) {
+        final IntegerVariable v = cf.auxVariable(CompactCSPReduction.AUX_CCSP, d);
+        ccspVariables.add(v);
+        return v;
+    }
+
+    public List<IntegerVariable> getCCSPVariables() {
+        return ccspVariables;
+    }
+
+    Variable newCCSPBoolVariable(final FormulaFactory f) {
+        final Variable v = f.newAuxVariable(CSP_AUX_LNG_VARIABLE);
+        ccspBoolVariables.add(v);
+        return v;
+    }
+
+    public List<Variable> getCCSPBoolVariables() {
+        return ccspBoolVariables;
     }
 
     @Override
     public Set<Variable> getSatVariables(final Collection<IntegerVariable> variables) {
-        return orderContext.getSatVariables(variables); //FIXME: Substitution?
+        final Collection<IntegerVariable> subs = adjustedVariablesSubstitution
+                .getAllOrSelf(variables).stream()
+                .flatMap(v -> {
+                    if (hasDigits(v)) {return getDigits(v).stream();} else {return Stream.empty();}
+                })
+                .collect(Collectors.toList());
+        return orderContext.getSatVariables(subs);
     }
 
     @Override
