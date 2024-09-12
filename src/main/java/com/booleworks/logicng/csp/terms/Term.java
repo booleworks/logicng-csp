@@ -82,8 +82,8 @@ public abstract class Term {
 
         public static Decomposition merge(final Decomposition term, final Collection<CspPredicate.Decomposition> predicateDecompositions) {
             final Set<IntegerClause> clauses = new LinkedHashSet<>();
-            final Set<IntegerVariable> intVars = new TreeSet<>(term.getAuxiliaryIntegerVariables());
-            final Set<Variable> boolVars = new TreeSet<>(term.getAuxiliaryBooleanVariables());
+            final Set<IntegerVariable> intVars = new LinkedHashSet<>(term.getAuxiliaryIntegerVariables());
+            final Set<Variable> boolVars = new LinkedHashSet<>(term.getAuxiliaryBooleanVariables());
             for (final CspPredicate.Decomposition predDecomp : predicateDecompositions) {
                 clauses.addAll(predDecomp.getClauses());
                 intVars.addAll(predDecomp.getAuxiliaryIntegerVariables());

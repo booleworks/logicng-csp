@@ -8,7 +8,6 @@ import com.booleworks.logicng.formulas.Variable;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 public class Csp {
@@ -20,19 +19,19 @@ public class Csp {
     private Set<IntegerClause> clauses;
 
     private Csp() {
-        this.internalIntegerVariables = new TreeSet<>();
-        this.visibleIntegerVariables = new TreeSet<>();
-        this.internalBooleanVariables = new TreeSet<>();
-        this.visibleBooleanVariables = new TreeSet<>();
+        this.internalIntegerVariables = new LinkedHashSet<>();
+        this.visibleIntegerVariables = new LinkedHashSet<>();
+        this.internalBooleanVariables = new LinkedHashSet<>();
+        this.visibleBooleanVariables = new LinkedHashSet<>();
         this.clauses = new LinkedHashSet<>();
         this.propagateSubstitutions = new IntegerVariableSubstitution();
     }
 
     private Csp(final Csp other) {
-        this.internalIntegerVariables = new TreeSet<>(other.internalIntegerVariables);
-        this.visibleIntegerVariables = new TreeSet<>(other.visibleIntegerVariables);
-        this.internalBooleanVariables = new TreeSet<>(other.internalBooleanVariables);
-        this.visibleBooleanVariables = new TreeSet<>(other.visibleBooleanVariables);
+        this.internalIntegerVariables = new LinkedHashSet<>(other.internalIntegerVariables);
+        this.visibleIntegerVariables = new LinkedHashSet<>(other.visibleIntegerVariables);
+        this.internalBooleanVariables = new LinkedHashSet<>(other.internalBooleanVariables);
+        this.visibleBooleanVariables = new LinkedHashSet<>(other.visibleBooleanVariables);
         this.clauses = new LinkedHashSet<>(other.clauses);
         this.propagateSubstitutions = new IntegerVariableSubstitution(other.propagateSubstitutions);
     }
@@ -91,8 +90,8 @@ public class Csp {
 
     public static Csp fromClauses(final Set<IntegerClause> clauses, final Set<IntegerVariable> integerVariables, final Set<Variable> booleanVariables,
                                   final IntegerVariableSubstitution propagateSubstitutions) {
-        final Set<IntegerVariable> intVars = new TreeSet<>();
-        final Set<Variable> boolVars = new TreeSet<>();
+        final Set<IntegerVariable> intVars = new LinkedHashSet<>();
+        final Set<Variable> boolVars = new LinkedHashSet<>();
         for (final IntegerClause clause : clauses) {
             intVars.addAll(clause.getArithmeticLiterals().stream().flatMap(v -> v.getVariables().stream()).collect(Collectors.toSet()));
             boolVars.addAll(clause.getBoolLiterals().stream().map(Literal::variable).collect(Collectors.toSet()));

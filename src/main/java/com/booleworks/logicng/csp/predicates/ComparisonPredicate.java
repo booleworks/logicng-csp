@@ -10,8 +10,8 @@ import com.booleworks.logicng.csp.terms.MultiplicationFunction;
 import com.booleworks.logicng.csp.terms.Term;
 import com.booleworks.logicng.formulas.FormulaFactory;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 public class ComparisonPredicate extends BinaryPredicate {
 
@@ -151,7 +151,7 @@ public class ComparisonPredicate extends BinaryPredicate {
         if (!termDecomposition.getLinearExpression().getDomain().contains(0)) {
             return Decomposition.emptyClause(); // false
         }
-        final Set<IntegerClause> result = new TreeSet<>(termDecomposition.getAdditionalConstraints());
+        final Set<IntegerClause> result = new LinkedHashSet<>(termDecomposition.getAdditionalConstraints());
         result.add(new IntegerClause(new LinearLiteral(termDecomposition.getLinearExpression(), LinearLiteral.Operator.EQ)));
         return new Decomposition(result, termDecomposition.getAuxiliaryIntegerVariables(), termDecomposition.getAuxiliaryBooleanVariables());
     }
@@ -169,7 +169,7 @@ public class ComparisonPredicate extends BinaryPredicate {
         if (!termDecomposition.getLinearExpression().getDomain().contains(0)) {
             return Decomposition.empty(); // true
         }
-        final Set<IntegerClause> result = new TreeSet<>(termDecomposition.getAdditionalConstraints());
+        final Set<IntegerClause> result = new LinkedHashSet<>(termDecomposition.getAdditionalConstraints());
         result.add(new IntegerClause(new LinearLiteral(termDecomposition.getLinearExpression(), LinearLiteral.Operator.NE)));
         return new Decomposition(result, termDecomposition.getAuxiliaryIntegerVariables(), termDecomposition.getAuxiliaryBooleanVariables());
     }
@@ -194,7 +194,7 @@ public class ComparisonPredicate extends BinaryPredicate {
         if (domain.lb() > 0) {
             return Decomposition.emptyClause(); //false
         }
-        final Set<IntegerClause> result = new TreeSet<>(termDecomposition.getAdditionalConstraints());
+        final Set<IntegerClause> result = new LinkedHashSet<>(termDecomposition.getAdditionalConstraints());
         result.add(new IntegerClause(new LinearLiteral(termDecomposition.getLinearExpression(), LinearLiteral.Operator.LE)));
         return new Decomposition(result, termDecomposition.getAuxiliaryIntegerVariables(), termDecomposition.getAuxiliaryBooleanVariables());
     }
@@ -218,7 +218,7 @@ public class ComparisonPredicate extends BinaryPredicate {
         if (domain.ub() < 0) {
             return Decomposition.emptyClause(); // false
         }
-        final Set<IntegerClause> result = new TreeSet<>(termDecomposition.getAdditionalConstraints());
+        final Set<IntegerClause> result = new LinkedHashSet<>(termDecomposition.getAdditionalConstraints());
         result.add(new IntegerClause(new LinearLiteral(LinearExpression.multiply(termDecomposition.getLinearExpression(), -1), LinearLiteral.Operator.LE)));
         return new Decomposition(result, termDecomposition.getAuxiliaryIntegerVariables(), termDecomposition.getAuxiliaryBooleanVariables());
     }

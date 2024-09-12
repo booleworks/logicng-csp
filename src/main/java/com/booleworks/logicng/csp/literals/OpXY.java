@@ -5,8 +5,8 @@ import com.booleworks.logicng.csp.IntegerHolder;
 import com.booleworks.logicng.csp.datastructures.IntegerVariableSubstitution;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * x op y (op in {=, <=, !=})
@@ -85,7 +85,7 @@ public class OpXY implements RCSPLiteral {
 
     @Override
     public Set<IntegerVariable> getVariables() {
-        final Set<IntegerVariable> set = new TreeSet<>();
+        final Set<IntegerVariable> set = new LinkedHashSet<>();
         if (x instanceof IntegerVariable) {
             set.add((IntegerVariable) x);
         }

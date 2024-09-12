@@ -5,9 +5,9 @@ import com.booleworks.logicng.csp.IntegerDomain;
 import com.booleworks.logicng.csp.LinearExpression;
 import com.booleworks.logicng.csp.predicates.CspPredicate;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 public class DivisionFunction extends BinaryFunction {
     public final static String DIV_AUX_VARIABLE = "DIV";
@@ -19,7 +19,7 @@ public class DivisionFunction extends BinaryFunction {
     @Override
     protected Decomposition calculateDecomposition(final CspFactory cf) {
         final Decomposition resultLeft = left.decompose(cf);
-        final Set<IntegerVariable> intVars = new TreeSet<>(resultLeft.getAuxiliaryIntegerVariables());
+        final Set<IntegerVariable> intVars = new LinkedHashSet<>(resultLeft.getAuxiliaryIntegerVariables());
         final IntegerDomain domainLeft = resultLeft.getLinearExpression().getDomain();
         final int rightValue = getRight().getValue();
         final IntegerVariable q = cf.auxVariable(DIV_AUX_VARIABLE, domainLeft.div(rightValue));

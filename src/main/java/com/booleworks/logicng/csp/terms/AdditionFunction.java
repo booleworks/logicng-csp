@@ -7,7 +7,6 @@ import com.booleworks.logicng.formulas.Variable;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 public final class AdditionFunction extends NAryFunction {
     public AdditionFunction(final LinkedHashSet<Term> terms) {
@@ -17,9 +16,9 @@ public final class AdditionFunction extends NAryFunction {
     @Override
     public Decomposition calculateDecomposition(final CspFactory cf) {
         LinearExpression.Builder expression = new LinearExpression.Builder(0);
-        final Set<IntegerClause> constraints = new TreeSet<>();
-        final Set<IntegerVariable> auxIntVars = new TreeSet<>();
-        final Set<Variable> auxBoolVars = new TreeSet<>();
+        final Set<IntegerClause> constraints = new LinkedHashSet<>();
+        final Set<IntegerVariable> auxIntVars = new LinkedHashSet<>();
+        final Set<Variable> auxBoolVars = new LinkedHashSet<>();
         for (final Term operand : operands) {
             final Decomposition ei = operand.decompose(cf);
             expression = expression.add(ei.getLinearExpression());

@@ -10,6 +10,7 @@ import com.booleworks.logicng.formulas.Variable;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
@@ -82,9 +83,9 @@ public abstract class CspPredicate implements Predicate {
         }
 
         public static Decomposition merge(final Collection<Decomposition> decomps) {
-            final Set<IntegerClause> clauses = new TreeSet<>();
-            final Set<IntegerVariable> auxiliaryIntegerVariables = new TreeSet<>();
-            final Set<Variable> auxiliaryBooleanVariables = new TreeSet<>();
+            final Set<IntegerClause> clauses = new LinkedHashSet<>();
+            final Set<IntegerVariable> auxiliaryIntegerVariables = new LinkedHashSet<>();
+            final Set<Variable> auxiliaryBooleanVariables = new LinkedHashSet<>();
             for (final Decomposition decomp : decomps) {
                 clauses.addAll(decomp.getClauses());
                 auxiliaryIntegerVariables.addAll(decomp.getAuxiliaryIntegerVariables());

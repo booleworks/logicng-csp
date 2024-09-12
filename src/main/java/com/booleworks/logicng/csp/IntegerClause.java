@@ -12,8 +12,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -132,15 +130,15 @@ public class IntegerClause {
         final Set<IntegerClause> clauses = new LinkedHashSet<>();
         for (final IntegerClause l : left.getClauses()) {
             for (final IntegerClause r : right.getClauses()) {
-                final SortedSet<Literal> newBools = new TreeSet<>(l.boolLiterals);
-                final SortedSet<ArithmeticLiteral> newAriths = new TreeSet<>(l.arithLiterals);
+                final Set<Literal> newBools = new LinkedHashSet<>(l.boolLiterals);
+                final Set<ArithmeticLiteral> newAriths = new LinkedHashSet<>(l.arithLiterals);
                 newBools.addAll(r.boolLiterals);
                 newAriths.addAll(r.arithLiterals);
                 clauses.add(new IntegerClause(newBools, newAriths));
             }
         }
-        final Set<IntegerVariable> intVars = new TreeSet<>(left.getAuxiliaryIntegerVariables());
-        final Set<Variable> boolVars = new TreeSet<>(left.getAuxiliaryBooleanVariables());
+        final Set<IntegerVariable> intVars = new LinkedHashSet<>(left.getAuxiliaryIntegerVariables());
+        final Set<Variable> boolVars = new LinkedHashSet<>(left.getAuxiliaryBooleanVariables());
         intVars.addAll(right.getAuxiliaryIntegerVariables());
         boolVars.addAll(right.getAuxiliaryBooleanVariables());
         return new CspPredicate.Decomposition(clauses, intVars, boolVars);

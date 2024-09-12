@@ -8,9 +8,9 @@ import com.booleworks.logicng.csp.predicates.CspPredicate;
 import com.booleworks.logicng.formulas.Formula;
 import com.booleworks.logicng.formulas.Variable;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 public class MinFunction extends BinaryFunction {
     public final static String MIN_AUX_VARIABLE = "MIN";
@@ -32,9 +32,9 @@ public class MinFunction extends BinaryFunction {
             return resultRight;
         }
 
-        final Set<IntegerClause> constraints = new TreeSet<>(resultLeft.getAdditionalConstraints());
-        final Set<IntegerVariable> intVars = new TreeSet<>(resultLeft.getAuxiliaryIntegerVariables());
-        final Set<Variable> boolVars = new TreeSet<>(resultLeft.getAuxiliaryBooleanVariables());
+        final Set<IntegerClause> constraints = new LinkedHashSet<>(resultLeft.getAdditionalConstraints());
+        final Set<IntegerVariable> intVars = new LinkedHashSet<>(resultLeft.getAuxiliaryIntegerVariables());
+        final Set<Variable> boolVars = new LinkedHashSet<>(resultLeft.getAuxiliaryBooleanVariables());
         constraints.addAll(resultRight.getAdditionalConstraints());
         intVars.addAll(resultRight.getAuxiliaryIntegerVariables());
         boolVars.addAll(resultRight.getAuxiliaryBooleanVariables());

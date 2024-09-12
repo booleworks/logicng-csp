@@ -8,8 +8,8 @@ import com.booleworks.logicng.csp.predicates.CspPredicate;
 import com.booleworks.logicng.formulas.Formula;
 import com.booleworks.logicng.formulas.Variable;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 public class AbsoluteFunction extends UnaryFunction {
     public final static String ABS_AUX_VARIABLE = "ABS";
@@ -29,9 +29,9 @@ public class AbsoluteFunction extends UnaryFunction {
             return new Decomposition(LinearExpression.multiply(expression, -1), decomposition.getAdditionalConstraints(), decomposition.getAuxiliaryIntegerVariables(),
                     decomposition.getAuxiliaryBooleanVariables());
         }
-        final Set<IntegerClause> constraints = new TreeSet<>(decomposition.getAdditionalConstraints());
-        final Set<IntegerVariable> auxIntVars = new TreeSet<>(decomposition.getAuxiliaryIntegerVariables());
-        final Set<Variable> auxBoolVars = new TreeSet<>(decomposition.getAuxiliaryBooleanVariables());
+        final Set<IntegerClause> constraints = new LinkedHashSet<>(decomposition.getAdditionalConstraints());
+        final Set<IntegerVariable> auxIntVars = new LinkedHashSet<>(decomposition.getAuxiliaryIntegerVariables());
+        final Set<Variable> auxBoolVars = new LinkedHashSet<>(decomposition.getAuxiliaryBooleanVariables());
         final IntegerDomain newDomain = domain.abs();
         final IntegerVariable newVariable = cf.auxVariable(ABS_AUX_VARIABLE, newDomain);
         auxIntVars.add(newVariable);
@@ -41,6 +41,6 @@ public class AbsoluteFunction extends UnaryFunction {
         constraints.addAll(decomp.getClauses());
         auxIntVars.addAll(decomp.getAuxiliaryIntegerVariables());
         auxBoolVars.addAll(decomp.getAuxiliaryBooleanVariables());
-        return new Decomposition(new LinearExpression(newVariable), constraints, auxIntVars, decomposition.getAuxiliaryBooleanVariables());
+        return new Decomposition(new LinearExpression(newVariable), constraints, auxIntVars, auxBoolVars);
     }
 }

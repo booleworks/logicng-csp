@@ -498,7 +498,6 @@ public class CspFactory {
     }
 
     public List<Formula> encodeCsp(final Csp csp, final CspEncodingContext context) {
-        final Csp newCsp;
         final EncodingResult result = EncodingResult.resultForFormula(formulaFactory);
         switch (context.getAlgorithm()) {
             case Order:
