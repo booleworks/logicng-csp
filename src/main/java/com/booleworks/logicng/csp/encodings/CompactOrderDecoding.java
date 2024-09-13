@@ -12,6 +12,7 @@ import com.booleworks.logicng.formulas.Variable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class CompactOrderDecoding {
     public static CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables,
@@ -52,16 +53,13 @@ public class CompactOrderDecoding {
     static int decodeIntVar(final IntegerVariable var, final Assignment model, final CompactOrderEncodingContext context) {
         final IntegerVariable adjusted = context.getAdjustedVariableOrSelf(var);
         final List<IntegerVariable> digits = context.getDigits(adjusted);
-        if (digits == null || digits.size() <= 1) {
-            return OrderDecoding.decodeIntVar(adjusted, model, context.getOrderContext());
-        } else {
-            return decodeBigIntVar(adjusted, model, context);
-        }
+        assert Objects.nonNull(digits);
+        return decodeBigIntVar(adjusted, model, context);
     }
 
     static int decodeBigIntVar(final IntegerVariable var, final Assignment model, final CompactOrderEncodingContext context) {
         final List<IntegerVariable> digits = context.getDigits(var);
-        assert digits != null && digits.size() > 1;
+        assert digits != null;
         final int b = context.getBase();
         int dbase = 1;
         int value = context.hasOffset(var) ? context.getOffset(var) : 0;

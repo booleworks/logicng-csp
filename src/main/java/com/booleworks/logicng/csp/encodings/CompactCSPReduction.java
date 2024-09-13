@@ -569,7 +569,7 @@ public class CompactCSPReduction {
     }
 
     public static LinearExpression sub(final LinearExpression lhs, final int e) {
-        return add(lhs, e);
+        return add(lhs, -e);
     }
 
     public static LinearExpression mul(final LinearExpression lhs, final int c) {

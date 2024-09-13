@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 public class CspModelEnumeration {
     public static List<CspAssignment> enumerate(final SATSolver solver, final Csp csp, final CspEncodingContext context, final CspFactory cf) {
-        return enumerate(solver, csp.getVisibleIntegerVariables(), csp.getVisibleBooleanVariables(), context, cf);
+        return enumerate(solver, csp.getPropagateSubstitutions().getAllOrSelf(csp.getVisibleIntegerVariables()), csp.getVisibleBooleanVariables(), context, cf);
     }
 
     public static List<CspAssignment> enumerate(final SATSolver solver, final Collection<IntegerVariable> integerVariables, final Collection<Variable> booleanVariables, final CspEncodingContext context, final CspFactory cf) {

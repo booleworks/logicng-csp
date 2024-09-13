@@ -216,7 +216,12 @@ public class CompactOrderEncodingContext implements CspEncodingContext {
 
     @Override
     public boolean isEncoded(final IntegerVariable v) {
-        return orderContext.isEncoded(v);
+        final List<IntegerVariable> digits = getDigits(adjustedVariablesSubstitution.getOrSelf(v));
+        if (digits == null) {
+            return false;
+        } else {
+            return digits.stream().anyMatch(orderContext::isEncoded);
+        }
     }
 
     @Override

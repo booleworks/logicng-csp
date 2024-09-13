@@ -499,13 +499,18 @@ public class CspFactory {
 
     public List<Formula> encodeCsp(final Csp csp, final CspEncodingContext context) {
         final EncodingResult result = EncodingResult.resultForFormula(formulaFactory);
+        encodeCsp(csp, context, result);
+        return result.result();
+    }
+
+    public void encodeCsp(final Csp csp, final CspEncodingContext context, final EncodingResult result) {
         switch (context.getAlgorithm()) {
             case Order:
                 OrderEncoding.encode(csp, (OrderEncodingContext) context, result, this);
-                return result.result();
+                break;
             case CompactOrder:
                 CompactOrderEncoding.encode(csp, (CompactOrderEncodingContext) context, result, this);
-                return result.result();
+                break;
             default:
                 throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
         }
@@ -513,25 +518,35 @@ public class CspFactory {
 
     public List<Formula> encodeVariable(final IntegerVariable variable, final CspEncodingContext context) {
         final EncodingResult result = EncodingResult.resultForFormula(formulaFactory);
+        encodeVariable(variable, context, result);
+        return result.result();
+    }
+
+    public void encodeVariable(final IntegerVariable variable, final CspEncodingContext context, final EncodingResult result) {
         switch (context.getAlgorithm()) {
             case Order:
                 OrderEncoding.encodeVariable(variable, (OrderEncodingContext) context, result, this);
-                return result.result();
+                break;
             default:
                 throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
         }
     }
 
     public List<Formula> encodeConstraint(final CspPredicate predicate, final CspEncodingContext context) {
-        final CspPredicate.Decomposition decomp = predicate.decompose(this);
         final EncodingResult result = EncodingResult.resultForFormula(formulaFactory);
+        encodeConstraint(predicate, context, result);
+        return result.result();
+    }
+
+    public void encodeConstraint(final CspPredicate predicate, final CspEncodingContext context, final EncodingResult result) {
+        final CspPredicate.Decomposition decomp = predicate.decompose(this);
         switch (context.getAlgorithm()) {
             case Order:
                 for (final IntegerVariable auxVar : decomp.getAuxiliaryIntegerVariables()) {
                     OrderEncoding.encodeVariable(auxVar, (OrderEncodingContext) context, result, this);
                 }
                 OrderEncoding.encodeClauses(decomp.getClauses(), (OrderEncodingContext) context, result, this);
-                return result.result();
+                break;
             default:
                 throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
         }
