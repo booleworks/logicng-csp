@@ -63,17 +63,16 @@ public class CompactCSPReduction {
                         ccspClauses.addAll(ccsp);
                     }
                 }
-                final Set<IntegerClause> newCcspClauses = new LinkedHashSet<>();
                 if (ccspClauses.isEmpty()) {
-                    newCcspClauses.add(new IntegerClause(clause.getBoolLiterals(), simpleLiterals));
+                    newClauses.add(new IntegerClause(clause.getBoolLiterals(), simpleLiterals));
                 } else {
                     for (final IntegerClause c : ccspClauses) {
-                        final Set<ArithmeticLiteral> nl = new LinkedHashSet<>(c.getArithmeticLiterals());
-                        nl.addAll(simpleLiterals);
-                        newCcspClauses.add(new IntegerClause(c.getBoolLiterals(), nl));
+                        final IntegerClause.Builder newC = new IntegerClause.Builder(c);
+                        newC.addBooleanLiterals(clause.getBoolLiterals());
+                        newC.addArithmeticLiterals(simpleLiterals);
+                        newClauses.add(newC.build());
                     }
                 }
-                newClauses.addAll(newCcspClauses);
             }
         }
         return new ReductionResult(newClauses, frontierVariables);
@@ -461,15 +460,13 @@ public class CompactCSPReduction {
     private static List<IntegerVariable> splitToDigits(final IntegerVariable v, final CompactOrderEncodingContext context, final CspFactory cf) {
         int ub = v.getDomain().ub();
         final int b = context.getBase();
-        final int m = (int) Math.ceil(Math.log(ub + 1) / Math.log(b));
 
-        final List<IntegerVariable> vs = new ArrayList<>(m);
-        if (m == 1) {
+        final List<IntegerVariable> vs = new ArrayList<>();
+        if (ub + 1 <= b) {
             vs.add(v);
         } else {
-            for (int i = 0; i < m; ++i) {
-                assert ub > 0;
-                final int ubi = (i == m - 1) ? ub : b - 1;
+            while (ub > 0) {
+                final int ubi = ub < b ? ub : b - 1;
                 final IntegerDomain dom = IntegerDomain.of(0, ubi);
                 final IntegerVariable dv = context.newAuxiliaryDigitVariable(dom, cf);
                 vs.add(dv);

@@ -78,7 +78,7 @@ public class OpAdd implements RCSPLiteral {
         final IntegerDomain yd = y.getDomain();
         switch (op) {
             case LE:
-                return zd.ub() < xd.lb() + yd.lb();
+                return zd.ub() <= xd.lb() + yd.lb();
             case GE:
                 return zd.lb() >= xd.ub() + yd.ub();
             case EQ:

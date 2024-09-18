@@ -20,7 +20,7 @@ public class OpXY implements RCSPLiteral {
     }
 
     public OpXY(final Operator op, final IntegerHolder x, final IntegerHolder y, final boolean inverted) {
-        if (inverted && op == Operator.NE) {
+        if (inverted && op == Operator.LE) {
             this.x = y;
             this.y = x;
         } else {
@@ -69,7 +69,7 @@ public class OpXY implements RCSPLiteral {
         final IntegerDomain yd = y.getDomain();
         switch (op) {
             case LE:
-                return xd.ub() < yd.lb();
+                return xd.ub() <= yd.lb();
             case EQ:
                 return xd.size() == 1 && yd.size() == 1 && xd.ub() == yd.ub();
             case NE:

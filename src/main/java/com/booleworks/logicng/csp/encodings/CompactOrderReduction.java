@@ -455,7 +455,7 @@ public class CompactOrderReduction {
             } else {
                 return simplifyClause(clause, context, f).stream();
             }
-        }).collect(Collectors.toSet());
+        }).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     static Set<IntegerClause> simplifyClause(final IntegerClause clause, final CompactOrderEncodingContext context, final FormulaFactory f) {
