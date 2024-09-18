@@ -26,14 +26,14 @@ public class OrderEncoding {
     }
 
     public static void encodeVariable(final IntegerVariable v, final OrderEncodingContext context, final EncodingResult result, final CspFactory cf) {
-        final FormulaFactory f = cf.formulaFactory();
+        final FormulaFactory f = cf.getFormulaFactory();
         final IntegerDomain domain = v.getDomain();
         final Formula[] clause = new Formula[2];
         int a0 = domain.lb();
         for (int a = a0 + 1; a <= domain.ub(); ++a) {
             if (domain.contains(a)) {
-                clause[0] = getCodeLE(v, a0, context, result, cf.formulaFactory()).negate(f);
-                clause[1] = getCodeLE(v, a, context, result, cf.formulaFactory());
+                clause[0] = getCodeLE(v, a0, context, result, cf.getFormulaFactory()).negate(f);
+                clause[1] = getCodeLE(v, a, context, result, cf.getFormulaFactory());
                 writeClause(clause, result);
                 a0 = a;
             }
@@ -68,7 +68,7 @@ public class OrderEncoding {
         }
         for (final ArithmeticLiteral literal : cl.getArithmeticLiterals()) {
             if (isSimpleLiteral(literal)) {
-                clause[i] = getCode((LinearLiteral) literal, context, result, cf.formulaFactory());
+                clause[i] = getCode((LinearLiteral) literal, context, result, cf.getFormulaFactory());
                 i++;
             } else {
                 lit = (LinearLiteral) literal;
@@ -87,7 +87,7 @@ public class OrderEncoding {
         }
         if (isSimpleLiteral(lit)) {
             clause = expandArray(clause, 1);
-            clause[0] = getCode(lit, context, result, cf.formulaFactory());
+            clause[0] = getCode(lit, context, result, cf.getFormulaFactory());
             writeClause(clause, result);
         } else {
             final LinearExpression ls = lit.getLinearExpression();
@@ -102,7 +102,7 @@ public class OrderEncoding {
                                        final OrderEncodingContext context, final EncodingResult result, final CspFactory cf) {
         if (i >= vs.length - 1) {
             final int a = exp.getA(vs[i]);
-            clause[i] = getCodeLE(vs[i], a, -s, context, result, cf.formulaFactory());
+            clause[i] = getCodeLE(vs[i], a, -s, context, result, cf.getFormulaFactory());
             writeClause(clause, result);
         } else {
             int lb0 = s;
@@ -126,10 +126,10 @@ public class OrderEncoding {
                 }
                 for (final Iterator<Integer> it = domain.values(lb, ub); it.hasNext(); ) {
                     final int c = it.next();
-                    clause[i] = getCodeLE(vs[i], c - 1, context, result, cf.formulaFactory());
+                    clause[i] = getCodeLE(vs[i], c - 1, context, result, cf.getFormulaFactory());
                     encodeLinearExpression(exp, vs, i + 1, s + a * c, clause, context, result, cf);
                 }
-                clause[i] = getCodeLE(vs[i], ub, context, result, cf.formulaFactory());
+                clause[i] = getCodeLE(vs[i], ub, context, result, cf.getFormulaFactory());
                 encodeLinearExpression(exp, vs, i + 1, s + a * (ub + 1), clause, context, result, cf);
             } else {
                 if (-lb0 >= 0) {
@@ -137,11 +137,11 @@ public class OrderEncoding {
                 } else {
                     lb = Math.max(lb, (-lb0 + a + 1) / a);
                 }
-                clause[i] = getCodeLE(vs[i], lb - 1, context, result, cf.formulaFactory()).negate(cf.formulaFactory());
+                clause[i] = getCodeLE(vs[i], lb - 1, context, result, cf.getFormulaFactory()).negate(cf.getFormulaFactory());
                 encodeLinearExpression(exp, vs, i + 1, s + a * (lb - 1), clause, context, result, cf);
                 for (final Iterator<Integer> it = domain.values(lb, ub); it.hasNext(); ) {
                     final int c = it.next();
-                    clause[i] = getCodeLE(vs[i], c, context, result, cf.formulaFactory()).negate(cf.formulaFactory());
+                    clause[i] = getCodeLE(vs[i], c, context, result, cf.getFormulaFactory()).negate(cf.getFormulaFactory());
                     encodeLinearExpression(exp, vs, i + 1, s + a * c, clause, context, result, cf);
                 }
             }

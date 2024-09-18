@@ -25,7 +25,7 @@ public class OrderReduction {
 
     static ReductionResult reduce(final Set<IntegerClause> clauses, final OrderEncodingContext context, final CspFactory cf) {
         final List<IntegerVariable> auxVars = new ArrayList<>();
-        final Set<IntegerClause> newClauses = toLinearLe(simplify(split(clauses, auxVars, context, cf), context, cf.formulaFactory()), context, cf.formulaFactory());
+        final Set<IntegerClause> newClauses = toLinearLe(simplify(split(clauses, auxVars, context, cf), context, cf.getFormulaFactory()), context, cf.getFormulaFactory());
         return new ReductionResult(newClauses, auxVars);
     }
 

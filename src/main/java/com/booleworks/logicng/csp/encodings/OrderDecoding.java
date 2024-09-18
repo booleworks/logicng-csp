@@ -29,7 +29,7 @@ public class OrderDecoding {
             if (model.positiveVariables().contains(v)) {
                 result.addPos(v);
             }
-            final Literal negV = v.negate(cf.formulaFactory());
+            final Literal negV = v.negate(cf.getFormulaFactory());
             if (model.negativeLiterals().contains(negV)) {
                 result.addNeg(negV);
             }

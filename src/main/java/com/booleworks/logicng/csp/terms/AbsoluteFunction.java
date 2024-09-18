@@ -37,7 +37,7 @@ public class AbsoluteFunction extends UnaryFunction {
         auxIntVars.add(newVariable);
         final Formula positiveFormula = cf.eq(newVariable, this.getOperand());
         final Formula negativeFormula = cf.eq(cf.minus(newVariable), this.getOperand());
-        final CspPredicate.Decomposition decomp = cf.decompose(cf.formulaFactory().or(positiveFormula, negativeFormula));
+        final CspPredicate.Decomposition decomp = cf.decompose(cf.getFormulaFactory().or(positiveFormula, negativeFormula));
         constraints.addAll(decomp.getClauses());
         auxIntVars.addAll(decomp.getAuxiliaryIntegerVariables());
         auxBoolVars.addAll(decomp.getAuxiliaryBooleanVariables());

@@ -22,7 +22,7 @@ public class CspDecompositionTest extends ParameterizedCspTest {
     @ParameterizedTest
     @MethodSource("cspFactories")
     public void testFormulas(final CspFactory cf) throws ParserException {
-        final FormulaFactory f = cf.formulaFactory();
+        final FormulaFactory f = cf.getFormulaFactory();
         final IntegerVariable a = cf.variable("a", 0, 3);
         final IntegerVariable b = cf.variable("b", 3, 5);
         final IntegerVariable c = cf.variable("c", 1, 2);

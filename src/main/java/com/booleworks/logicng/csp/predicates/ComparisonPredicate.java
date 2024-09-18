@@ -81,12 +81,12 @@ public class ComparisonPredicate extends BinaryPredicate {
         // abs(a1) <= x2
         if (left instanceof AbsoluteFunction) {
             final Term a1 = ((AbsoluteFunction) left).getOperand();
-            return cf.decompose(cf.formulaFactory().and(cf.le(a1, right), cf.ge(a1, cf.minus(right))));
+            return cf.decompose(cf.getFormulaFactory().and(cf.le(a1, right), cf.ge(a1, cf.minus(right))));
         }
         // abs(a1) >= x1
         if (right instanceof AbsoluteFunction) {
             final Term a1 = ((AbsoluteFunction) right).getOperand();
-            return cf.decompose(cf.formulaFactory().or(cf.ge(a1, left), cf.le(a1, cf.minus(left))));
+            return cf.decompose(cf.getFormulaFactory().or(cf.ge(a1, left), cf.le(a1, cf.minus(left))));
         }
         return decomposeLeZero(cf.sub(left, right), cf);
     }
@@ -95,12 +95,12 @@ public class ComparisonPredicate extends BinaryPredicate {
         // abs(a1) < x2
         if (left instanceof AbsoluteFunction) {
             final Term a1 = ((AbsoluteFunction) left).getOperand();
-            return cf.decompose(cf.formulaFactory().and(cf.lt(a1, right), cf.gt(a1, cf.minus(right))));
+            return cf.decompose(cf.getFormulaFactory().and(cf.lt(a1, right), cf.gt(a1, cf.minus(right))));
         }
         // abs(a1) > x1
         if (right instanceof AbsoluteFunction) {
             final Term a1 = ((AbsoluteFunction) right).getOperand();
-            return cf.decompose(cf.formulaFactory().or(cf.gt(a1, left), cf.lt(a1, cf.minus(left))));
+            return cf.decompose(cf.getFormulaFactory().or(cf.gt(a1, left), cf.lt(a1, cf.minus(left))));
         }
         return decomposeLeZero(cf.add(cf.sub(left, right), cf.one()), cf);
     }
@@ -109,7 +109,7 @@ public class ComparisonPredicate extends BinaryPredicate {
         // abs(a1) >= x2
         if (left instanceof AbsoluteFunction) {
             final Term a1 = ((AbsoluteFunction) left).getOperand();
-            return cf.decompose(cf.formulaFactory().or(
+            return cf.decompose(cf.getFormulaFactory().or(
                     cf.ge(a1, right),
                     cf.le(a1, cf.minus(right))
             ));
@@ -117,7 +117,7 @@ public class ComparisonPredicate extends BinaryPredicate {
         // abs(a1) <= x1
         if (right instanceof AbsoluteFunction) {
             final Term a1 = ((AbsoluteFunction) right).getOperand();
-            return cf.decompose(cf.formulaFactory().and(cf.le(a1, left), cf.ge(a1, cf.minus(left))));
+            return cf.decompose(cf.getFormulaFactory().and(cf.le(a1, left), cf.ge(a1, cf.minus(left))));
         }
         return decomposeLeZero(cf.sub(right, left), cf);
     }
@@ -126,12 +126,12 @@ public class ComparisonPredicate extends BinaryPredicate {
         // abs(a1) > x2
         if (left instanceof AbsoluteFunction) {
             final Term a1 = ((AbsoluteFunction) left).getOperand();
-            return cf.decompose(cf.formulaFactory().and(cf.gt(a1, right), cf.lt(a1, cf.minus(right))));
+            return cf.decompose(cf.getFormulaFactory().and(cf.gt(a1, right), cf.lt(a1, cf.minus(right))));
         }
         // abs(a1) < x1
         if (right instanceof AbsoluteFunction) {
             final Term a1 = ((AbsoluteFunction) right).getOperand();
-            return cf.decompose(cf.formulaFactory().or(cf.lt(a1, left), cf.gt(a1, cf.minus(left))
+            return cf.decompose(cf.getFormulaFactory().or(cf.lt(a1, left), cf.gt(a1, cf.minus(left))
             ));
         }
         return decomposeLeZero(cf.add(cf.sub(right, left), cf.one()), cf);

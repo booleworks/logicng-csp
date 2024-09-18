@@ -39,7 +39,7 @@ public class CompactOrderReduction {
         newClauses = adjust(clauses, integerVariables, context, cf);
         newClauses = toTernary(newClauses, context, cf);
         newClauses = toRCSP(newClauses, context, cf);
-        newClauses = simplify(newClauses, context, cf.formulaFactory());
+        newClauses = simplify(newClauses, context, cf.getFormulaFactory());
 
         final int size = context.getAdjustedVariables().size() + context.getTernarySimplificationVariables().size() + context.getRCSPVariables().size();
         final List<IntegerVariable> currentVariables = new ArrayList<>(size);
@@ -138,9 +138,9 @@ public class CompactOrderReduction {
                     final IntegerClause c = new IntegerClause(new LinearLiteral(new LinearExpression(1, newVar, -(lst + 1)), LinearLiteral.Operator.NE));
                     additionalClauses.add(c);
                 } else if (lst + 1 != i) {
-                    final Variable b = context.newAdjustedBoolVariable(cf.formulaFactory());
+                    final Variable b = context.newAdjustedBoolVariable(cf.getFormulaFactory());
                     final IntegerClause clause1 = new IntegerClause(
-                            b.negate(cf.formulaFactory()),
+                            b.negate(cf.getFormulaFactory()),
                             new LinearLiteral(new LinearExpression(1, newVar, -lst), LinearLiteral.Operator.LE)
                     );
                     additionalClauses.add(clause1);

@@ -467,7 +467,7 @@ public class CspFactory {
         return predicate;
     }
 
-    public FormulaFactory formulaFactory() {
+    public FormulaFactory getFormulaFactory() {
         return formulaFactory;
     }
 

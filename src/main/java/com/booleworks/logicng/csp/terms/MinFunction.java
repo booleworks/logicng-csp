@@ -47,7 +47,7 @@ public class MinFunction extends BinaryFunction {
         final CspPredicate.Decomposition d2 = cf.le(x, this.right).decompose(cf);
         final Formula leLeft = cf.ge(x, this.left);
         final Formula leRight = cf.ge(x, this.right);
-        final CspPredicate.Decomposition d3 = cf.decompose(cf.formulaFactory().or(leLeft, leRight));
+        final CspPredicate.Decomposition d3 = cf.decompose(cf.getFormulaFactory().or(leLeft, leRight));
         final Decomposition newTerm = new Decomposition(new LinearExpression(x), constraints, intVars, boolVars);
         return Term.Decomposition.merge(newTerm, List.of(d1, d2, d3));
     }

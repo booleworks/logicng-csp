@@ -112,12 +112,12 @@ public class CompactCSPReduction {
                 } else {
                     final Variable[] s = new Variable[m];
                     for (int i = 1; i < m; ++i) {
-                        s[i] = context.newCCSPBoolVariable(cf.formulaFactory());
+                        s[i] = context.newCCSPBoolVariable(cf.getFormulaFactory());
                     }
                     // -s(i+1) or x(i) <= y(i) (when 0 <= i < m - 1)
                     for (int i = 0; i < m - 1; ++i) {
                         ret.add(new IntegerClause(
-                                s[i + 1].negate(cf.formulaFactory()),
+                                s[i + 1].negate(cf.getFormulaFactory()),
                                 le(nth(x, i, context), nth(y, i, context))
                         ));
                     }
@@ -127,7 +127,7 @@ public class CompactCSPReduction {
                     // -s(i+1) or (x(i) <= y(i) - 1) or s(i) (when 1 <= i < m - 1)
                     for (int i = 1; i < m - 1; ++i) {
                         final IntegerClause.Builder newClause = new IntegerClause.Builder();
-                        newClause.addBooleanLiterals(s[i + 1].negate(cf.formulaFactory()), s[i]);
+                        newClause.addBooleanLiterals(s[i + 1].negate(cf.getFormulaFactory()), s[i]);
                         newClause.addArithmeticLiteral(le(nth(x, i, context), sub(nth(y, i, context), 1)));
                         ret.add(newClause.build());
                     }
@@ -152,7 +152,7 @@ public class CompactCSPReduction {
                     newClause.addArithmeticLiterals(le(nth(x, i, context), sub(nth(y, i, context), 1)));
                     newClause.addArithmeticLiterals(ge(sub(nth(x, i, context), 1), nth(y, i, context)));
                 }
-                ret.addAll(CompactOrderReduction.simplifyClause(newClause.build(), context, cf.formulaFactory()));
+                ret.addAll(CompactOrderReduction.simplifyClause(newClause.build(), context, cf.getFormulaFactory()));
                 break;
         }
         return ret;
@@ -190,13 +190,13 @@ public class CompactCSPReduction {
             case LE: {
                 final Variable[] s = new Variable[m];
                 for (int i = 1; i < m; ++i) {
-                    s[i] = context.newCCSPBoolVariable(cf.formulaFactory());
+                    s[i] = context.newCCSPBoolVariable(cf.getFormulaFactory());
                 }
 
                 // -s(i+1) or (z(i) + B*c(i+1) <= x(i) + y(i) + c(i)) (when 0 <= i < m - 1)
                 for (int i = 0; i < m - 1; ++i) {
                     ret.add(new IntegerClause(
-                            s[i + 1].negate(cf.formulaFactory()),
+                            s[i + 1].negate(cf.getFormulaFactory()),
                             le(lhs[i], rhs[i])
                     ));
                 }
@@ -207,7 +207,7 @@ public class CompactCSPReduction {
                 // (when 1 <= i < m - 1)
                 for (int i = 1; i < m - 1; ++i) {
                     final IntegerClause.Builder newClause = new IntegerClause.Builder();
-                    newClause.addBooleanLiterals(s[i + 1].negate(cf.formulaFactory()), s[i]);
+                    newClause.addBooleanLiterals(s[i + 1].negate(cf.getFormulaFactory()), s[i]);
                     newClause.addArithmeticLiteral(le(lhs[i], sub(rhs[i], 1)));
                     ret.add(newClause.build());
                 }
@@ -226,12 +226,12 @@ public class CompactCSPReduction {
             case GE: {
                 final Variable[] s = new Variable[m];
                 for (int i = 1; i < m; i++) {
-                    s[i] = context.newCCSPBoolVariable(cf.formulaFactory());
+                    s[i] = context.newCCSPBoolVariable(cf.getFormulaFactory());
                 }
 
                 // -s(i+1) or (z(i) + B*c(i+1) <= x(i) + y(i) + c(i)) (when 0 <= i < m - 1)
                 for (int i = 0; i < m - 1; i++) {
-                    ret.add(new IntegerClause(s[i + 1].negate(cf.formulaFactory()), le(lhs[i], rhs[i])));
+                    ret.add(new IntegerClause(s[i + 1].negate(cf.getFormulaFactory()), le(lhs[i], rhs[i])));
                 }
                 // z(i) >= x(i) + y(i) + c(i) (when i == m - 1)
                 ret.add(new IntegerClause(ge(lhs[m - 1], rhs[m - 1])));
@@ -240,7 +240,7 @@ public class CompactCSPReduction {
                 // (when 1 <= i < m - 1)
                 for (int i = 1; i < m - 1; ++i) {
                     final IntegerClause.Builder newClause = new IntegerClause.Builder();
-                    newClause.addBooleanLiterals(s[i + 1].negate(cf.formulaFactory()), s[i]);
+                    newClause.addBooleanLiterals(s[i + 1].negate(cf.getFormulaFactory()), s[i]);
                     newClause.addArithmeticLiteral(ge(sub(lhs[i], 1), rhs[i]));
                     ret.add(newClause.build());
                 }
@@ -273,7 +273,7 @@ public class CompactCSPReduction {
                             ge(sub(lhs[i], 1), rhs[i])
                     );
                 }
-                ret.addAll(CompactOrderReduction.simplifyClause(newClause.build(), context, cf.formulaFactory()));
+                ret.addAll(CompactOrderReduction.simplifyClause(newClause.build(), context, cf.getFormulaFactory()));
 
                 for (int i = 0; i < m - 1; i++) {
                     // carry(i+1) <= 0 or x(i)+y(i)+carry(i) >= B

@@ -33,7 +33,7 @@ public class AllDifferentPredicate extends CspPredicate {
                 eqs.add(cf.eq(terms.get(i), terms.get(j)));
             }
         }
-        return cf.formulaFactory().or(eqs);
+        return cf.getFormulaFactory().or(eqs);
     }
 
     @Override

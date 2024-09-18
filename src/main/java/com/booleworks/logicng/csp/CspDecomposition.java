@@ -12,7 +12,7 @@ import java.util.Set;
 
 public class CspDecomposition {
     public static CspPredicate.Decomposition decompose(final Formula formula, final CspFactory cf) {
-        final Formula nnf = formula.nnf(cf.formulaFactory());
+        final Formula nnf = formula.nnf(cf.getFormulaFactory());
         final Set<CspPredicate.Decomposition> decompositions = new LinkedHashSet<>();
         decomposeRecursive(nnf, cf, decompositions);
         return CspPredicate.Decomposition.merge(decompositions);
@@ -58,7 +58,7 @@ public class CspDecomposition {
                 final Not not = (Not) formula;
                 assert (not.operand().type() == FType.PREDICATE);
                 if (not.operand() instanceof CspPredicate) {
-                    decomposeRecursive(((CspPredicate) not.operand()).negate(cf).nnf(cf.formulaFactory()), cf, decompositions);
+                    decomposeRecursive(((CspPredicate) not.operand()).negate(cf).nnf(cf.getFormulaFactory()), cf, decompositions);
                 } else {
                     throw new RuntimeException("Cannot decompose predicates of type: " + not.operand().getClass());
                 }

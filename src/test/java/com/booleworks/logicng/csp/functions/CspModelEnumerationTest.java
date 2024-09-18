@@ -24,7 +24,7 @@ public class CspModelEnumerationTest extends ParameterizedCspTest {
     @ParameterizedTest
     @MethodSource("cspFactories")
     public void testOnlyIntVariables(final CspFactory cf) {
-        final FormulaFactory f = cf.formulaFactory();
+        final FormulaFactory f = cf.getFormulaFactory();
         final IntegerVariable a = cf.variable("a", 1, 2);
         final IntegerVariable b = cf.variable("b", 10, 12);
         final IntegerVariable c = cf.variable("c", -5, 12);
@@ -48,7 +48,7 @@ public class CspModelEnumerationTest extends ParameterizedCspTest {
     @ParameterizedTest
     @MethodSource("cspFactories")
     public void testOnlyBooleanVariables(final CspFactory cf) {
-        final FormulaFactory f = cf.formulaFactory();
+        final FormulaFactory f = cf.getFormulaFactory();
         final Variable a = f.variable("A");
         final Variable b = f.variable("B");
         final Variable c = f.variable("C");
