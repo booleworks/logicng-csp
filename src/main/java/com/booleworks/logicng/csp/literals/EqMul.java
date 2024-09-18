@@ -93,4 +93,9 @@ public class EqMul implements RCSPLiteral {
     public IntegerVariable getY() {
         return y;
     }
+
+    @Override
+    public String toString() {
+        return "(eqmul " + z + " " + x + " " + y + ")";
+    }
 }

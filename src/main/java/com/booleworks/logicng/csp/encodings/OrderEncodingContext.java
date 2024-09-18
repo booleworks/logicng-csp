@@ -28,7 +28,7 @@ public class OrderEncodingContext implements CspEncodingContext {
         this.simplifyIntVariables = new ArrayList<>();
     }
 
-    OrderEncodingContext(final OrderEncodingContext context) {
+    public OrderEncodingContext(final OrderEncodingContext context) {
         this.variableMap = new TreeMap<>(context.variableMap);
         this.simplifyBoolVariables = new ArrayList<>(context.simplifyBoolVariables);
         this.simplifyIntVariables = new ArrayList<>(context.simplifyIntVariables);

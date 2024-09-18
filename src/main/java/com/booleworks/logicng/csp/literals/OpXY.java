@@ -113,4 +113,9 @@ public class OpXY implements RCSPLiteral {
             return new OpXY(op, newX, newY);
         }
     }
+
+    @Override
+    public String toString() {
+        return "(" + op + " " + x + " " + y + ")";
+    }
 }

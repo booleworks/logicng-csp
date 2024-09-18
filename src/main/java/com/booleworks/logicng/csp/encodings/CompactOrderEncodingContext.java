@@ -33,7 +33,7 @@ public class CompactOrderEncodingContext implements CspEncodingContext {
     private final List<IntegerVariable> ccspVariables;
     private final List<Variable> ccspBoolVariables;
 
-    public CompactOrderEncodingContext(final int base) {
+    CompactOrderEncodingContext(final int base) {
         this.base = base;
         this.orderContext = CspEncodingContext.order();
         this.digits = new HashMap<>();
@@ -49,7 +49,7 @@ public class CompactOrderEncodingContext implements CspEncodingContext {
         this.ccspBoolVariables = new ArrayList<>();
     }
 
-    public CompactOrderEncodingContext() {
+    CompactOrderEncodingContext() {
         this(DEFAULT_BASE);
     }
 

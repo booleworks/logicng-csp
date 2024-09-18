@@ -154,7 +154,7 @@ class IntegerRangeDomain extends IntegerDomain {
     @Override
     public SortedSet<Integer> headSet(final int value) {
         final TreeSet<Integer> result = new TreeSet<>();
-        Iterator<Integer> it = values(lb, value - 1);
+        final Iterator<Integer> it = values(lb, value - 1);
         while (it.hasNext()) {
             result.add(it.next());
         }

@@ -132,4 +132,9 @@ public class OpAdd implements RCSPLiteral {
             return new OpAdd(op, newZ, newX, newY);
         }
     }
+
+    @Override
+    public String toString() {
+        return "(" + op + "add " + z + " " + x + " " + y + ")";
+    }
 }
