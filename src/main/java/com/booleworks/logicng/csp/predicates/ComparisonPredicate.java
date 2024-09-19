@@ -1,9 +1,9 @@
 package com.booleworks.logicng.csp.predicates;
 
 import com.booleworks.logicng.csp.CspFactory;
-import com.booleworks.logicng.csp.IntegerClause;
-import com.booleworks.logicng.csp.IntegerDomain;
-import com.booleworks.logicng.csp.LinearExpression;
+import com.booleworks.logicng.csp.datastructures.IntegerClause;
+import com.booleworks.logicng.csp.datastructures.LinearExpression;
+import com.booleworks.logicng.csp.datastructures.domains.IntegerDomain;
 import com.booleworks.logicng.csp.literals.LinearLiteral;
 import com.booleworks.logicng.csp.terms.AbsoluteFunction;
 import com.booleworks.logicng.csp.terms.MultiplicationFunction;

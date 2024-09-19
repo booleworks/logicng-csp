@@ -1,9 +1,8 @@
 package com.booleworks.logicng.csp.terms;
 
 import com.booleworks.logicng.csp.CspFactory;
-import com.booleworks.logicng.csp.IntegerDomain;
-import com.booleworks.logicng.csp.IntegerHolder;
-import com.booleworks.logicng.csp.LinearExpression;
+import com.booleworks.logicng.csp.datastructures.LinearExpression;
+import com.booleworks.logicng.csp.datastructures.domains.IntegerDomain;
 
 import java.util.Collections;
 import java.util.SortedSet;

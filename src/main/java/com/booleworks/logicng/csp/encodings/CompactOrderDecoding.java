@@ -1,8 +1,8 @@
 package com.booleworks.logicng.csp.encodings;
 
-import com.booleworks.logicng.csp.Csp;
-import com.booleworks.logicng.csp.CspAssignment;
 import com.booleworks.logicng.csp.CspFactory;
+import com.booleworks.logicng.csp.datastructures.Csp;
+import com.booleworks.logicng.csp.datastructures.CspAssignment;
 import com.booleworks.logicng.csp.datastructures.IntegerVariableSubstitution;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.datastructures.Assignment;

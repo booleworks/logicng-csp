@@ -1,6 +1,10 @@
-package com.booleworks.logicng.csp;
+package com.booleworks.logicng.csp.functions;
 
+import com.booleworks.logicng.csp.CspFactory;
+import com.booleworks.logicng.csp.datastructures.Csp;
+import com.booleworks.logicng.csp.datastructures.IntegerClause;
 import com.booleworks.logicng.csp.datastructures.IntegerVariableSubstitution;
+import com.booleworks.logicng.csp.datastructures.domains.IntegerDomain;
 import com.booleworks.logicng.csp.literals.ArithmeticLiteral;
 import com.booleworks.logicng.csp.literals.LinearLiteral;
 import com.booleworks.logicng.csp.terms.IntegerVariable;

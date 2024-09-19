@@ -62,7 +62,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.booleworks.logicng.csp;
+package com.booleworks.logicng.csp.datastructures.domains;
 
 import java.util.Collections;
 import java.util.Iterator;

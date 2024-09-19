@@ -1,7 +1,7 @@
 package com.booleworks.logicng.csp.encodings;
 
 import com.booleworks.logicng.csp.CspFactory;
-import com.booleworks.logicng.csp.IntegerDomain;
+import com.booleworks.logicng.csp.datastructures.domains.IntegerDomain;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.datastructures.EncodingResult;
 import com.booleworks.logicng.formulas.FormulaFactory;

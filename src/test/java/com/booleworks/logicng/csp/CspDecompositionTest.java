@@ -2,6 +2,8 @@ package com.booleworks.logicng.csp;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.booleworks.logicng.csp.datastructures.IntegerClause;
+import com.booleworks.logicng.csp.datastructures.LinearExpression;
 import com.booleworks.logicng.csp.literals.LinearLiteral;
 import com.booleworks.logicng.csp.predicates.CspPredicate;
 import com.booleworks.logicng.csp.terms.IntegerVariable;

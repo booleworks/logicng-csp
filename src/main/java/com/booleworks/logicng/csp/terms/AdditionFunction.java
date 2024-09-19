@@ -1,8 +1,8 @@
 package com.booleworks.logicng.csp.terms;
 
 import com.booleworks.logicng.csp.CspFactory;
-import com.booleworks.logicng.csp.IntegerClause;
-import com.booleworks.logicng.csp.LinearExpression;
+import com.booleworks.logicng.csp.datastructures.IntegerClause;
+import com.booleworks.logicng.csp.datastructures.LinearExpression;
 import com.booleworks.logicng.formulas.Variable;
 
 import java.util.LinkedHashSet;

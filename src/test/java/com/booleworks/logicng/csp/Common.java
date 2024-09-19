@@ -1,5 +1,6 @@
 package com.booleworks.logicng.csp;
 
+import com.booleworks.logicng.csp.datastructures.IntegerClause;
 import com.booleworks.logicng.csp.literals.ArithmeticLiteral;
 import com.booleworks.logicng.formulas.Literal;
 

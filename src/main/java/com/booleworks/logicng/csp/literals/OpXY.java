@@ -1,8 +1,8 @@
 package com.booleworks.logicng.csp.literals;
 
-import com.booleworks.logicng.csp.IntegerDomain;
-import com.booleworks.logicng.csp.IntegerHolder;
 import com.booleworks.logicng.csp.datastructures.IntegerVariableSubstitution;
+import com.booleworks.logicng.csp.datastructures.domains.IntegerDomain;
+import com.booleworks.logicng.csp.terms.IntegerHolder;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 
 import java.util.LinkedHashSet;

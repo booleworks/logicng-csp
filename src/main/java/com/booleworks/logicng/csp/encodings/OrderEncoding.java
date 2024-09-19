@@ -1,11 +1,11 @@
 package com.booleworks.logicng.csp.encodings;
 
 import com.booleworks.logicng.collections.LNGVector;
-import com.booleworks.logicng.csp.Csp;
 import com.booleworks.logicng.csp.CspFactory;
-import com.booleworks.logicng.csp.IntegerClause;
-import com.booleworks.logicng.csp.IntegerDomain;
-import com.booleworks.logicng.csp.LinearExpression;
+import com.booleworks.logicng.csp.datastructures.Csp;
+import com.booleworks.logicng.csp.datastructures.IntegerClause;
+import com.booleworks.logicng.csp.datastructures.LinearExpression;
+import com.booleworks.logicng.csp.datastructures.domains.IntegerDomain;
 import com.booleworks.logicng.csp.literals.ArithmeticLiteral;
 import com.booleworks.logicng.csp.literals.LinearLiteral;
 import com.booleworks.logicng.csp.terms.IntegerVariable;

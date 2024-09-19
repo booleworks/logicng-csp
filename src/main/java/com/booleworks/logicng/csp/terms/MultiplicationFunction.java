@@ -1,7 +1,7 @@
 package com.booleworks.logicng.csp.terms;
 
 import com.booleworks.logicng.csp.CspFactory;
-import com.booleworks.logicng.csp.LinearExpression;
+import com.booleworks.logicng.csp.datastructures.LinearExpression;
 
 public final class MultiplicationFunction extends BinaryFunction {
     public MultiplicationFunction(final IntegerConstant left, final Term right) {

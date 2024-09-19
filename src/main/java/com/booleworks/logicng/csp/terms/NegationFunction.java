@@ -1,7 +1,7 @@
 package com.booleworks.logicng.csp.terms;
 
 import com.booleworks.logicng.csp.CspFactory;
-import com.booleworks.logicng.csp.LinearExpression;
+import com.booleworks.logicng.csp.datastructures.LinearExpression;
 
 public final class NegationFunction extends UnaryFunction {
 

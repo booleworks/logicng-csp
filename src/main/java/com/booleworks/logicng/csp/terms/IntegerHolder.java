@@ -1,4 +1,6 @@
-package com.booleworks.logicng.csp;
+package com.booleworks.logicng.csp.terms;
+
+import com.booleworks.logicng.csp.datastructures.domains.IntegerDomain;
 
 public interface IntegerHolder extends Comparable<IntegerHolder> {
     IntegerDomain getDomain();

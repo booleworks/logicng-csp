@@ -1,4 +1,4 @@
-package com.booleworks.logicng.csp;
+package com.booleworks.logicng.csp.datastructures;
 
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.formulas.Literal;

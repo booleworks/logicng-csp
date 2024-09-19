@@ -2,10 +2,10 @@ package com.booleworks.logicng.csp.functions;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.booleworks.logicng.csp.Csp;
-import com.booleworks.logicng.csp.CspAssignment;
 import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.ParameterizedCspTest;
+import com.booleworks.logicng.csp.datastructures.Csp;
+import com.booleworks.logicng.csp.datastructures.CspAssignment;
 import com.booleworks.logicng.csp.encodings.CspEncodingContext;
 import com.booleworks.logicng.csp.encodings.OrderEncodingContext;
 import com.booleworks.logicng.csp.terms.IntegerVariable;

@@ -1,5 +1,9 @@
 package com.booleworks.logicng.csp;
 
+import com.booleworks.logicng.csp.datastructures.Csp;
+import com.booleworks.logicng.csp.datastructures.CspAssignment;
+import com.booleworks.logicng.csp.datastructures.IntegerClause;
+import com.booleworks.logicng.csp.datastructures.domains.IntegerDomain;
 import com.booleworks.logicng.csp.encodings.CompactOrderDecoding;
 import com.booleworks.logicng.csp.encodings.CompactOrderEncoding;
 import com.booleworks.logicng.csp.encodings.CompactOrderEncodingContext;
@@ -7,6 +11,7 @@ import com.booleworks.logicng.csp.encodings.CspEncodingContext;
 import com.booleworks.logicng.csp.encodings.OrderDecoding;
 import com.booleworks.logicng.csp.encodings.OrderEncoding;
 import com.booleworks.logicng.csp.encodings.OrderEncodingContext;
+import com.booleworks.logicng.csp.functions.CspDecomposition;
 import com.booleworks.logicng.csp.functions.IntegerVariablesFunction;
 import com.booleworks.logicng.csp.predicates.AllDifferentPredicate;
 import com.booleworks.logicng.csp.predicates.ComparisonPredicate;

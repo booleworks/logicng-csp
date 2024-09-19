@@ -1,6 +1,6 @@
 package com.booleworks.logicng.csp.encodings;
 
-import com.booleworks.logicng.csp.IntegerClause;
+import com.booleworks.logicng.csp.datastructures.IntegerClause;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 
 import java.util.List;

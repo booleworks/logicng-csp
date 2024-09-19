@@ -1,5 +1,7 @@
-package com.booleworks.logicng.csp;
+package com.booleworks.logicng.csp.functions;
 
+import com.booleworks.logicng.csp.CspFactory;
+import com.booleworks.logicng.csp.datastructures.IntegerClause;
 import com.booleworks.logicng.csp.predicates.CspPredicate;
 import com.booleworks.logicng.formulas.FType;
 import com.booleworks.logicng.formulas.Formula;

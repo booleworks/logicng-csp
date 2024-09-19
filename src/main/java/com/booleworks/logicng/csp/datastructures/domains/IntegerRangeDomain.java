@@ -1,4 +1,4 @@
-package com.booleworks.logicng.csp;
+package com.booleworks.logicng.csp.datastructures.domains;
 
 import java.util.Collections;
 import java.util.Iterator;

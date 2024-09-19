@@ -3,9 +3,9 @@ package com.booleworks.logicng.csp.predicates;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.booleworks.logicng.csp.CspFactory;
-import com.booleworks.logicng.csp.IntegerClause;
-import com.booleworks.logicng.csp.LinearExpression;
 import com.booleworks.logicng.csp.ParameterizedCspTest;
+import com.booleworks.logicng.csp.datastructures.IntegerClause;
+import com.booleworks.logicng.csp.datastructures.LinearExpression;
 import com.booleworks.logicng.csp.literals.LinearLiteral;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.csp.terms.Term;
