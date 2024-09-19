@@ -462,9 +462,9 @@ public class CompactCSPReduction {
         final int b = context.getBase();
 
         final List<IntegerVariable> vs = new ArrayList<>();
-        if (ub + 1 <= b) {
+        if (ub > 0 && ub + 1 <= b) {
             vs.add(v);
-        } else {
+        } else if (ub > 0) {
             while (ub > 0) {
                 final int ubi = ub < b ? ub : b - 1;
                 final IntegerDomain dom = IntegerDomain.of(0, ubi);

@@ -71,8 +71,8 @@ public class LinearExpression implements Comparable<LinearExpression> {
             }
             final long a1 = Math.abs(getA(v1));
             final long a2 = Math.abs(getA(v2));
-            if (a1 != s2) {
-                return a1 > s2 ? -1 : 1;
+            if (a1 != a2) {
+                return a1 > a2 ? -1 : 1;
             }
             return v1.compareTo(v2);
         });
