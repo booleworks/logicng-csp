@@ -19,7 +19,9 @@ public class LinearLiteral implements ArithmeticLiteral {
     }
 
     public enum Operator {
-        LE, EQ, NE
+        LE,
+        EQ,
+        NE
     }
 
     public LinearExpression getSum() {
@@ -99,12 +101,18 @@ public class LinearLiteral implements ArithmeticLiteral {
 
     @Override
     public boolean equals(final Object o) {
-        if (this == o) {return true;}
-        if (o == null || getClass() != o.getClass()) {return false;}
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         final LinearLiteral that = (LinearLiteral) o;
 
-        if (!op.equals(that.op)) {return false;}
+        if (!op.equals(that.op)) {
+            return false;
+        }
         return sum.equals(that.sum);
     }
 

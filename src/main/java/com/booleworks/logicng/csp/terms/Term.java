@@ -46,7 +46,19 @@ public abstract class Term {
     }
 
     public enum Type {
-        ZERO, ONE, CONST, VAR, NEG, ADD, SUB, MUL, MOD, DIV, MAX, MIN, ABS
+        ZERO,
+        ONE,
+        CONST,
+        VAR,
+        NEG,
+        ADD,
+        SUB,
+        MUL,
+        MOD,
+        DIV,
+        MAX,
+        MIN,
+        ABS
     }
 
     public static final class Decomposition {
@@ -56,7 +68,8 @@ public abstract class Term {
         private final Set<IntegerVariable> auxiliaryIntegerVariables;
         private final Set<Variable> auxiliaryBooleanVariables;
 
-        public Decomposition(final LinearExpression linearExpression, final Set<IntegerClause> additionalConstraints, final Set<IntegerVariable> auxiliaryIntegerVariables,
+        public Decomposition(final LinearExpression linearExpression, final Set<IntegerClause> additionalConstraints,
+                             final Set<IntegerVariable> auxiliaryIntegerVariables,
                              final Set<Variable> auxiliaryBooleanVariables) {
             this.linearExpression = linearExpression;
             this.additionalConstraints = additionalConstraints;
@@ -80,7 +93,8 @@ public abstract class Term {
             return Collections.unmodifiableSet(auxiliaryBooleanVariables);
         }
 
-        public static Decomposition merge(final Decomposition term, final Collection<CspPredicate.Decomposition> predicateDecompositions) {
+        public static Decomposition merge(final Decomposition term,
+                                          final Collection<CspPredicate.Decomposition> predicateDecompositions) {
             final Set<IntegerClause> clauses = new LinkedHashSet<>();
             final Set<IntegerVariable> intVars = new LinkedHashSet<>(term.getAuxiliaryIntegerVariables());
             final Set<Variable> boolVars = new LinkedHashSet<>(term.getAuxiliaryBooleanVariables());

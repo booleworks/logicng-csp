@@ -37,27 +37,33 @@ public class CompactOrderDecoding {
         return result;
     }
 
-    public static CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables, final Collection<Variable> booleanVariables,
+    public static CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables,
+                                       final Collection<Variable> booleanVariables,
                                        final CompactOrderEncodingContext context, final CspFactory cf) {
         return decode(model, integerVariables, booleanVariables, new IntegerVariableSubstitution(), context, cf);
     }
 
-    public static CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables, final CompactOrderEncodingContext context, final CspFactory cf) {
+    public static CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables,
+                                       final CompactOrderEncodingContext context, final CspFactory cf) {
         return decode(model, integerVariables, Collections.emptyList(), new IntegerVariableSubstitution(), context, cf);
     }
 
-    public static CspAssignment decode(final Assignment model, final Csp csp, final CompactOrderEncodingContext context, final CspFactory cf) {
-        return decode(model, csp.getVisibleIntegerVariables(), csp.getVisibleBooleanVariables(), csp.getPropagateSubstitutions(), context, cf);
+    public static CspAssignment decode(final Assignment model, final Csp csp, final CompactOrderEncodingContext context,
+                                       final CspFactory cf) {
+        return decode(model, csp.getVisibleIntegerVariables(), csp.getVisibleBooleanVariables(),
+                csp.getPropagateSubstitutions(), context, cf);
     }
 
-    static int decodeIntVar(final IntegerVariable var, final Assignment model, final CompactOrderEncodingContext context) {
+    static int decodeIntVar(final IntegerVariable var, final Assignment model,
+                            final CompactOrderEncodingContext context) {
         final IntegerVariable adjusted = context.getAdjustedVariableOrSelf(var);
         final List<IntegerVariable> digits = context.getDigits(adjusted);
         assert Objects.nonNull(digits);
         return decodeBigIntVar(adjusted, model, context);
     }
 
-    static int decodeBigIntVar(final IntegerVariable var, final Assignment model, final CompactOrderEncodingContext context) {
+    static int decodeBigIntVar(final IntegerVariable var, final Assignment model,
+                               final CompactOrderEncodingContext context) {
         final List<IntegerVariable> digits = context.getDigits(var);
         assert digits != null;
         final int b = context.getBase();

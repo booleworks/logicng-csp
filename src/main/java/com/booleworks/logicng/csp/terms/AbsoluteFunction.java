@@ -26,7 +26,8 @@ public class AbsoluteFunction extends UnaryFunction {
         if (domain.lb() >= 0) {
             return decomposition;
         } else if (domain.ub() <= 0) {
-            return new Decomposition(LinearExpression.multiply(expression, -1), decomposition.getAdditionalConstraints(), decomposition.getAuxiliaryIntegerVariables(),
+            return new Decomposition(LinearExpression.multiply(expression, -1),
+                    decomposition.getAdditionalConstraints(), decomposition.getAuxiliaryIntegerVariables(),
                     decomposition.getAuxiliaryBooleanVariables());
         }
         final Set<IntegerClause> constraints = new LinkedHashSet<>(decomposition.getAdditionalConstraints());
@@ -37,7 +38,8 @@ public class AbsoluteFunction extends UnaryFunction {
         auxIntVars.add(newVariable);
         final Formula positiveFormula = cf.eq(newVariable, this.getOperand());
         final Formula negativeFormula = cf.eq(cf.minus(newVariable), this.getOperand());
-        final CspPredicate.Decomposition decomp = cf.decompose(cf.getFormulaFactory().or(positiveFormula, negativeFormula));
+        final CspPredicate.Decomposition decomp =
+                cf.decompose(cf.getFormulaFactory().or(positiveFormula, negativeFormula));
         constraints.addAll(decomp.getClauses());
         auxIntVars.addAll(decomp.getAuxiliaryIntegerVariables());
         auxBoolVars.addAll(decomp.getAuxiliaryBooleanVariables());

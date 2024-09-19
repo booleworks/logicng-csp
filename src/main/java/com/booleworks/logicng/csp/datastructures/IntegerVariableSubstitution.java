@@ -30,7 +30,7 @@ public final class IntegerVariableSubstitution {
         return mainDirection.isEmpty();
     }
 
-    public boolean containsKey(IntegerVariable v) {
+    public boolean containsKey(final IntegerVariable v) {
         return mainDirection.containsKey(v);
     }
 
@@ -65,8 +65,12 @@ public final class IntegerVariableSubstitution {
 
     @Override
     public boolean equals(final Object o) {
-        if (this == o) {return true;}
-        if (!(o instanceof IntegerVariableSubstitution)) {return false;}
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof IntegerVariableSubstitution)) {
+            return false;
+        }
 
         final IntegerVariableSubstitution that = (IntegerVariableSubstitution) o;
         return mainDirection.equals(that.mainDirection); //&& reverseDirection.equals(that.reverseDirection);

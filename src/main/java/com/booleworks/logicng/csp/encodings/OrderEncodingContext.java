@@ -62,7 +62,8 @@ public class OrderEncodingContext implements CspEncodingContext {
 
     @Override
     public Set<Variable> getSatVariables(final Collection<IntegerVariable> variables) {
-        return variables.stream().map(variableMap::get).filter(Objects::nonNull).flatMap(m -> m.values().stream()).collect(Collectors.toSet());
+        return variables.stream().map(variableMap::get).filter(Objects::nonNull).flatMap(m -> m.values().stream())
+                .collect(Collectors.toSet());
     }
 
     @Override

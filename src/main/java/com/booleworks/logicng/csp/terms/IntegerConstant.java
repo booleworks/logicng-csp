@@ -16,7 +16,8 @@ public final class IntegerConstant extends Term implements IntegerHolder {
     }
 
     @Override
-    public void variablesInplace(final SortedSet<IntegerVariable> variables) {}
+    public void variablesInplace(final SortedSet<IntegerVariable> variables) {
+    }
 
     public int getValue() {
         return value;
@@ -29,7 +30,8 @@ public final class IntegerConstant extends Term implements IntegerHolder {
 
     @Override
     protected Decomposition calculateDecomposition(final CspFactory cf) {
-        return new Decomposition(new LinearExpression(value), Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
+        return new Decomposition(new LinearExpression(value), Collections.emptySet(), Collections.emptySet(),
+                Collections.emptySet());
     }
 
     @Override

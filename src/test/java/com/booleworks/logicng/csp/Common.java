@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 public class Common {
+    @SafeVarargs
     public static <G> Set<G> setFrom(final G... elms) {
         return new LinkedHashSet<>(List.of(elms));
     }

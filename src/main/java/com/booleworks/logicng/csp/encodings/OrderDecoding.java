@@ -37,17 +37,21 @@ public class OrderDecoding {
         return result;
     }
 
-    public static CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables, final Collection<Variable> booleanVariables,
+    public static CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables,
+                                       final Collection<Variable> booleanVariables,
                                        final OrderEncodingContext context, final CspFactory cf) {
         return decode(model, integerVariables, booleanVariables, new IntegerVariableSubstitution(), context, cf);
     }
 
-    public static CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables, final OrderEncodingContext context, final CspFactory cf) {
+    public static CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables,
+                                       final OrderEncodingContext context, final CspFactory cf) {
         return decode(model, integerVariables, Collections.emptyList(), new IntegerVariableSubstitution(), context, cf);
     }
 
-    public static CspAssignment decode(final Assignment model, final Csp csp, final OrderEncodingContext context, final CspFactory cf) {
-        return decode(model, csp.getVisibleIntegerVariables(), csp.getVisibleBooleanVariables(), csp.getPropagateSubstitutions(), context, cf);
+    public static CspAssignment decode(final Assignment model, final Csp csp, final OrderEncodingContext context,
+                                       final CspFactory cf) {
+        return decode(model, csp.getVisibleIntegerVariables(), csp.getVisibleBooleanVariables(),
+                csp.getPropagateSubstitutions(), context, cf);
     }
 
     static int decodeIntVar(final IntegerVariable var, final Assignment model, final OrderEncodingContext context) {

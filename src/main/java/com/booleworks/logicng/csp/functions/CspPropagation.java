@@ -22,7 +22,8 @@ public class CspPropagation {
         if (!csp.getPropagateSubstitutions().isEmpty()) {
             throw new IllegalArgumentException("Propagating a CSP more than once is not supported");
         }
-        final IntegerVariableSubstitution restrictions = new IntegerVariableSubstitution(csp.getPropagateSubstitutions());
+        final IntegerVariableSubstitution restrictions =
+                new IntegerVariableSubstitution(csp.getPropagateSubstitutions());
         boolean changed = true;
         while (changed) {
             changed = false;
@@ -34,14 +35,17 @@ public class CspPropagation {
         }
         if (!restrictions.isEmpty()) {
             final Set<IntegerClause> newClauses =
-                    csp.getClauses().stream().map(c -> rebuildClause(c, restrictions)).filter(c -> !c.isValid()).collect(Collectors.toSet());
-            return Csp.fromClauses(newClauses, csp.getVisibleIntegerVariables(), csp.getVisibleBooleanVariables(), restrictions);
+                    csp.getClauses().stream().map(c -> rebuildClause(c, restrictions)).filter(c -> !c.isValid())
+                            .collect(Collectors.toSet());
+            return Csp.fromClauses(newClauses, csp.getVisibleIntegerVariables(), csp.getVisibleBooleanVariables(),
+                    restrictions);
         } else {
             return csp;
         }
     }
 
-    private static boolean calculateNewBounds(final IntegerClause clause, final IntegerVariableSubstitution restrictions, final CspFactory cf) {
+    private static boolean calculateNewBounds(final IntegerClause clause,
+                                              final IntegerVariableSubstitution restrictions, final CspFactory cf) {
         boolean changed = false;
         for (final IntegerVariable v : clause.getCommonVariables()) {
             assert clause.getBoolLiterals().isEmpty();
@@ -76,7 +80,8 @@ public class CspPropagation {
         return changed;
     }
 
-    private static IntegerClause rebuildClause(final IntegerClause clause, final IntegerVariableSubstitution assignment) {
+    private static IntegerClause rebuildClause(final IntegerClause clause,
+                                               final IntegerVariableSubstitution assignment) {
         final TreeSet<ArithmeticLiteral> newLits = clause.getArithmeticLiterals().stream()
                 .map(l -> l.substitute(assignment))
                 .filter(Objects::nonNull)
@@ -92,7 +97,8 @@ public class CspPropagation {
         }
     }
 
-    private static IntegerVariable boundVariable(final IntegerVariable variable, final int lb, final int ub, final CspFactory cf) {
+    private static IntegerVariable boundVariable(final IntegerVariable variable, final int lb, final int ub,
+                                                 final CspFactory cf) {
         final IntegerDomain d = variable.getDomain().bound(lb, ub);
         if (d == variable.getDomain()) {
             return variable;
@@ -100,7 +106,8 @@ public class CspPropagation {
         return cf.auxVariable(BOUNDED_AUX_VAR, variable.getName(), d);
     }
 
-    private static int[] getBound(final ArithmeticLiteral literal, final IntegerVariable v, final IntegerVariableSubstitution restrictions) {
+    private static int[] getBound(final ArithmeticLiteral literal, final IntegerVariable v,
+                                  final IntegerVariableSubstitution restrictions) {
         if (literal instanceof LinearLiteral) {
             final LinearLiteral l = (LinearLiteral) literal;
             final int a = l.getSum().getA(v);

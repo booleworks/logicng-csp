@@ -56,7 +56,13 @@ public abstract class CspPredicate implements Predicate {
     }
 
     public enum Type {
-        EQ, NE, LE, LT, GE, GT, ALLDIFFERENT
+        EQ,
+        NE,
+        LE,
+        LT,
+        GE,
+        GT,
+        ALLDIFFERENT
     }
 
     public final static class Decomposition {
@@ -64,7 +70,8 @@ public abstract class CspPredicate implements Predicate {
         final Set<IntegerVariable> auxiliaryIntegerVariables;
         final Set<Variable> auxiliaryBooleanVariables;
 
-        public Decomposition(final Set<IntegerClause> clauses, final Set<IntegerVariable> auxiliaryIntegerVariables, final Set<Variable> auxiliaryBooleanVariables) {
+        public Decomposition(final Set<IntegerClause> clauses, final Set<IntegerVariable> auxiliaryIntegerVariables,
+                             final Set<Variable> auxiliaryBooleanVariables) {
             this.clauses = clauses;
             this.auxiliaryIntegerVariables = auxiliaryIntegerVariables;
             this.auxiliaryBooleanVariables = auxiliaryBooleanVariables;
@@ -103,7 +110,8 @@ public abstract class CspPredicate implements Predicate {
         }
 
         public static Decomposition emptyClause() {
-            return new Decomposition(Collections.singleton(new IntegerClause()), Collections.emptySet(), Collections.emptySet());
+            return new Decomposition(Collections.singleton(new IntegerClause()), Collections.emptySet(),
+                    Collections.emptySet());
         }
     }
 }

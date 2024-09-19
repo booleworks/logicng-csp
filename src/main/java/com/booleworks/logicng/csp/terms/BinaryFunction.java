@@ -34,17 +34,17 @@ public abstract class BinaryFunction extends Function {
         if (getClass() == other.getClass()) {
             final BinaryFunction that = (BinaryFunction) other;
             return withOrder
-                    ? Objects.equals(left, that.left) && Objects.equals(right, that.right) ||
-                    Objects.equals(left, that.right) && Objects.equals(right, that.left)
-                    : Objects.equals(left, that.left) && Objects.equals(right, that.right);
+                   ? Objects.equals(left, that.left) && Objects.equals(right, that.right) ||
+                           Objects.equals(left, that.right) && Objects.equals(right, that.left)
+                   : Objects.equals(left, that.left) && Objects.equals(right, that.right);
         }
         return false;
     }
 
     int hashCode(final boolean withOrder) {
         return type.ordinal() + (withOrder
-                ? 11 * left.hashCode() - 13 * right.hashCode()
-                : 17 * left.hashCode() + 19 * right.hashCode());
+                                 ? 11 * left.hashCode() - 13 * right.hashCode()
+                                 : 17 * left.hashCode() + 19 * right.hashCode());
     }
 
     @Override

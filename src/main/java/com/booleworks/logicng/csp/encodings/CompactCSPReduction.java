@@ -24,7 +24,8 @@ public class CompactCSPReduction {
     public static final String AUX_CCSP = "COE_CCSP";
     public static final String AUX_DIGIT = "COE_DIGIT";
 
-    static ReductionResult toCCSP(final Set<IntegerClause> clauses, final List<IntegerVariable> variables, final CompactOrderEncodingContext context,
+    static ReductionResult toCCSP(final Set<IntegerClause> clauses, final List<IntegerVariable> variables,
+                                  final CompactOrderEncodingContext context,
                                   final CspFactory cf) {
         final Set<IntegerClause> newClauses = new LinkedHashSet<>();
         final List<IntegerVariable> frontierVariables = new ArrayList<>();
@@ -78,7 +79,9 @@ public class CompactCSPReduction {
         return new ReductionResult(newClauses, frontierVariables);
     }
 
-    private static Set<IntegerClause> convertToCCSP(final RCSPLiteral literal, final List<IntegerVariable> frontierVariables, final CompactOrderEncodingContext context,
+    private static Set<IntegerClause> convertToCCSP(final RCSPLiteral literal,
+                                                    final List<IntegerVariable> frontierVariables,
+                                                    final CompactOrderEncodingContext context,
                                                     final CspFactory cf) {
         if (literal instanceof EqMul) {
             return convertToCCSP((EqMul) literal, frontierVariables, context, cf);
@@ -91,7 +94,8 @@ public class CompactCSPReduction {
         }
     }
 
-    private static Set<IntegerClause> convertToCCSP(final OpXY lit, final CompactOrderEncodingContext context, final CspFactory cf) {
+    private static Set<IntegerClause> convertToCCSP(final OpXY lit, final CompactOrderEncodingContext context,
+                                                    final CspFactory cf) {
         final Set<IntegerClause> ret = new LinkedHashSet<>();
         final IntegerHolder x = lit.getX();
         final IntegerHolder y = lit.getY();
@@ -157,7 +161,8 @@ public class CompactCSPReduction {
         return ret;
     }
 
-    private static Set<IntegerClause> convertToCCSP(final OpAdd lit, final List<IntegerVariable> frontierVariables, final CompactOrderEncodingContext context,
+    private static Set<IntegerClause> convertToCCSP(final OpAdd lit, final List<IntegerVariable> frontierVariables,
+                                                    final CompactOrderEncodingContext context,
                                                     final CspFactory cf) {
         final Set<IntegerClause> ret = new LinkedHashSet<>();
         final int b = context.getBase();
@@ -287,7 +292,8 @@ public class CompactCSPReduction {
         return ret;
     }
 
-    private static Set<IntegerClause> convertToCCSP(final EqMul lit, final List<IntegerVariable> frontierVariables, final CompactOrderEncodingContext context,
+    private static Set<IntegerClause> convertToCCSP(final EqMul lit, final List<IntegerVariable> frontierVariables,
+                                                    final CompactOrderEncodingContext context,
                                                     final CspFactory cf) {
         final int b = context.getBase();
         final IntegerHolder x = lit.getX();
@@ -420,8 +426,10 @@ public class CompactCSPReduction {
     /**
      * u = b*s+t
      */
-    private static Set<IntegerClause> shiftAddToCCSP(final IntegerHolder u, final IntegerHolder s, final IntegerHolder t,
-                                                     final List<IntegerVariable> frontierVariables, final CompactOrderEncodingContext context, final CspFactory cf) {
+    private static Set<IntegerClause> shiftAddToCCSP(final IntegerHolder u, final IntegerHolder s,
+                                                     final IntegerHolder t,
+                                                     final List<IntegerVariable> frontierVariables,
+                                                     final CompactOrderEncodingContext context, final CspFactory cf) {
         final int b = context.getBase();
         final int m = 1 + Math.max(nDigits(s, context, cf), nDigits(t, context, cf));
         final Set<IntegerClause> ret = new LinkedHashSet<>();
@@ -457,7 +465,8 @@ public class CompactCSPReduction {
         return ret;
     }
 
-    private static List<IntegerVariable> splitToDigits(final IntegerVariable v, final CompactOrderEncodingContext context, final CspFactory cf) {
+    private static List<IntegerVariable> splitToDigits(final IntegerVariable v,
+                                                       final CompactOrderEncodingContext context, final CspFactory cf) {
         int ub = v.getDomain().ub();
         final int b = context.getBase();
 
@@ -484,7 +493,9 @@ public class CompactCSPReduction {
         }
     }
 
-    private static List<Integer> calculateOrGetConstDigits(final IntegerConstant c, final CompactOrderEncodingContext context, final CspFactory cf) {
+    private static List<Integer> calculateOrGetConstDigits(final IntegerConstant c,
+                                                           final CompactOrderEncodingContext context,
+                                                           final CspFactory cf) {
         if (!context.hasConstDigits(c)) {
             context.addConstDigits(c, intToDigits(c, context.getBase()));
         }
@@ -520,7 +531,8 @@ public class CompactCSPReduction {
         return context.getConstDigits(v).size() > n ? context.getConstDigits(v).get(n) : 0;
     }
 
-    private static IntegerVariable newCCSPVariable(final IntegerDomain d, final List<IntegerVariable> frontierVariables, final CompactOrderEncodingContext context,
+    private static IntegerVariable newCCSPVariable(final IntegerDomain d, final List<IntegerVariable> frontierVariables,
+                                                   final CompactOrderEncodingContext context,
                                                    final CspFactory cf) {
         final IntegerVariable v = context.newCCSPVariable(d, cf);
         final List<IntegerVariable> digits = splitToDigits(v, context, cf);

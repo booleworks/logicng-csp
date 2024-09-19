@@ -256,9 +256,10 @@ public class CspFactory {
 
     private void addOperand(final Term op, final LinkedHashMap<Term, Integer> compactifiedTerms) {
         if (op instanceof MultiplicationFunction) {
-            compactifiedTerms.compute(((MultiplicationFunction) op).getRight(), (k, v) -> v == null
-                    ? ((MultiplicationFunction) op).getLeft().getValue()
-                    : ((MultiplicationFunction) op).getLeft().getValue() + v);
+            compactifiedTerms.compute(((MultiplicationFunction) op).getRight(),
+                    (k, v) -> v == null
+                              ? ((MultiplicationFunction) op).getLeft().getValue()
+                              : ((MultiplicationFunction) op).getLeft().getValue() + v);
         } else {
             compactifiedTerms.compute(op, (k, v) -> v == null ? 1 : v + 1);
         }
@@ -309,7 +310,8 @@ public class CspFactory {
         if (right instanceof IntegerConstant) {
             return constant(left.getValue() * ((IntegerConstant) right).getValue());
         }
-        return mulTerms.computeIfAbsent(new Pair<>(left.getValue(), right), o -> new MultiplicationFunction(left, right));
+        return mulTerms.computeIfAbsent(new Pair<>(left.getValue(), right),
+                o -> new MultiplicationFunction(left, right));
     }
 
     public Term abs(final Term operand) {
@@ -341,7 +343,8 @@ public class CspFactory {
         if (left instanceof IntegerConstant) {
             return constant(((IntegerConstant) left).getValue() / right.getValue());
         }
-        return this.divTerms.computeIfAbsent(new Pair<>(left, right.getValue()), p -> new DivisionFunction(left, right));
+        return this.divTerms.computeIfAbsent(new Pair<>(left, right.getValue()),
+                p -> new DivisionFunction(left, right));
     }
 
     public Term mod(final Term left, final int right) {
@@ -418,7 +421,8 @@ public class CspFactory {
         if (foundFormula != null) {
             return foundFormula;
         }
-        final ComparisonPredicate predicate = new ComparisonPredicate(CspPredicate.Type.EQ, left, right, formulaFactory);
+        final ComparisonPredicate predicate =
+                new ComparisonPredicate(CspPredicate.Type.EQ, left, right, formulaFactory);
         eqPredicates.put(operands, predicate);
         return predicate;
     }
@@ -429,7 +433,8 @@ public class CspFactory {
         if (foundFormula != null) {
             return foundFormula;
         }
-        final ComparisonPredicate predicate = new ComparisonPredicate(CspPredicate.Type.NE, left, right, formulaFactory);
+        final ComparisonPredicate predicate =
+                new ComparisonPredicate(CspPredicate.Type.NE, left, right, formulaFactory);
         nePredicates.put(operands, predicate);
         return predicate;
     }
@@ -450,7 +455,9 @@ public class CspFactory {
         return processComparison(left, right, gePredicates, CspPredicate.Type.GE);
     }
 
-    private ComparisonPredicate processComparison(final Term left, final Term right, final Map<Pair<Term, Term>, ComparisonPredicate> cache, final CspPredicate.Type type) {
+    private ComparisonPredicate processComparison(final Term left, final Term right,
+                                                  final Map<Pair<Term, Term>, ComparisonPredicate> cache,
+                                                  final CspPredicate.Type type) {
         final Pair<Term, Term> operands = new Pair<>(left, right);
         final ComparisonPredicate foundFormula = cache.get(operands);
         if (foundFormula != null) {
@@ -517,7 +524,8 @@ public class CspFactory {
                 CompactOrderEncoding.encode(csp, (CompactOrderEncodingContext) context, result, this);
                 break;
             default:
-                throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
+                throw new UnsupportedOperationException(
+                        "Unsupported csp encoding algorithm: " + context.getAlgorithm());
         }
     }
 
@@ -527,13 +535,15 @@ public class CspFactory {
         return result.result();
     }
 
-    public void encodeVariable(final IntegerVariable variable, final CspEncodingContext context, final EncodingResult result) {
+    public void encodeVariable(final IntegerVariable variable, final CspEncodingContext context,
+                               final EncodingResult result) {
         switch (context.getAlgorithm()) {
             case Order:
                 OrderEncoding.encodeVariable(variable, (OrderEncodingContext) context, result, this);
                 break;
             default:
-                throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
+                throw new UnsupportedOperationException(
+                        "Unsupported csp encoding algorithm: " + context.getAlgorithm());
         }
     }
 
@@ -543,7 +553,8 @@ public class CspFactory {
         return result.result();
     }
 
-    public void encodeConstraint(final CspPredicate predicate, final CspEncodingContext context, final EncodingResult result) {
+    public void encodeConstraint(final CspPredicate predicate, final CspEncodingContext context,
+                                 final EncodingResult result) {
         final CspPredicate.Decomposition decomp = predicate.decompose(this);
         switch (context.getAlgorithm()) {
             case Order:
@@ -553,7 +564,8 @@ public class CspFactory {
                 OrderEncoding.encodeClauses(decomp.getClauses(), (OrderEncodingContext) context, result, this);
                 break;
             default:
-                throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
+                throw new UnsupportedOperationException(
+                        "Unsupported csp encoding algorithm: " + context.getAlgorithm());
         }
     }
 
@@ -564,7 +576,8 @@ public class CspFactory {
             case CompactOrder:
                 return CompactOrderDecoding.decode(model, csp, (CompactOrderEncodingContext) context, this);
             default:
-                throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
+                throw new UnsupportedOperationException(
+                        "Unsupported csp encoding algorithm: " + context.getAlgorithm());
         }
     }
 
@@ -572,22 +585,28 @@ public class CspFactory {
                                 final Collection<Variable> booleanVariables, final CspEncodingContext context) {
         switch (context.getAlgorithm()) {
             case Order:
-                return OrderDecoding.decode(model, integerVariables, booleanVariables, (OrderEncodingContext) context, this);
+                return OrderDecoding.decode(model, integerVariables, booleanVariables, (OrderEncodingContext) context,
+                        this);
             case CompactOrder:
-                return CompactOrderDecoding.decode(model, integerVariables, booleanVariables, (CompactOrderEncodingContext) context, this);
+                return CompactOrderDecoding.decode(model, integerVariables, booleanVariables,
+                        (CompactOrderEncodingContext) context, this);
             default:
-                throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
+                throw new UnsupportedOperationException(
+                        "Unsupported csp encoding algorithm: " + context.getAlgorithm());
         }
     }
 
-    public CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables, final CspEncodingContext context) {
+    public CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables,
+                                final CspEncodingContext context) {
         switch (context.getAlgorithm()) {
             case Order:
                 return OrderDecoding.decode(model, integerVariables, (OrderEncodingContext) context, this);
             case CompactOrder:
-                return CompactOrderDecoding.decode(model, integerVariables, (CompactOrderEncodingContext) context, this);
+                return CompactOrderDecoding.decode(model, integerVariables, (CompactOrderEncodingContext) context,
+                        this);
             default:
-                throw new UnsupportedOperationException("Unsupported csp encoding algorithm: " + context.getAlgorithm());
+                throw new UnsupportedOperationException(
+                        "Unsupported csp encoding algorithm: " + context.getAlgorithm());
         }
     }
 }

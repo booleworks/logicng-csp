@@ -13,6 +13,7 @@ public final class NegationFunction extends UnaryFunction {
     public Decomposition calculateDecomposition(final CspFactory cf) {
         final Decomposition result = operand.decompose(cf);
         return new Decomposition(LinearExpression.multiply(result.getLinearExpression(), -1),
-                result.getAdditionalConstraints(), result.getAuxiliaryIntegerVariables(), result.getAuxiliaryBooleanVariables());
+                result.getAdditionalConstraints(), result.getAuxiliaryIntegerVariables(),
+                result.getAuxiliaryBooleanVariables());
     }
 }

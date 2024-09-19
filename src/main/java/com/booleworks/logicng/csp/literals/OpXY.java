@@ -31,7 +31,9 @@ public class OpXY implements RCSPLiteral {
     }
 
     public enum Operator {
-        LE, EQ, NE;
+        LE,
+        EQ,
+        NE;
 
         public static Operator from(final LinearLiteral.Operator op) {
             switch (op) {

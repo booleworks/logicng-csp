@@ -79,20 +79,24 @@ public class Csp {
         return fromClauses(clauses, integerVariables, Collections.emptySet(), new IntegerVariableSubstitution());
     }
 
-    public static Csp fromClauses(final Set<IntegerClause> clauses, final Set<IntegerVariable> integerVariables, final Set<Variable> booleanVariables) {
+    public static Csp fromClauses(final Set<IntegerClause> clauses, final Set<IntegerVariable> integerVariables,
+                                  final Set<Variable> booleanVariables) {
         return fromClauses(clauses, integerVariables, booleanVariables, new IntegerVariableSubstitution());
     }
 
-    public static Csp fromClauses(final Set<IntegerClause> clauses, final Set<IntegerVariable> integerVariables, final IntegerVariableSubstitution propagateSubstitutions) {
+    public static Csp fromClauses(final Set<IntegerClause> clauses, final Set<IntegerVariable> integerVariables,
+                                  final IntegerVariableSubstitution propagateSubstitutions) {
         return fromClauses(clauses, integerVariables, Collections.emptySet(), propagateSubstitutions);
     }
 
-    public static Csp fromClauses(final Set<IntegerClause> clauses, final Set<IntegerVariable> integerVariables, final Set<Variable> booleanVariables,
+    public static Csp fromClauses(final Set<IntegerClause> clauses, final Set<IntegerVariable> integerVariables,
+                                  final Set<Variable> booleanVariables,
                                   final IntegerVariableSubstitution propagateSubstitutions) {
         final Set<IntegerVariable> intVars = new LinkedHashSet<>();
         final Set<Variable> boolVars = new LinkedHashSet<>();
         for (final IntegerClause clause : clauses) {
-            intVars.addAll(clause.getArithmeticLiterals().stream().flatMap(v -> v.getVariables().stream()).collect(Collectors.toSet()));
+            intVars.addAll(clause.getArithmeticLiterals().stream().flatMap(v -> v.getVariables().stream())
+                    .collect(Collectors.toSet()));
             boolVars.addAll(clause.getBoolLiterals().stream().map(Literal::variable).collect(Collectors.toSet()));
         }
         return new Csp.Builder()

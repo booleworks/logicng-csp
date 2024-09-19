@@ -23,7 +23,10 @@ public class OpAdd implements RCSPLiteral {
     }
 
     public enum Operator {
-        LE, GE, EQ, NE;
+        LE,
+        GE,
+        EQ,
+        NE;
 
         public static Operator from(final LinearLiteral.Operator op) {
             switch (op) {

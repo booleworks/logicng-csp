@@ -117,7 +117,8 @@ public final class IntegerVariable extends Term implements IntegerHolder {
 
     @Override
     public Decomposition calculateDecomposition(final CspFactory cf) {
-        return new Decomposition(new LinearExpression(this), Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
+        return new Decomposition(new LinearExpression(this), Collections.emptySet(), Collections.emptySet(),
+                Collections.emptySet());
     }
 
     public String getName() {

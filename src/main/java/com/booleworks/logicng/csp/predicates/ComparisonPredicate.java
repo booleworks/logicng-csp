@@ -152,8 +152,10 @@ public class ComparisonPredicate extends BinaryPredicate {
             return Decomposition.emptyClause(); // false
         }
         final Set<IntegerClause> result = new LinkedHashSet<>(termDecomposition.getAdditionalConstraints());
-        result.add(new IntegerClause(new LinearLiteral(termDecomposition.getLinearExpression(), LinearLiteral.Operator.EQ)));
-        return new Decomposition(result, termDecomposition.getAuxiliaryIntegerVariables(), termDecomposition.getAuxiliaryBooleanVariables());
+        result.add(new IntegerClause(
+                new LinearLiteral(termDecomposition.getLinearExpression(), LinearLiteral.Operator.EQ)));
+        return new Decomposition(result, termDecomposition.getAuxiliaryIntegerVariables(),
+                termDecomposition.getAuxiliaryBooleanVariables());
     }
 
     private Decomposition decomposeNeZero(final Term term, final CspFactory cf) {
@@ -170,8 +172,10 @@ public class ComparisonPredicate extends BinaryPredicate {
             return Decomposition.empty(); // true
         }
         final Set<IntegerClause> result = new LinkedHashSet<>(termDecomposition.getAdditionalConstraints());
-        result.add(new IntegerClause(new LinearLiteral(termDecomposition.getLinearExpression(), LinearLiteral.Operator.NE)));
-        return new Decomposition(result, termDecomposition.getAuxiliaryIntegerVariables(), termDecomposition.getAuxiliaryBooleanVariables());
+        result.add(new IntegerClause(
+                new LinearLiteral(termDecomposition.getLinearExpression(), LinearLiteral.Operator.NE)));
+        return new Decomposition(result, termDecomposition.getAuxiliaryIntegerVariables(),
+                termDecomposition.getAuxiliaryBooleanVariables());
     }
 
     private Decomposition decomposeLeZero(final Term term, final CspFactory cf) {
@@ -195,8 +199,10 @@ public class ComparisonPredicate extends BinaryPredicate {
             return Decomposition.emptyClause(); //false
         }
         final Set<IntegerClause> result = new LinkedHashSet<>(termDecomposition.getAdditionalConstraints());
-        result.add(new IntegerClause(new LinearLiteral(termDecomposition.getLinearExpression(), LinearLiteral.Operator.LE)));
-        return new Decomposition(result, termDecomposition.getAuxiliaryIntegerVariables(), termDecomposition.getAuxiliaryBooleanVariables());
+        result.add(new IntegerClause(
+                new LinearLiteral(termDecomposition.getLinearExpression(), LinearLiteral.Operator.LE)));
+        return new Decomposition(result, termDecomposition.getAuxiliaryIntegerVariables(),
+                termDecomposition.getAuxiliaryBooleanVariables());
     }
 
     private Decomposition decomposeGeZero(final Term term, final CspFactory cf) {
@@ -219,7 +225,10 @@ public class ComparisonPredicate extends BinaryPredicate {
             return Decomposition.emptyClause(); // false
         }
         final Set<IntegerClause> result = new LinkedHashSet<>(termDecomposition.getAdditionalConstraints());
-        result.add(new IntegerClause(new LinearLiteral(LinearExpression.multiply(termDecomposition.getLinearExpression(), -1), LinearLiteral.Operator.LE)));
-        return new Decomposition(result, termDecomposition.getAuxiliaryIntegerVariables(), termDecomposition.getAuxiliaryBooleanVariables());
+        result.add(new IntegerClause(
+                new LinearLiteral(LinearExpression.multiply(termDecomposition.getLinearExpression(), -1),
+                        LinearLiteral.Operator.LE)));
+        return new Decomposition(result, termDecomposition.getAuxiliaryIntegerVariables(),
+                termDecomposition.getAuxiliaryBooleanVariables());
     }
 }

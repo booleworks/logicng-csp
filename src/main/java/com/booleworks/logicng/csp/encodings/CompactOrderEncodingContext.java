@@ -207,9 +207,7 @@ public class CompactOrderEncodingContext implements CspEncodingContext {
     public Set<Variable> getSatVariables(final Collection<IntegerVariable> variables) {
         final Collection<IntegerVariable> subs = adjustedVariablesSubstitution
                 .getAllOrSelf(variables).stream()
-                .flatMap(v -> {
-                    if (hasDigits(v)) {return getDigits(v).stream();} else {return Stream.empty();}
-                })
+                .flatMap(v -> hasDigits(v) ? getDigits(v).stream() : Stream.empty())
                 .collect(Collectors.toList());
         return orderContext.getSatVariables(subs);
     }

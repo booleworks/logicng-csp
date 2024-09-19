@@ -20,7 +20,8 @@ public class CspDecomposition {
         return CspPredicate.Decomposition.merge(decompositions);
     }
 
-    private static void decomposeRecursive(final Formula formula, final CspFactory cf, final Set<CspPredicate.Decomposition> decompositions) {
+    private static void decomposeRecursive(final Formula formula, final CspFactory cf,
+                                           final Set<CspPredicate.Decomposition> decompositions) {
         switch (formula.type()) {
             case AND:
                 for (final Formula op : formula) {
@@ -47,7 +48,9 @@ public class CspDecomposition {
                 }
                 break;
             case LITERAL:
-                decompositions.add(new CspPredicate.Decomposition(Collections.singleton(new IntegerClause((Literal) formula)), Collections.emptySet(), Collections.emptySet()));
+                decompositions.add(
+                        new CspPredicate.Decomposition(Collections.singleton(new IntegerClause((Literal) formula)),
+                                Collections.emptySet(), Collections.emptySet()));
                 break;
             case PREDICATE:
                 if (formula instanceof CspPredicate) {
@@ -60,7 +63,8 @@ public class CspDecomposition {
                 final Not not = (Not) formula;
                 assert (not.operand().type() == FType.PREDICATE);
                 if (not.operand() instanceof CspPredicate) {
-                    decomposeRecursive(((CspPredicate) not.operand()).negate(cf).nnf(cf.getFormulaFactory()), cf, decompositions);
+                    decomposeRecursive(((CspPredicate) not.operand()).negate(cf).nnf(cf.getFormulaFactory()), cf,
+                            decompositions);
                 } else {
                     throw new RuntimeException("Cannot decompose predicates of type: " + not.operand().getClass());
                 }

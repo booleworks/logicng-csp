@@ -16,14 +16,20 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class CspModelEnumeration {
-    public static List<CspAssignment> enumerate(final SATSolver solver, final Csp csp, final CspEncodingContext context, final CspFactory cf) {
-        return enumerate(solver, csp.getPropagateSubstitutions().getAllOrSelf(csp.getVisibleIntegerVariables()), csp.getVisibleBooleanVariables(), context, cf);
+    public static List<CspAssignment> enumerate(final SATSolver solver, final Csp csp, final CspEncodingContext context,
+                                                final CspFactory cf) {
+        return enumerate(solver, csp.getPropagateSubstitutions().getAllOrSelf(csp.getVisibleIntegerVariables()),
+                csp.getVisibleBooleanVariables(), context, cf);
     }
 
-    public static List<CspAssignment> enumerate(final SATSolver solver, final Collection<IntegerVariable> integerVariables, final Collection<Variable> booleanVariables, final CspEncodingContext context, final CspFactory cf) {
+    public static List<CspAssignment> enumerate(final SATSolver solver,
+                                                final Collection<IntegerVariable> integerVariables,
+                                                final Collection<Variable> booleanVariables,
+                                                final CspEncodingContext context, final CspFactory cf) {
         final Set<Variable> allVars = context.getSatVariables(integerVariables);
         allVars.addAll(booleanVariables);
-        final List<IntegerVariable> additionalVariables = integerVariables.stream().filter(v -> !context.isEncoded(v)).collect(Collectors.toList());
+        final List<IntegerVariable> additionalVariables =
+                integerVariables.stream().filter(v -> !context.isEncoded(v)).collect(Collectors.toList());
         final List<CspAssignment> decodedModels = solver.enumerateAllModels(allVars).stream()
                 .map(m -> cf.decode(m.assignment(), integerVariables, booleanVariables, context))
                 .collect(Collectors.toList());
@@ -34,9 +40,12 @@ public class CspModelEnumeration {
         }
     }
 
-    private static List<CspAssignment> enumerateAdditionalVariables(final List<CspAssignment> decodedModels, final List<IntegerVariable> integerVariables) {
-        final List<Iterator<Integer>> iterators = integerVariables.stream().map(v -> v.getDomain().iterator()).collect(Collectors.toList());
-        final List<Integer> values = iterators.stream().map(Iterator::next).collect(Collectors.toList()); //Domains cannot be empty
+    private static List<CspAssignment> enumerateAdditionalVariables(final List<CspAssignment> decodedModels,
+                                                                    final List<IntegerVariable> integerVariables) {
+        final List<Iterator<Integer>> iterators =
+                integerVariables.stream().map(v -> v.getDomain().iterator()).collect(Collectors.toList());
+        final List<Integer> values =
+                iterators.stream().map(Iterator::next).collect(Collectors.toList()); //Domains cannot be empty
         final List<CspAssignment> models = new ArrayList<>();
         int leaderIndex = 0;
         for (int index = 0; index < integerVariables.size(); ) {

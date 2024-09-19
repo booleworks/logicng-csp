@@ -110,12 +110,18 @@ public class IntegerClause {
 
     @Override
     public boolean equals(final Object o) {
-        if (this == o) {return true;}
-        if (o == null || getClass() != o.getClass()) {return false;}
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         final IntegerClause that = (IntegerClause) o;
 
-        if (!boolLiterals.equals(that.boolLiterals)) {return false;}
+        if (!boolLiterals.equals(that.boolLiterals)) {
+            return false;
+        }
         return arithLiterals.equals(that.arithLiterals);
     }
 
@@ -126,7 +132,8 @@ public class IntegerClause {
         return result;
     }
 
-    public static CspPredicate.Decomposition factorize(final CspPredicate.Decomposition left, final CspPredicate.Decomposition right) {
+    public static CspPredicate.Decomposition factorize(final CspPredicate.Decomposition left,
+                                                       final CspPredicate.Decomposition right) {
         final Set<IntegerClause> clauses = new LinkedHashSet<>();
         for (final IntegerClause l : left.getClauses()) {
             for (final IntegerClause r : right.getClauses()) {
@@ -152,7 +159,8 @@ public class IntegerClause {
         }
 
         public Builder(final IntegerClause clause) {
-            this.clause = new IntegerClause(new LinkedHashSet<>(clause.getBoolLiterals()), new LinkedHashSet<>(clause.getArithmeticLiterals()));
+            this.clause = new IntegerClause(new LinkedHashSet<>(clause.getBoolLiterals()),
+                    new LinkedHashSet<>(clause.getArithmeticLiterals()));
         }
 
         private Builder(final Set<Literal> boolLiterals, final Set<ArithmeticLiteral> arithLiterals) {

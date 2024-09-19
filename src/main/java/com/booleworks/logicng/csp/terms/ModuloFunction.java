@@ -30,7 +30,9 @@ public class ModuloFunction extends BinaryFunction {
         final CspPredicate.Decomposition d1 = cf.eq(this.left, cf.add(px, r)).decompose(cf);
         final CspPredicate.Decomposition d2 = cf.ge(r, cf.zero()).decompose(cf);
         final CspPredicate.Decomposition d3 = cf.gt(cf.constant(Math.abs(rightValue)), r).decompose(cf);
-        final Term.Decomposition newTerm = new Decomposition(new LinearExpression(r), resultLeft.getAdditionalConstraints(), intVars, resultLeft.getAuxiliaryBooleanVariables());
+        final Term.Decomposition newTerm =
+                new Decomposition(new LinearExpression(r), resultLeft.getAdditionalConstraints(), intVars,
+                        resultLeft.getAuxiliaryBooleanVariables());
         return Term.Decomposition.merge(newTerm, List.of(d1, d2, d3));
     }
 

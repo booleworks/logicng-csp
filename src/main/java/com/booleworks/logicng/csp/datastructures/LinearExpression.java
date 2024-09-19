@@ -95,7 +95,9 @@ public class LinearExpression implements Comparable<LinearExpression> {
     private int gcd(int p, int q) {
         while (true) {
             final int r = p % q;
-            if (r == 0) {break;}
+            if (r == 0) {
+                break;
+            }
             p = q;
             q = r;
         }
@@ -111,7 +113,9 @@ public class LinearExpression implements Comparable<LinearExpression> {
             final int a = getA(v);
             if (a != 0) {
                 gcd = gcd(gcd, Math.abs(getA(v)));
-                if (gcd == 1) {break;}
+                if (gcd == 1) {
+                    break;
+                }
             }
         }
         if (b != 0) {
@@ -146,7 +150,9 @@ public class LinearExpression implements Comparable<LinearExpression> {
         long size = 1;
         for (final IntegerVariable v : coef.keySet()) {
             size *= v.getDomain().size();
-            if (size > limit) {return true;}
+            if (size > limit) {
+                return true;
+            }
         }
         return false;
     }
