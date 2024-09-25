@@ -9,18 +9,41 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * x op y (op in {=, <=, !=})
+ * Auxiliary literal representing a simple relation between two variables:
+ * <p>
+ * {@code x (op) y} with {@code op in {=, <=, !=}}
+ * <p>
+ * This class is an intermediate representation used by encoding algorithms. It should not be used directly.
  */
 public class OpXY implements RCSPLiteral {
     private final IntegerHolder x, y;
     private final Operator op;
 
+    /**
+     * Constructs new simple relation: {@code x (op) y; op in {=, <=, !=}}
+     * @param op operator of the relation
+     * @param x  argument x
+     * @param y  argument y
+     */
     public OpXY(final Operator op, final IntegerHolder x, final IntegerHolder y) {
         this(op, x, y, false);
     }
 
-    public OpXY(final Operator op, final IntegerHolder x, final IntegerHolder y, final boolean inverted) {
-        if (inverted && op == Operator.LE) {
+    /**
+     * Constructors new simple relation and invert it:
+     * <pre>
+     *     {@code
+     *     invert -> y <= x | x = y | x != y
+     *     !invert -> x <= y | x = y | x != y
+     *     }
+     * </pre>
+     * @param op     operator of the relation
+     * @param x      argument x
+     * @param y      argument y
+     * @param invert whether to invert the relation or not
+     */
+    public OpXY(final Operator op, final IntegerHolder x, final IntegerHolder y, final boolean invert) {
+        if (invert && op == Operator.LE) {
             this.x = y;
             this.y = x;
         } else {
@@ -30,11 +53,28 @@ public class OpXY implements RCSPLiteral {
         this.op = op;
     }
 
+    /**
+     * Operators that can be used this literal.
+     */
     public enum Operator {
+        /**
+         * Less-than-equals ({@code <=}).
+         */
         LE,
+        /**
+         * equals ({@code =}).
+         */
         EQ,
+        /**
+         * not equals ({@code !=}).
+         */
         NE;
 
+        /**
+         * Convert a linear literal operator
+         * @param op linear literal operator
+         * @return converted literal
+         */
         public static Operator from(final LinearLiteral.Operator op) {
             switch (op) {
                 case LE:
@@ -48,14 +88,26 @@ public class OpXY implements RCSPLiteral {
         }
     }
 
+    /**
+     * Returns the operator of the relation.
+     * @return operator of the relation
+     */
     public Operator getOp() {
         return op;
     }
 
+    /**
+     * Returns x.
+     * @return x
+     */
     public IntegerHolder getX() {
         return x;
     }
 
+    /**
+     * Returns y.
+     * @return y
+     */
     public IntegerHolder getY() {
         return y;
     }

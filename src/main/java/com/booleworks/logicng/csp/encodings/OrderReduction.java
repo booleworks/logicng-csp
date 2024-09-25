@@ -18,11 +18,35 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * A class grouping functions for reducing a problem for the order encoding.
+ */
 public class OrderReduction {
+    /**
+     * Maximum domain size for linear expressions before they get simplified.
+     */
     public static final int MAX_LINEAR_EXPRESSION_SIZE = 1024;
+
+    /**
+     * Number of splits performed for simplifying linear expressions.
+     */
     public static final int SPLITS = 2;
+
+    /**
+     * Prefix for auxiliary variables used for simplifying linear expressions.
+     */
     public static final String AUX_SIMPLE = "OE_SIMPLE";
 
+    private OrderReduction() {
+    }
+
+    /**
+     * Reduces a set of arithmetic clauses so that it can be encoded with the order encoding.
+     * @param clauses the clauses
+     * @param context the encoding context
+     * @param cf      the factory
+     * @return the reduced problem
+     */
     static ReductionResult reduce(final Set<IntegerClause> clauses, final OrderEncodingContext context,
                                   final CspFactory cf) {
         final List<IntegerVariable> auxVars = new ArrayList<>();
@@ -42,7 +66,7 @@ public class OrderReduction {
                 if (al instanceof LinearLiteral) {
                     final LinearLiteral ll = (LinearLiteral) al;
                     final LinearExpression sum =
-                            simplifyLinearExpression(new LinearExpression.Builder(ll.getLinearExpression()), true,
+                            simplifyLinearExpression(new LinearExpression.Builder(ll.getSum()), true,
                                     newClauses, newFrontierAuxVars, context, cf).build();
                     return new LinearLiteral(sum, ll.getOperator());
                 } else {
@@ -107,18 +131,18 @@ public class OrderReduction {
                 return Collections.singleton(new IntegerClause(boolLiterals, lits));
             case EQ:
                 final Set<ArithmeticLiteral> litsA = new LinkedHashSet<>(simpleLiterals);
-                litsA.add(new LinearLiteral(literal.getLinearExpression(), LinearLiteral.Operator.LE));
+                litsA.add(new LinearLiteral(literal.getSum(), LinearLiteral.Operator.LE));
                 final IntegerClause c1 = new IntegerClause(boolLiterals, litsA);
-                final LinearExpression.Builder ls = new LinearExpression.Builder(literal.getLinearExpression());
+                final LinearExpression.Builder ls = new LinearExpression.Builder(literal.getSum());
                 ls.multiply(-1);
                 final Set<ArithmeticLiteral> litsB = new LinkedHashSet<>(simpleLiterals);
                 litsB.add(new LinearLiteral(ls.build(), LinearLiteral.Operator.LE));
                 final IntegerClause c2 = new IntegerClause(boolLiterals, litsB);
                 return Set.of(c1, c2);
             case NE:
-                final LinearExpression.Builder ls1 = new LinearExpression.Builder(literal.getLinearExpression());
+                final LinearExpression.Builder ls1 = new LinearExpression.Builder(literal.getSum());
                 ls1.setB(ls1.getB() + 1);
-                final LinearExpression.Builder ls2 = new LinearExpression.Builder(literal.getLinearExpression());
+                final LinearExpression.Builder ls2 = new LinearExpression.Builder(literal.getSum());
                 ls2.multiply(-1);
                 ls2.setB(ls2.getB() + 1);
                 final Set<ArithmeticLiteral> litsNe = new LinkedHashSet<>(simpleLiterals);
@@ -143,7 +167,7 @@ public class OrderReduction {
             if (OrderEncoding.isSimpleLiteral(literal)) {
                 newArithLiterals.add(literal);
             } else {
-                final Variable p = context.addSimplifyBooleanVariable(f);
+                final Variable p = context.newSimplifyBooleanVariable(f);
                 final Literal notP = p.negate(f);
                 final Set<Literal> boolLiterals = new LinkedHashSet<>();
                 final Set<ArithmeticLiteral> arithLiterals = new LinkedHashSet<>();
@@ -179,7 +203,7 @@ public class OrderReduction {
             LinearExpression.Builder simplified =
                     simplifyLinearExpression(eMut, false, clauses, newFrontierAuxVars, context, cf);
             if (simplified.size() > 1) {
-                final IntegerVariable v = context.addSimplifyIntVariable(simplified.getDomain(), cf);
+                final IntegerVariable v = context.newSimplifyIntVariable(simplified.getDomain(), cf);
                 newFrontierAuxVars.add(v);
                 simplified.subtract(new LinearExpression(v));
                 final IntegerClause aux =
@@ -195,6 +219,12 @@ public class OrderReduction {
         return result;
     }
 
+    /**
+     * Split a linear expression into multiple linear expressions.
+     * @param exp the linear expression
+     * @param m   the number of new linear expressions
+     * @return an array with the new linear expressions
+     */
     static LinearExpression.Builder[] split(final LinearExpression exp, final int m) {
         final LinearExpression.Builder[] es = new LinearExpression.Builder[m];
         for (int i = 0; i < m; ++i) {

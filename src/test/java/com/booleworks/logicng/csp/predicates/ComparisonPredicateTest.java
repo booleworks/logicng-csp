@@ -1,7 +1,5 @@
 package com.booleworks.logicng.csp.predicates;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.ParameterizedCspTest;
 import com.booleworks.logicng.csp.datastructures.IntegerClause;
@@ -14,6 +12,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.SortedMap;
 import java.util.TreeMap;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ComparisonPredicateTest extends ParameterizedCspTest {
 
@@ -160,7 +160,8 @@ public class ComparisonPredicateTest extends ParameterizedCspTest {
         final SortedMap<IntegerVariable, Integer> coef3 = new TreeMap<>();
         coef3.put(a, -1);
         coef3.put(b, -1);
-        assertThat(pred3.getClauses().iterator().next()).isEqualTo(new IntegerClause(new LinearLiteral(new LinearExpression(coef3, 19), LinearLiteral.Operator.LE)));
+        assertThat(pred3.getClauses().iterator().next()).isEqualTo(
+                new IntegerClause(new LinearLiteral(new LinearExpression(coef3, 19), LinearLiteral.Operator.LE)));
         assertThat(pred3.getAuxiliaryBooleanVariables()).isEmpty();
         assertThat(pred3.getAuxiliaryIntegerVariables()).isEmpty();
         assertThat(pred4.getClauses()).isEmpty();
@@ -173,7 +174,8 @@ public class ComparisonPredicateTest extends ParameterizedCspTest {
         final SortedMap<IntegerVariable, Integer> coef6 = new TreeMap<>();
         coef6.put(a, 1);
         coef6.put(b, 1);
-        assertThat(pred6.getClauses().iterator().next()).isEqualTo(new IntegerClause(new LinearLiteral(new LinearExpression(coef6, -20), LinearLiteral.Operator.NE)));
+        assertThat(pred6.getClauses().iterator().next()).isEqualTo(
+                new IntegerClause(new LinearLiteral(new LinearExpression(coef6, -20), LinearLiteral.Operator.NE)));
         assertThat(pred6.getAuxiliaryBooleanVariables()).isEmpty();
         assertThat(pred6.getAuxiliaryIntegerVariables()).isEmpty();
     }

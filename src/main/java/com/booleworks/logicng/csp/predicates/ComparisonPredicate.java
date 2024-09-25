@@ -13,8 +13,20 @@ import com.booleworks.logicng.formulas.FormulaFactory;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+/**
+ * A predicate representing different types of comparisons between two terms.
+ */
 public class ComparisonPredicate extends BinaryPredicate {
 
+    /**
+     * Constructs a new comparison operator
+     * <p>
+     * <B>This constructor should not be used!</B> Use {@link CspFactory} to create new predicates.
+     * @param type  type of the comparison
+     * @param left  left side of the comparison
+     * @param right right side of the comparison
+     * @param f     the factory
+     */
     public ComparisonPredicate(final Type type, final Term left, final Term right, final FormulaFactory f) {
         super(type, left, right, f);
     }

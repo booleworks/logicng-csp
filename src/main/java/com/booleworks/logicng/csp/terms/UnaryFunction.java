@@ -3,14 +3,29 @@ package com.booleworks.logicng.csp.terms;
 import java.util.Objects;
 import java.util.SortedSet;
 
+/**
+ * An arithmetic function term with exactly one operand.
+ */
 public abstract class UnaryFunction extends Function {
+    /**
+     * The operand of this term.
+     */
     protected final Term operand;
 
+    /**
+     * Constructs a new unary function of a given type and operand.
+     * @param type    the type of the term
+     * @param operand the operand
+     */
     UnaryFunction(final Term.Type type, final Term operand) {
         super(type);
         this.operand = operand;
     }
 
+    /**
+     * Get the operand of this function.
+     * @return the operand of this function
+     */
     public Term getOperand() {
         return operand;
     }

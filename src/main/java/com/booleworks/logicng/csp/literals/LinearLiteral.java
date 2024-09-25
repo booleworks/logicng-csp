@@ -9,25 +9,60 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+/**
+ * Represents a relation with a linear sum:
+ * <p>
+ * {@code c_1 * a_1 + ... c_n * a_n (op) 0} with {@code op in {<=, =, !=}}
+ */
 public class LinearLiteral implements ArithmeticLiteral {
     private final LinearExpression sum;
     private final Operator op;
 
+    /**
+     * Construct new linear literal: {@code c_1 * a_1 + ... c_n * a_n <= 0}
+     * @param sum left side of the relation
+     * @param op  operator of the relation ({@code <=, =, !=})
+     */
     public LinearLiteral(final LinearExpression sum, final Operator op) {
         this.sum = LinearExpression.normalized(sum);
         this.op = op;
     }
 
+    /**
+     * Operators that can be used in a linear literal.
+     * <ul>
+     *     <li>LE: less-than-equals ({@code <=})</li>
+     *     <li>EQ: equals ({@code =})</li>
+     *     <li>NE: not equals ({@code !=})</li>
+     * </ul>
+     */
     public enum Operator {
+        /**
+         * Less-than-equals ({@code <=}).
+         */
         LE,
+        /**
+         * equals ({@code =}).
+         */
         EQ,
+        /**
+         * not equals ({@code !=}).
+         */
         NE
     }
 
+    /**
+     * Returns the sum (left side) of the relation.
+     * @return the sum (left side) of the relation
+     */
     public LinearExpression getSum() {
         return sum;
     }
 
+    /**
+     * Returns the operator of the relation.
+     * @return operator of the relation
+     */
     public Operator getOperator() {
         return op;
     }
@@ -35,10 +70,6 @@ public class LinearLiteral implements ArithmeticLiteral {
     @Override
     public Set<IntegerVariable> getVariables() {
         return sum.getVariables();
-    }
-
-    public LinearExpression getLinearExpression() {
-        return sum;
     }
 
     @Override

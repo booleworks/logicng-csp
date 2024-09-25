@@ -8,7 +8,16 @@ import com.booleworks.logicng.formulas.Variable;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+/**
+ * A function term representing the addition operation.
+ */
 public final class AdditionFunction extends NAryFunction {
+    /**
+     * Constructs a new addition function term.
+     * <p>
+     * <B>This constructor should not be used!</B> Use {@link CspFactory} to create new terms.
+     * @param terms the operands
+     */
     public AdditionFunction(final LinkedHashSet<Term> terms) {
         super(Term.Type.ADD, terms);
     }

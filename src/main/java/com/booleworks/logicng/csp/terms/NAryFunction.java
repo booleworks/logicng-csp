@@ -7,14 +7,29 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.stream.Collectors;
 
+/**
+ * An arithmetic function term with any number of operands.
+ */
 public abstract class NAryFunction extends Function {
+    /**
+     * The operands of this function.
+     */
     protected final LinkedHashSet<Term> operands;
 
+    /**
+     * Constructs a new N-ary function of the given type and operands.
+     * @param type     the type of this term
+     * @param operands the operands
+     */
     NAryFunction(final Term.Type type, final LinkedHashSet<Term> operands) {
         super(type);
         this.operands = operands;
     }
 
+    /**
+     * Returns the operands of the term.
+     * @return the operands of the term
+     */
     public Set<Term> getOperands() {
         return Collections.unmodifiableSet(operands);
     }

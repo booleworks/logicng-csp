@@ -17,7 +17,20 @@ import com.booleworks.logicng.formulas.Literal;
 import java.util.Iterator;
 import java.util.Set;
 
+/**
+ * A class grouping functions for the order encoding
+ */
 public class OrderEncoding {
+    private OrderEncoding() {
+    }
+
+    /**
+     * Encodes a CSP problem using the order encoding.
+     * @param csp     the problem
+     * @param context the encoding context
+     * @param result  destination for the result
+     * @param cf      the factory
+     */
     public static void encode(final Csp csp, final OrderEncodingContext context, final EncodingResult result,
                               final CspFactory cf) {
         for (final IntegerVariable v : csp.getInternalIntegerVariables()) {
@@ -26,6 +39,13 @@ public class OrderEncoding {
         encodeClauses(csp.getClauses(), context, result, cf);
     }
 
+    /**
+     * Encodes a single integer variable using the order encoding.
+     * @param v       the integer variable
+     * @param context the encoding context
+     * @param result  destination for the result
+     * @param cf      the factory
+     */
     public static void encodeVariable(final IntegerVariable v, final OrderEncodingContext context,
                                       final EncodingResult result, final CspFactory cf) {
         final FormulaFactory f = cf.getFormulaFactory();
@@ -42,6 +62,13 @@ public class OrderEncoding {
         }
     }
 
+    /**
+     * Encodes a set of arithmetic clauses using the order encoding
+     * @param clauses the set of clauses
+     * @param context the encoding context
+     * @param result  destination for the result
+     * @param cf      the factory
+     */
     public static void encodeClauses(final Set<IntegerClause> clauses, final OrderEncodingContext context,
                                      final EncodingResult result, final CspFactory cf) {
         final ReductionResult reduced = OrderReduction.reduce(clauses, context, cf);
@@ -55,6 +82,13 @@ public class OrderEncoding {
         }
     }
 
+    /**
+     * <B>Directly</B> encodes (without reduction) an arithmetic clause using the order encoding.
+     * @param cl      the arithmetic clause
+     * @param context the encoding context
+     * @param result  destination for the result
+     * @param cf      the factory
+     */
     static void encodeClause(final IntegerClause cl, final OrderEncodingContext context, final EncodingResult result,
                              final CspFactory cf) {
         if (!isSimpleClause(cl)) {
@@ -85,8 +119,8 @@ public class OrderEncoding {
         }
     }
 
-    static void encodeLitClause(final LinearLiteral lit, Formula[] clause, final OrderEncodingContext context,
-                                final EncodingResult result, final CspFactory cf) {
+    private static void encodeLitClause(final LinearLiteral lit, Formula[] clause, final OrderEncodingContext context,
+                                        final EncodingResult result, final CspFactory cf) {
         if (lit.getOperator() == LinearLiteral.Operator.EQ || lit.getOperator() == LinearLiteral.Operator.NE) {
             throw new RuntimeException("Invalid operator for order encoding " + lit);
         }
@@ -95,18 +129,19 @@ public class OrderEncoding {
             clause[0] = getCode(lit, context, result, cf.getFormulaFactory());
             writeClause(clause, result);
         } else {
-            final LinearExpression ls = lit.getLinearExpression();
-            final IntegerVariable[] vs = lit.getLinearExpression().getVariablesSorted();
+            final LinearExpression ls = lit.getSum();
+            final IntegerVariable[] vs = lit.getSum().getVariablesSorted();
             final int n = ls.size();
             clause = expandArray(clause, n);
-            encodeLinearExpression(ls, vs, 0, lit.getLinearExpression().getB(), clause, context, result, cf);
+            encodeLinearExpression(ls, vs, 0, lit.getSum().getB(), clause, context, result, cf);
         }
     }
 
-    static void encodeLinearExpression(final LinearExpression exp, final IntegerVariable[] vs, final int i, final int s,
-                                       final Formula[] clause,
-                                       final OrderEncodingContext context, final EncodingResult result,
-                                       final CspFactory cf) {
+    private static void encodeLinearExpression(final LinearExpression exp, final IntegerVariable[] vs, final int i,
+                                               final int s,
+                                               final Formula[] clause,
+                                               final OrderEncodingContext context, final EncodingResult result,
+                                               final CspFactory cf) {
         if (i >= vs.length - 1) {
             final int a = exp.getA(vs[i]);
             clause[i] = getCodeLE(vs[i], a, -s, context, result, cf.getFormulaFactory());
@@ -157,8 +192,8 @@ public class OrderEncoding {
         }
     }
 
-    static Formula getCodeLE(final IntegerVariable left, final int right, final OrderEncodingContext context,
-                             final EncodingResult result, final FormulaFactory f) {
+    private static Formula getCodeLE(final IntegerVariable left, final int right, final OrderEncodingContext context,
+                                     final EncodingResult result, final FormulaFactory f) {
         final IntegerDomain domain = left.getDomain();
         if (right < domain.lb()) {
             return f.falsum();
@@ -169,8 +204,9 @@ public class OrderEncoding {
         return context.intVariableInstance(left, index, result);
     }
 
-    static Formula getCodeLE(final IntegerVariable left, final int a, final int b, final OrderEncodingContext context,
-                             final EncodingResult result, final FormulaFactory f) {
+    private static Formula getCodeLE(final IntegerVariable left, final int a, final int b,
+                                     final OrderEncodingContext context,
+                                     final EncodingResult result, final FormulaFactory f) {
         if (a >= 0) {
             final int c;
             if (b >= 0) {
@@ -190,15 +226,16 @@ public class OrderEncoding {
         }
     }
 
-    static Formula getCode(final LinearLiteral lit, final OrderEncodingContext context, final EncodingResult result,
-                           final FormulaFactory f) {
+    private static Formula getCode(final LinearLiteral lit, final OrderEncodingContext context,
+                                   final EncodingResult result,
+                                   final FormulaFactory f) {
         if (!isSimpleLiteral(lit)) {
             throw new IllegalArgumentException("Encountered non-simple literal in order encoding " + lit.toString());
         }
         if (lit.getOperator() == LinearLiteral.Operator.EQ || lit.getOperator() == LinearLiteral.Operator.NE) {
             throw new IllegalArgumentException("Encountered eq/ne literal in order encoding " + lit);
         }
-        final LinearExpression sum = lit.getLinearExpression();
+        final LinearExpression sum = lit.getSum();
         final int b = sum.getB();
         if (sum.size() == 0) {
             return f.constant(b <= 0);
@@ -209,7 +246,7 @@ public class OrderEncoding {
         }
     }
 
-    static int sizeLE(final IntegerDomain d, final int value) {
+    private static int sizeLE(final IntegerDomain d, final int value) {
         if (value < d.lb()) {
             return 0;
         }
@@ -223,18 +260,38 @@ public class OrderEncoding {
         }
     }
 
+
+    /**
+     * Returns whether an arithmetic clauses is simple.
+     * <p>
+     * A clause is <I>simple</I> if it contains at most one non-simple literal.
+     * @param clause
+     * @return {@code true} if the clause is simple
+     */
     static boolean isSimpleClause(final IntegerClause clause) {
         return clause.size() - simpleClauseSize(clause) <= 1;
     }
 
+    /**
+     * Returns whether an arithmetic literal is simple.
+     * <p>
+     * A literal is <I>simple</I> if it will encode as a single boolean variable.
+     * @param literal the arithmetic literal
+     * @return {@code true} if the literal is simple
+     */
     static boolean isSimpleLiteral(final ArithmeticLiteral literal) {
         if (literal instanceof LinearLiteral) {
             final LinearLiteral l = (LinearLiteral) literal;
-            return l.getLinearExpression().getCoef().size() <= 1 && l.getOperator() == LinearLiteral.Operator.LE;
+            return l.getSum().getCoef().size() <= 1 && l.getOperator() == LinearLiteral.Operator.LE;
         }
         return false;
     }
 
+    /**
+     * Returns the number of simple literals (simple arithmetic literals and all boolean literals).
+     * @param clause the clause
+     * @return number of simple literals
+     */
     static int simpleClauseSize(final IntegerClause clause) {
         int simpleLiterals = clause.getBoolLiterals().size();
         for (final ArithmeticLiteral lit : clause.getArithmeticLiterals()) {
@@ -245,13 +302,13 @@ public class OrderEncoding {
         return simpleLiterals;
     }
 
-    static Formula[] expandArray(final Formula[] clause0, final int n) {
+    private static Formula[] expandArray(final Formula[] clause0, final int n) {
         final Formula[] clause = new Formula[clause0.length + n];
         System.arraycopy(clause0, 0, clause, n, clause0.length);
         return clause;
     }
 
-    static void writeClause(final Formula[] clause, final EncodingResult result) {
+    private static void writeClause(final Formula[] clause, final EncodingResult result) {
         final LNGVector<Literal> vec = new LNGVector<>();
         for (final Formula literal : clause) {
             switch (literal.type()) {

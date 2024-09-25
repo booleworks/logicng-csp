@@ -20,10 +20,31 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * A class grouping operations for reducing RCSP literals to CCSP literals.
+ */
 public class CompactCSPReduction {
+    /**
+     * Prefix for CCSP auxiliary variables.
+     */
     public static final String AUX_CCSP = "COE_CCSP";
+
+    /**
+     * Prefix for digits.
+     */
     public static final String AUX_DIGIT = "COE_DIGIT";
 
+    private CompactCSPReduction() {
+    }
+
+    /**
+     * Reduces a set of arithmetic clauses with RCSP literals to clauses with CCSP literals.
+     * @param clauses   RCSP clauses
+     * @param variables all variables used in {@code clauses}
+     * @param context   the encoding context
+     * @param cf        the factory
+     * @return reduced clauses and relevant variables
+     */
     static ReductionResult toCCSP(final Set<IntegerClause> clauses, final List<IntegerVariable> variables,
                                   final CompactOrderEncodingContext context,
                                   final CspFactory cf) {
@@ -541,29 +562,29 @@ public class CompactCSPReduction {
         return v;
     }
 
-    public static LinearLiteral le(final LinearExpression lhs, final LinearExpression rhs) {
+    private static LinearLiteral le(final LinearExpression lhs, final LinearExpression rhs) {
         final LinearExpression l = LinearExpression.subtract(lhs, rhs);
         return new LinearLiteral(l, LinearLiteral.Operator.LE);
     }
 
-    public static LinearLiteral le(final LinearExpression lhs, final int e) {
+    private static LinearLiteral le(final LinearExpression lhs, final int e) {
         final LinearExpression.Builder l = new LinearExpression.Builder(lhs);
         l.setB(l.getB() - e);
         return new LinearLiteral(l.build(), LinearLiteral.Operator.LE);
     }
 
-    public static LinearLiteral ge(final LinearExpression lhs, final LinearExpression rhs) {
+    private static LinearLiteral ge(final LinearExpression lhs, final LinearExpression rhs) {
         return le(rhs, lhs);
     }
 
-    public static LinearLiteral ge(final LinearExpression lhs, final int e) {
+    private static LinearLiteral ge(final LinearExpression lhs, final int e) {
         final LinearExpression.Builder l = new LinearExpression.Builder(lhs);
         l.setB(l.getB() - e);
         l.multiply(-1);
         return new LinearLiteral(l.build(), LinearLiteral.Operator.LE);
     }
 
-    public static LinearExpression add(final LinearExpression... es) {
+    private static LinearExpression add(final LinearExpression... es) {
         final LinearExpression.Builder l = new LinearExpression.Builder(0);
         for (final LinearExpression e : es) {
             l.add(e);
@@ -571,17 +592,17 @@ public class CompactCSPReduction {
         return l.build();
     }
 
-    public static LinearExpression add(final LinearExpression lhs, final int e) {
+    private static LinearExpression add(final LinearExpression lhs, final int e) {
         final LinearExpression.Builder l = new LinearExpression.Builder(lhs);
         l.setB(l.getB() + e);
         return l.build();
     }
 
-    public static LinearExpression sub(final LinearExpression lhs, final int e) {
+    private static LinearExpression sub(final LinearExpression lhs, final int e) {
         return add(lhs, -e);
     }
 
-    public static LinearExpression mul(final LinearExpression lhs, final int c) {
+    private static LinearExpression mul(final LinearExpression lhs, final int c) {
         final LinearExpression.Builder l = new LinearExpression.Builder(lhs);
         l.multiply(c);
         return l.build();

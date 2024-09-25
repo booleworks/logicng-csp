@@ -8,60 +8,89 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * A class storing substitutions from integer variables to integer variables.
+ */
 public final class IntegerVariableSubstitution {
-    private final Map<IntegerVariable, IntegerVariable> mainDirection;
-    // private final Map<IntegerVariable, IntegerVariable> reverseDirection;
+    private final Map<IntegerVariable, IntegerVariable> substitutions;
 
+    /**
+     * Constructs new substitution.
+     */
     public IntegerVariableSubstitution() {
-        mainDirection = new HashMap<>();
-        // reverseDirection = new HashMap<>();
+        substitutions = new HashMap<>();
     }
 
+    /**
+     * Copies new substitution from an existing substitution.
+     * @param other the existing substitution
+     */
     public IntegerVariableSubstitution(final IntegerVariableSubstitution other) {
-        mainDirection = new HashMap<>(other.mainDirection);
-        // reverseDirection = new HashMap<>(other.reverseDirection);
+        substitutions = new HashMap<>(other.substitutions);
     }
 
+    /**
+     * Returns the number of substitutions stored.
+     * @return the number of substitutions stored
+     */
     public int size() {
-        return mainDirection.size();
+        return substitutions.size();
     }
 
+    /**
+     * Returns whether there are substitutions stored.
+     * @return {@code true} if there are no substitutions stored, {@code false} otherwise.
+     */
     public boolean isEmpty() {
-        return mainDirection.isEmpty();
+        return substitutions.isEmpty();
     }
 
+    /**
+     * Returns whether a variable has a substitution.
+     * @param v the variable
+     * @return {@code true} if the variable has a substitution, {@code false} otherwise.
+     */
     public boolean containsKey(final IntegerVariable v) {
-        return mainDirection.containsKey(v);
+        return substitutions.containsKey(v);
     }
 
+    /**
+     * Adds a new substitution.
+     * @param original   the original variable
+     * @param substitute the substitute
+     */
     public void add(final IntegerVariable original, final IntegerVariable substitute) {
-        mainDirection.put(original, substitute);
+        substitutions.put(original, substitute);
         // reverseDirection.put(substitute, original);
     }
 
+    /**
+     * Returns the substitute of a variable.
+     * @param original the variable
+     * @return the substitute
+     */
     public IntegerVariable get(final IntegerVariable original) {
-        return mainDirection.get(original);
+        return substitutions.get(original);
     }
 
+    /**
+     * Returns the substitute if a variable of the variable itself if there is no substitute.
+     * @param original the variable
+     * @return the substitute or the variable itself
+     */
     public IntegerVariable getOrSelf(final IntegerVariable original) {
-        return mainDirection.getOrDefault(original, original);
+        return substitutions.getOrDefault(original, original);
     }
 
-    //public void getOriginal(final IntegerVariable substitute) {
-    //    reverseDirection.get(substitute);
-    //}
-
-    //public void getOriginalOrSelf(final IntegerVariable substitute) {
-    //    reverseDirection.getOrDefault(substitute, substitute);
-    //}
-
+    /**
+     * Returns the substitutes of a list of variables. If a substitute does not exist for a variable the variable
+     * itself is used.
+     * @param originals the variables
+     * @return the substitutes
+     */
     public List<IntegerVariable> getAllOrSelf(final Collection<IntegerVariable> originals) {
-        return originals.stream().map(v -> mainDirection.getOrDefault(v, v)).collect(Collectors.toList());
+        return originals.stream().map(v -> substitutions.getOrDefault(v, v)).collect(Collectors.toList());
     }
-
-    //public List<IntegerVariable> getAllOriginalOrSelf(final Collection<IntegerVariable> substitutes) {
-    //    return substitutes.stream().map(v -> reverseDirection.getOrDefault(v, v)).collect(Collectors.toList());
-    //}
 
     @Override
     public boolean equals(final Object o) {
@@ -73,18 +102,18 @@ public final class IntegerVariableSubstitution {
         }
 
         final IntegerVariableSubstitution that = (IntegerVariableSubstitution) o;
-        return mainDirection.equals(that.mainDirection); //&& reverseDirection.equals(that.reverseDirection);
+        return substitutions.equals(that.substitutions); //&& reverseDirection.equals(that.reverseDirection);
     }
 
     @Override
     public int hashCode() {
-        final int result = mainDirection.hashCode();
+        final int result = substitutions.hashCode();
         // result = 31 * result + reverseDirection.hashCode();
         return result;
     }
 
     @Override
     public String toString() {
-        return "IntegerVariableSubstitution{" + mainDirection + '}';
+        return "IntegerVariableSubstitution{" + substitutions + '}';
     }
 }

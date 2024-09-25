@@ -9,9 +9,22 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * A function term representing the modulo operation.
+ */
 public class ModuloFunction extends BinaryFunction {
+    /**
+     * Prefix for auxiliary variables introduced by the decomposition
+     */
     public final static String MOD_AUX_VARIABLE = "MOD";
 
+    /**
+     * Constructs a new modulo function term.
+     * <p>
+     * <B>This constructor should not be used!</B> Use {@link CspFactory} to create new terms.
+     * @param left  the dividend
+     * @param right the divisor
+     */
     public ModuloFunction(final Term left, final IntegerConstant right) {
         super(Term.Type.MOD, left, right);
     }

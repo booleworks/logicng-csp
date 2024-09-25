@@ -3,20 +3,44 @@ package com.booleworks.logicng.csp.terms;
 import java.util.Objects;
 import java.util.SortedSet;
 
+/**
+ * An arithmetic function term with exactly two operands.
+ */
 public abstract class BinaryFunction extends Function {
+    /**
+     * Left operand.
+     */
     protected final Term left;
+
+    /**
+     * Right operand.
+     */
     protected final Term right;
 
+    /**
+     * Constructs a new binary function of the given type and operands.
+     * @param type  the type of the term
+     * @param left  the left operand
+     * @param right the right operand
+     */
     BinaryFunction(final Term.Type type, final Term left, final Term right) {
         super(type);
         this.left = left;
         this.right = right;
     }
 
+    /**
+     * Returns the left operand.
+     * @return the left operand
+     */
     public Term getLeft() {
         return left;
     }
 
+    /**
+     * Returns the right operand.
+     * @return the right operand
+     */
     public Term getRight() {
         return right;
     }

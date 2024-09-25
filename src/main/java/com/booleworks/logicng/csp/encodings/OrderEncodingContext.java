@@ -17,17 +17,27 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+/**
+ * Encoding context for order encoding.
+ */
 public class OrderEncodingContext implements CspEncodingContext {
     private final Map<IntegerVariable, Map<Integer, Variable>> variableMap;
     private final List<Variable> simplifyBoolVariables;
     private final List<IntegerVariable> simplifyIntVariables;
 
+    /**
+     * Constructs a new encoding context for order encoding.
+     */
     OrderEncodingContext() {
         this.variableMap = new TreeMap<>();
         this.simplifyBoolVariables = new ArrayList<>();
         this.simplifyIntVariables = new ArrayList<>();
     }
 
+    /**
+     * Copies the encoding context.
+     * @param context the context to copy
+     */
     public OrderEncodingContext(final OrderEncodingContext context) {
         this.variableMap = new TreeMap<>(context.variableMap);
         this.simplifyBoolVariables = new ArrayList<>(context.simplifyBoolVariables);
@@ -39,23 +49,45 @@ public class OrderEncodingContext implements CspEncodingContext {
         return CspEncodingAlgorithm.Order;
     }
 
-    IntegerVariable addSimplifyIntVariable(final IntegerDomain domain, final CspFactory cf) {
+    /**
+     * Creates and stores a new auxiliary variable used for simplifying linear expressions.
+     * @param domain the domain
+     * @param cf     the factory
+     * @return new auxiliary variable
+     */
+    IntegerVariable newSimplifyIntVariable(final IntegerDomain domain, final CspFactory cf) {
         final IntegerVariable var = cf.auxVariable(OrderReduction.AUX_SIMPLE, domain);
         this.simplifyIntVariables.add(var);
         return var;
     }
 
-    Variable addSimplifyBooleanVariable(final FormulaFactory f) {
+    /**
+     * Creates and stores a new boolean auxiliary variable for simplifying arithmetic clauses.
+     * @param f the factory
+     * @return new auxiliary variable
+     */
+    Variable newSimplifyBooleanVariable(final FormulaFactory f) {
         final Variable var = f.newAuxVariable(CSP_AUX_LNG_VARIABLE);
         this.simplifyBoolVariables.add(var);
         return var;
     }
 
+    /**
+     * Get or create a boolean variable representing a certain index of an integer variable.
+     * @param group  the integer variable
+     * @param index  the queried index
+     * @param result the destination for encodings
+     * @return the boolean variable
+     */
     Variable intVariableInstance(final IntegerVariable group, final int index, final EncodingResult result) {
         final Map<Integer, Variable> intMap = this.variableMap.computeIfAbsent(group, k -> new TreeMap<>());
         return intMap.computeIfAbsent(index, i -> result.newVariable(CSP_AUX_LNG_VARIABLE));
     }
 
+    /**
+     * Returns the mapping between integer variables and their indices and associated boolean variables.
+     * @return the mapping between integer variables and their indices and associated boolean variables
+     */
     public Map<IntegerVariable, Map<Integer, Variable>> getVariableMap() {
         return Collections.unmodifiableMap(this.variableMap);
     }
@@ -71,14 +103,26 @@ public class OrderEncodingContext implements CspEncodingContext {
         return variableMap.containsKey(v);
     }
 
+    /**
+     * Returns all integer variables encoded in this context.
+     * @return all integer variables encoded in this context
+     */
     public Set<IntegerVariable> getIntegerVariables() {
         return this.variableMap.keySet();
     }
 
+    /**
+     * Returns all boolean auxiliary variables that are used for simplifications.
+     * @return all boolean auxiliary variables that are used for simplifications
+     */
     public List<Variable> getSimplifyBoolVariables() {
         return this.simplifyBoolVariables;
     }
 
+    /**
+     * Returns all integer auxiliary variables that are used for simplifications.
+     * @return all integer auxiliary variables that are used for simplifications
+     */
     public List<IntegerVariable> getSimplifyIntVariables() {
         return this.simplifyIntVariables;
     }

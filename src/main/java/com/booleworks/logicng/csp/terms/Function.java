@@ -2,8 +2,11 @@ package com.booleworks.logicng.csp.terms;
 
 import java.util.Objects;
 
+/**
+ * Represents a function term. A function term is composed of other terms.
+ */
 public abstract class Function extends Term {
-    public Function(final Term.Type type) {
+    Function(final Term.Type type) {
         super(type);
     }
 

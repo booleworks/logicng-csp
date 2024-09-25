@@ -11,9 +11,21 @@ import com.booleworks.logicng.formulas.Variable;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+/**
+ * A function term representing the absolut operation, i.e, the value of the operand is negated if it is negative.
+ */
 public class AbsoluteFunction extends UnaryFunction {
+    /**
+     * Prefix for auxiliary variables created by absolut function decomposition.
+     */
     public final static String ABS_AUX_VARIABLE = "ABS";
 
+    /**
+     * Constructs a new absolut function term.
+     * <p>
+     * <B>This constructor should not be used!</B> Use {@link CspFactory} to create new terms.
+     * @param operand the operand
+     */
     public AbsoluteFunction(final Term operand) {
         super(Term.Type.ABS, operand);
     }

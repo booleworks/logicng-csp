@@ -7,9 +7,19 @@ import com.booleworks.logicng.formulas.FormulaFactory;
 import java.util.Objects;
 import java.util.SortedSet;
 
+/**
+ * Represents the class of predicates that have exactly two terms as operands.
+ */
 public abstract class BinaryPredicate extends CspPredicate {
 
+    /**
+     * left operand
+     */
     protected Term left;
+
+    /**
+     * right operand
+     */
     protected Term right;
 
     BinaryPredicate(final CspPredicate.Type type, final Term left, final Term right, final FormulaFactory f) {
@@ -24,10 +34,18 @@ public abstract class BinaryPredicate extends CspPredicate {
         right.variablesInplace(variables);
     }
 
+    /**
+     * Returns the left operand.
+     * @return the left operand
+     */
     public Term getLeft() {
         return left;
     }
 
+    /**
+     * Returns the right operand.
+     * @return the right operand
+     */
     public Term getRight() {
         return right;
     }

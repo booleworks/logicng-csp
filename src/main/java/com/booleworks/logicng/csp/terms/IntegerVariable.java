@@ -93,11 +93,6 @@ public final class IntegerVariable extends Term implements IntegerHolder {
         this.aux = aux;
     }
 
-    @Override
-    public void variablesInplace(final SortedSet<IntegerVariable> variables) {
-        variables.add(this);
-    }
-
     /**
      * Returns whether this variable is unsatisfiable, e.g. has an empty domain.
      * @return whether this variable is unsatisfiable
@@ -106,8 +101,25 @@ public final class IntegerVariable extends Term implements IntegerHolder {
         return domain.isEmpty();
     }
 
+    /**
+     * Returns whether the variable is an auxiliary variable.
+     * @return whether the variable is an auxiliary variable
+     */
     public boolean isAux() {
         return aux;
+    }
+
+    /**
+     * Returns the name of the variable.
+     * @return the name of the variable
+     */
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public void variablesInplace(final SortedSet<IntegerVariable> variables) {
+        variables.add(this);
     }
 
     @Override
@@ -121,25 +133,10 @@ public final class IntegerVariable extends Term implements IntegerHolder {
                 Collections.emptySet());
     }
 
-    public String getName() {
-        return name;
-    }
-
     @Override
     public IntegerDomain getDomain() {
         return domain;
     }
-
-    //@Override
-    //public int compareTo(final IntegerVariable v) {
-    //    if (this == v) {
-    //        return 0;
-    //    }
-    //    if (v == null) {
-    //        return 1;
-    //    }
-    //    return name.compareTo(v.getName());
-    //}
 
     @Override
     public boolean equals(final Object other) {
@@ -167,6 +164,12 @@ public final class IntegerVariable extends Term implements IntegerHolder {
         }
     }
 
+    /**
+     * Creates a new uncached auxiliary variable.
+     * @param name   the name of the variable
+     * @param domain the domain of the variable
+     * @return a new uncached auxiliary variable
+     */
     public static IntegerVariable auxVar(final String name, final IntegerDomain domain) {
         return new IntegerVariable(name, domain, true);
     }

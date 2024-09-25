@@ -1,67 +1,3 @@
-///////////////////////////////////////////////////////////////////////////
-//                   __                _      _   ________               //
-//                  / /   ____  ____ _(_)____/ | / / ____/               //
-//                 / /   / __ \/ __ `/ / ___/  |/ / / __                 //
-//                / /___/ /_/ / /_/ / / /__/ /|  / /_/ /                 //
-//               /_____/\____/\__, /_/\___/_/ |_/\____/                  //
-//                           /____/                                      //
-//                                                                       //
-//               The Next Generation Logic Library                       //
-//                                                                       //
-///////////////////////////////////////////////////////////////////////////
-//                                                                       //
-//  Copyright 2015-20xx Christoph Zengler                                //
-//                                                                       //
-//  Licensed under the Apache License, Version 2.0 (the "License");      //
-//  you may not use this file except in compliance with the License.     //
-//  You may obtain a copy of the License at                              //
-//                                                                       //
-//  http://www.apache.org/licenses/LICENSE-2.0                           //
-//                                                                       //
-//  Unless required by applicable law or agreed to in writing, software  //
-//  distributed under the License is distributed on an "AS IS" BASIS,    //
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or      //
-//  implied.  See the License for the specific language governing        //
-//  permissions and limitations under the License.                       //
-//                                                                       //
-///////////////////////////////////////////////////////////////////////////
-
-/*
-Azucar (A SAT-based CSP Solver) version 0.2.4
-
-Copyright (c) 2012
-by Tomoya Tanjo (tanjo @ nii.ac.jp),
-   Naoyuki Tamura (tamura @ kobe-u.ac.jp), and
-   Mutsunori Banbara (banbara @ kobe-u.ac.jp)
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
- * Redistributions of source code must retain the above copyright
-   notice, this list of conditions and the following disclaimer.
- * Redistributions in binary form must reproduce the above copyright
-   notice, this list of conditions and the following disclaimer in the
-   documentation and/or other materials provided with the
-   distribution.
- * Neither the name of the Kobe University nor the names of its
-   contributors may be used to endorse or promote products derived
-   from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
 package com.booleworks.logicng.csp.datastructures.domains;
 
 import java.util.Iterator;
@@ -73,11 +9,28 @@ import java.util.SortedSet;
  * defined by a set of concrete values ({@link IntegerSetDomain}).
  */
 public abstract class IntegerDomain {
+    /**
+     * Maximum number of individual elements in a domain.
+     */
     public static int MAX_SET_SIZE = 128;
 
+    /**
+     * The lower bound of the domain
+     */
     protected final int lb;
+
+    /**
+     * The upper bound of the domain
+     */
     protected final int ub;
 
+    /**
+     * Creates a domain of a set of integers.
+     * <p>
+     * If the set is continuous it creates an {@link IntegerRangeDomain} otherwise an {@link IntegerSetDomain}.
+     * @param values the values
+     * @return new domain
+     */
     public static IntegerDomain of(final SortedSet<Integer> values) {
         assert values.comparator() == null : "Custom comparators are not supported";
         if (values.isEmpty()) {
@@ -92,10 +45,21 @@ public abstract class IntegerDomain {
         }
     }
 
+    /**
+     * Creates a range domain from the lower bound and upper bound.
+     * @param lb the lower bound
+     * @param ub the upper bound
+     * @return new domain
+     */
     public static IntegerDomain of(final int lb, final int ub) {
         return new IntegerRangeDomain(lb, ub);
     }
 
+    /**
+     * Constructs a new domain from lower bound and upper bound.
+     * @param lb the lower bound
+     * @param ub the upper bound
+     */
     protected IntegerDomain(final int lb, final int ub) {
         this.lb = lb;
         this.ub = ub;
@@ -265,6 +229,11 @@ public abstract class IntegerDomain {
      */
     public abstract IntegerDomain max(final IntegerDomain d);
 
+    /**
+     * Returns the subset whose elements are strictly less than {@code value}.
+     * @param value the upper bound (excluded)
+     * @return the subset
+     */
     public abstract SortedSet<Integer> headSet(final int value);
 
     /**
@@ -283,10 +252,20 @@ public abstract class IntegerDomain {
         return ub;
     }
 
+    /**
+     * Returns an iterator with all values contained in the domain.
+     * @return iterator with all values contained in the domain.
+     */
     public Iterator<Integer> iterator() {
         return values(lb, ub);
     }
 
+    /**
+     * Creates a new domain from a set of integers. This function restricts the size of {@link IntegerSetDomain}s and
+     * will approximate them with a {@link IntegerRangeDomain} if it becomes to large.
+     * @param domain the set of integers
+     * @return integer domain
+     */
     protected static IntegerDomain create(final SortedSet<Integer> domain) {
         final int lb = domain.first();
         final int ub = domain.last();
@@ -297,7 +276,13 @@ public abstract class IntegerDomain {
         }
     }
 
-    static protected IntegerDomain mulRanges(final IntegerDomain a, final IntegerDomain b) {
+    /**
+     * Multiples two ranges (only lower and upper bound, not individual values).
+     * @param a first range
+     * @param b second range
+     * @return multiplied range as ranged domain
+     */
+    protected static IntegerDomain mulRanges(final IntegerDomain a, final IntegerDomain b) {
         final int b00 = a.lb * b.lb;
         final int b01 = a.lb * b.ub;
         final int b10 = a.ub * b.lb;
@@ -307,7 +292,13 @@ public abstract class IntegerDomain {
         return IntegerDomain.of(lb0, ub0);
     }
 
-    static protected IntegerDomain divRanges(final IntegerDomain a, final IntegerDomain b) {
+    /**
+     * Divide two ranges (only lower and upper bound, not individual values).
+     * @param a the dividend
+     * @param b the divisor
+     * @return divided range as ranged domain
+     */
+    protected static IntegerDomain divRanges(final IntegerDomain a, final IntegerDomain b) {
         final int b00 = div(a.lb, b.lb);
         final int b01 = div(a.lb, b.ub);
         final int b10 = div(a.ub, b.lb);
@@ -325,7 +316,13 @@ public abstract class IntegerDomain {
         return IntegerDomain.of(lb0, ub0);
     }
 
-    static protected int div(final int x, final int y) {
+    /**
+     * divide and round two integer values
+     * @param x the dividend
+     * @param y the divisor
+     * @return the result
+     */
+    protected static int div(final int x, final int y) {
         return x < 0 && x % y != 0 ? x / y - 1 : x / y;
     }
 }

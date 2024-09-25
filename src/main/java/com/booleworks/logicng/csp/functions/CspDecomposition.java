@@ -12,7 +12,19 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+/**
+ * Class grouping functions related to decomposing formula into CSP problems.
+ */
 public class CspDecomposition {
+    private CspDecomposition() {
+    }
+
+    /**
+     * Decompose a formula into arithmetic clauses.
+     * @param formula the formula
+     * @param cf      the factory
+     * @return the decomposition result
+     */
     public static CspPredicate.Decomposition decompose(final Formula formula, final CspFactory cf) {
         final Formula nnf = formula.nnf(cf.getFormulaFactory());
         final Set<CspPredicate.Decomposition> decompositions = new LinkedHashSet<>();

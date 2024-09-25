@@ -3,7 +3,17 @@ package com.booleworks.logicng.csp.terms;
 import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.datastructures.LinearExpression;
 
+/**
+ * A function term representing the multiplication operation.
+ */
 public final class MultiplicationFunction extends BinaryFunction {
+    /**
+     * Constructs a new multiplication function term.
+     * <p>
+     * <B>This constructor should not be used!</B> Use {@link CspFactory} to create new terms.
+     * @param left  the constant factor
+     * @param right the variable
+     */
     public MultiplicationFunction(final IntegerConstant left, final Term right) {
         super(Term.Type.MUL, left, right);
     }

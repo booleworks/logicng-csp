@@ -47,7 +47,13 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+/**
+ * The central data structure for creating and managing CSP objects (terms, predicate, integer variables).
+ */
 public class CspFactory {
+    /**
+     * Prefix for all auxiliary variables
+     */
     public static final String AUX_PREFIX = "@AUX_";
     private final IntegerConstant zero;
     private final IntegerConstant one;
@@ -72,6 +78,10 @@ public class CspFactory {
     private final Map<LinkedHashSet<Term>, AllDifferentPredicate> allDifferentPredicates;
     private final Map<String, Integer> auxVarCounters;
 
+    /**
+     * Constructs a new factory for CSP related constructs. It uses a {@link FormulaFactory} as basis.
+     * @param formulaFactory the underlying formula factory
+     */
     public CspFactory(final FormulaFactory formulaFactory) {
         this.formulaFactory = formulaFactory;
         this.integerConstants = new HashMap<>();
@@ -99,6 +109,11 @@ public class CspFactory {
         this.integerConstants.put(1, this.one);
     }
 
+    /**
+     * Copies an existing CSP factory and replaces the underlying formula factory.
+     * @param other          the existing CSP factory
+     * @param formulaFactory the underlying formula factory
+     */
     public CspFactory(final CspFactory other, final FormulaFactory formulaFactory) {
         this.formulaFactory = formulaFactory;
         this.integerConstants = new HashMap<>(other.integerConstants);
@@ -126,14 +141,27 @@ public class CspFactory {
         this.integerConstants.put(1, this.one);
     }
 
+    /**
+     * Creates the integer constant for zero.
+     * @return integer constant for zero
+     */
     public IntegerConstant zero() {
         return zero;
     }
 
+    /**
+     * Creates the integer constant for one.
+     * @return integer constant for one
+     */
     public IntegerConstant one() {
         return one;
     }
 
+    /**
+     * Creates the integer constant for the given value.
+     * @param value the constant integer value
+     * @return the integer constant
+     */
     public IntegerConstant constant(final int value) {
         if (value == 0) {
             return zero();
@@ -144,14 +172,39 @@ public class CspFactory {
         }
     }
 
+    /**
+     * Creates a new integer variable with a ranged domain.
+     * <p>
+     * The domain must not be empty and there must not be another variable with the same name.
+     * @param name       the name of the variable
+     * @param lowerBound the lower bound of the variable's domain
+     * @param upperBound the upper bound of the variable's domain
+     * @return the new variable
+     */
     public IntegerVariable variable(final String name, final int lowerBound, final int upperBound) {
         return variable(name, IntegerDomain.of(lowerBound, upperBound));
     }
 
+    /**
+     * Creates a new integer variable from individual values.
+     * <p>
+     * The domain must not be empty and there must not be another variable with the same name.
+     * @param name   the name of the variable
+     * @param values the integer domain
+     * @return the new variable
+     */
     public IntegerVariable variable(final String name, final Collection<Integer> values) {
         return variable(name, IntegerDomain.of(new TreeSet<>(values)));
     }
 
+    /**
+     * Creates a new integer variable from an integer domain.
+     * <p>
+     * The domain must not be empty and there must not be another variable with the same name.
+     * @param name   the name of the variable
+     * @param domain the integer domain
+     * @return the new variable
+     */
     public IntegerVariable variable(final String name, final IntegerDomain domain) {
         return variableIntern(name, domain, false);
     }
@@ -169,16 +222,37 @@ public class CspFactory {
         return newVariable;
     }
 
+    /**
+     * Creates a new auxiliary variable of type {@code type} and an integer domain.
+     * @param type   the auxiliary class of the variable
+     * @param domain the integer domain
+     * @return a new auxiliary variable
+     */
     public IntegerVariable auxVariable(final String type, final IntegerDomain domain) {
         final int counter = auxVarCounters.compute(type, (key, value) -> value == null ? 0 : value + 1);
         return variableIntern(AUX_PREFIX + type + "_" + counter, domain, true);
     }
 
+    /**
+     * Creates a new auxiliary variable of type {@code type} and an additional postfix and an integer domain.
+     * <p>
+     * The postfix can be used encode some addition information into the variable that helps to associate the
+     * variable with its original purpose.
+     * @param type    the auxiliary class of the variable
+     * @param postfix the postfix of the variable
+     * @param domain  the integer domain
+     * @return a new auxiliary variable
+     */
     public IntegerVariable auxVariable(final String type, final String postfix, final IntegerDomain domain) {
         final int counter = auxVarCounters.compute(type, (key, value) -> value == null ? 0 : value + 1);
         return variableIntern(AUX_PREFIX + type + "_" + counter + "_" + postfix, domain, true);
     }
 
+    /**
+     * Creates the negation of {@code term}
+     * @param term the term
+     * @return the negation of {@code term}
+     */
     public Term minus(final Term term) {
         // contract double minus --x to x
         if (term instanceof NegationFunction) {
@@ -190,14 +264,29 @@ public class CspFactory {
         return unaryMinusTerms.computeIfAbsent(term, NegationFunction::new);
     }
 
+    /**
+     * Create the negation of an integer constant.
+     * @param constant the integer constant
+     * @return the negated constant
+     */
     public Term minus(final IntegerConstant constant) {
         return constant(-constant.getValue());
     }
 
+    /**
+     * Creates the addition of a list of terms.
+     * @param terms the operands
+     * @return the addition
+     */
     public Term add(final Term... terms) {
         return add(Arrays.asList(terms));
     }
 
+    /**
+     * Creates the addition of a list of terms.
+     * @param terms the operands
+     * @return the addition
+     */
     public Term add(final Collection<Term> terms) {
         final Collection<Term> originalOperands = terms;
         final Term foundFunction = addTerms.get(originalOperands);
@@ -219,6 +308,12 @@ public class CspFactory {
         return addition;
     }
 
+    /**
+     * Creates the addition of two integer constants.
+     * @param left  the first integer constant
+     * @param right the second integer constant
+     * @return the sum as integer constant
+     */
     public IntegerConstant add(final IntegerConstant left, final IntegerConstant right) {
         return constant(left.getValue() + right.getValue());
     }
@@ -265,6 +360,12 @@ public class CspFactory {
         }
     }
 
+    /**
+     * Creates the subtraction of two terms.
+     * @param left  the minuend
+     * @param right the subtrahend
+     * @return the subtraction
+     */
     public Term sub(final Term left, final Term right) {
         // x-x = 0
         if (left.equals(right)) {
@@ -285,14 +386,32 @@ public class CspFactory {
         return subTerms.computeIfAbsent(new Pair<>(left, right), p -> new SubtractionFunction(left, right));
     }
 
+    /**
+     * Creates the subtraction of two integer constant.
+     * @param left  the minuend
+     * @param right the subtrahend
+     * @return the subtracted values as integer constant
+     */
     public IntegerConstant sub(final IntegerConstant left, final IntegerConstant right) {
         return constant(left.getValue() - right.getValue());
     }
 
+    /**
+     * Creates the multiplication of a term with an integer.
+     * @param value the constant integer value
+     * @param term  the term
+     * @return the multiplication
+     */
     public Term mul(final int value, final Term term) {
         return mul(constant(value), term);
     }
 
+    /**
+     * Creates the multiplication of a term with an integer constant.
+     * @param left  the integer constant
+     * @param right the term
+     * @return the multiplication
+     */
     public Term mul(final IntegerConstant left, final Term right) {
         // a*0 or 0*a = 0
         if (left.getType() == Term.Type.ZERO || right.getType() == Term.Type.ZERO) {
@@ -314,6 +433,11 @@ public class CspFactory {
                 o -> new MultiplicationFunction(left, right));
     }
 
+    /**
+     * Creates the absolute function of a term.
+     * @param operand the operand
+     * @return the absolute function
+     */
     public Term abs(final Term operand) {
         // constant
         if (operand instanceof IntegerConstant) {
@@ -322,10 +446,22 @@ public class CspFactory {
         return absTerms.computeIfAbsent(operand, o -> new AbsoluteFunction(operand));
     }
 
+    /**
+     * Creates the division of a term with an integer constant
+     * @param left  the dividend
+     * @param right the divisor
+     * @return the division
+     */
     public Term div(final Term left, final int right) {
         return div(left, constant(right));
     }
 
+    /**
+     * Creates the division of a term with an integer constant
+     * @param left  the dividend
+     * @param right the divisor
+     * @return the division
+     */
     public Term div(final Term left, final IntegerConstant right) {
         // no division by 0
         if (right.getValue() == 0) {
@@ -347,10 +483,22 @@ public class CspFactory {
                 p -> new DivisionFunction(left, right));
     }
 
+    /**
+     * Creates the modulo function of a term with an integer constant
+     * @param left  the dividend
+     * @param right the divisor
+     * @return the modulo function
+     */
     public Term mod(final Term left, final int right) {
         return mod(left, constant(right));
     }
 
+    /**
+     * Creates the modulo function of a term with an integer constant
+     * @param left  the dividend
+     * @param right the divisor
+     * @return the modulo function
+     */
     public Term mod(final Term left, final IntegerConstant right) {
         // no division by 0 or by negative integers
         if (right.getValue() == 0) {
@@ -370,6 +518,12 @@ public class CspFactory {
         return this.modTerms.computeIfAbsent(new Pair<>(left, right.getValue()), p -> new ModuloFunction(left, right));
     }
 
+    /**
+     * Creates the minimum function between two terms.
+     * @param left  the first term
+     * @param right the second term
+     * @return the minimum function
+     */
     public Term min(final Term left, final Term right) {
         // min(x, x) = x
         if (left.equals(right)) {
@@ -383,6 +537,12 @@ public class CspFactory {
         return minTerms.computeIfAbsent(operands, p -> new MinFunction(left, right));
     }
 
+    /**
+     * Creates the maximum function between two terms.
+     * @param left  the first term
+     * @param right the second term
+     * @return the maximum function
+     */
     public Term max(final Term left, final Term right) {
         // max(x, x) = x
         if (left.equals(right)) {
@@ -396,6 +556,13 @@ public class CspFactory {
         return maxTerms.computeIfAbsent(operands, p -> new MaxFunction(left, right));
     }
 
+    /**
+     * Create a new comparison predicate
+     * @param left  the left side of the comparison
+     * @param right the right side of the comparison
+     * @param type  the operator
+     * @return the comparison predicate
+     */
     public ComparisonPredicate comparison(final Term left, final Term right, final CspPredicate.Type type) {
         switch (type) {
             case EQ:
@@ -415,6 +582,12 @@ public class CspFactory {
         }
     }
 
+    /**
+     * Creates an equality predicate.
+     * @param left  the left side of the equality
+     * @param right the right side of the equality
+     * @return the equality predicate
+     */
     public ComparisonPredicate eq(final Term left, final Term right) {
         final LinkedHashSet<Term> operands = new LinkedHashSet<>(Arrays.asList(left, right));
         final ComparisonPredicate foundFormula = eqPredicates.get(operands);
@@ -427,6 +600,12 @@ public class CspFactory {
         return predicate;
     }
 
+    /**
+     * Creates an inequality predicate.
+     * @param left  the left side of the inequality
+     * @param right the right side of the inequality
+     * @return the inequality predicate
+     */
     public ComparisonPredicate ne(final Term left, final Term right) {
         final LinkedHashSet<Term> operands = new LinkedHashSet<>(Arrays.asList(left, right));
         final ComparisonPredicate foundFormula = nePredicates.get(operands);
@@ -439,18 +618,42 @@ public class CspFactory {
         return predicate;
     }
 
+    /**
+     * Creates a less-than predicate
+     * @param left  the left side
+     * @param right the right side
+     * @return the less-than predicate
+     */
     public ComparisonPredicate lt(final Term left, final Term right) {
         return processComparison(left, right, ltPredicates, CspPredicate.Type.LT);
     }
 
+    /**
+     * Creates a less-than-equals predicate
+     * @param left  the left side
+     * @param right the right side
+     * @return the less-than predicate
+     */
     public ComparisonPredicate le(final Term left, final Term right) {
         return processComparison(left, right, lePredicates, CspPredicate.Type.LE);
     }
 
+    /**
+     * Creates a greater-than predicate
+     * @param left  the left side
+     * @param right the right side
+     * @return the less-than predicate
+     */
     public ComparisonPredicate gt(final Term left, final Term right) {
         return processComparison(left, right, gtPredicates, CspPredicate.Type.GT);
     }
 
+    /**
+     * Creates a greater-than-equals predicate
+     * @param left  the left side
+     * @param right the right side
+     * @return the less-than predicate
+     */
     public ComparisonPredicate ge(final Term left, final Term right) {
         return processComparison(left, right, gePredicates, CspPredicate.Type.GE);
     }
@@ -468,6 +671,11 @@ public class CspFactory {
         return predicate;
     }
 
+    /**
+     * Creates an all-different predicate that test whether all operands have different values.
+     * @param terms the operands
+     * @return the less-than predicate
+     */
     public AllDifferentPredicate allDifferent(final Collection<Term> terms) {
         final LinkedHashSet<Term> operands = new LinkedHashSet<>(terms);
         final AllDifferentPredicate foundFormula = allDifferentPredicates.get(operands);
@@ -479,14 +687,28 @@ public class CspFactory {
         return predicate;
     }
 
+    /**
+     * Returns the underlying formula factory.
+     * @return the underlying formula factory
+     */
     public FormulaFactory getFormulaFactory() {
         return formulaFactory;
     }
 
+    /**
+     * Decomposes a formula into arithmetic clauses.
+     * @param formula the formula
+     * @return the decomposition result
+     */
     public CspPredicate.Decomposition decompose(final Formula formula) {
         return CspDecomposition.decompose(formula, this);
     }
 
+    /**
+     * Builds a CSP problem from a formula.
+     * @param formula the formula
+     * @return the CSP problem
+     */
     public Csp buildCsp(final Formula formula) {
         final SortedSet<Variable> variables = formula.variables(formulaFactory);
         final SortedSet<IntegerVariable> integerVariables = IntegerVariablesFunction.integerVariables(formula);
@@ -494,6 +716,11 @@ public class CspFactory {
         return Csp.fromClauses(clauses, integerVariables, variables);
     }
 
+    /**
+     * Build a CSP problem from a conjunction of CSP predicates.
+     * @param predicates the predicates
+     * @return the CSP problem
+     */
     public Csp buildCsp(final Collection<CspPredicate> predicates) {
         final SortedSet<IntegerVariable> vars = new TreeSet<>();
         for (final CspPredicate predicate : predicates) {
@@ -505,16 +732,33 @@ public class CspFactory {
         return Csp.fromClauses(clauses, vars);
     }
 
+    /**
+     * Build a CSP problem from a conjunction of CSP predicates.
+     * @param predicates the predicates
+     * @return the CSP problem
+     */
     public Csp buildCsp(final CspPredicate... predicates) {
         return buildCsp(Arrays.asList(predicates));
     }
 
+    /**
+     * Encodes a CSP problem as a CNF.
+     * @param csp     the CSP problem
+     * @param context the encoding context
+     * @return the encoded CNF
+     */
     public List<Formula> encodeCsp(final Csp csp, final CspEncodingContext context) {
         final EncodingResult result = EncodingResult.resultForFormula(formulaFactory);
         encodeCsp(csp, context, result);
         return result.result();
     }
 
+    /**
+     * Encodes a CSP problem as a CNF.
+     * @param csp     the CSP problem
+     * @param context the encoding context
+     * @param result  the destination for the encoding
+     */
     public void encodeCsp(final Csp csp, final CspEncodingContext context, final EncodingResult result) {
         switch (context.getAlgorithm()) {
             case Order:
@@ -529,12 +773,24 @@ public class CspFactory {
         }
     }
 
+    /**
+     * Encodes a integer variable as a CNF.
+     * @param variable the integer variable
+     * @param context  the encoding context
+     * @return the encoded CNF
+     */
     public List<Formula> encodeVariable(final IntegerVariable variable, final CspEncodingContext context) {
         final EncodingResult result = EncodingResult.resultForFormula(formulaFactory);
         encodeVariable(variable, context, result);
         return result.result();
     }
 
+    /**
+     * Encodes a integer variable as a CNF.
+     * @param variable the integer variable
+     * @param context  the encoding context
+     * @param result   the destination for the encoding
+     */
     public void encodeVariable(final IntegerVariable variable, final CspEncodingContext context,
                                final EncodingResult result) {
         switch (context.getAlgorithm()) {
@@ -547,12 +803,24 @@ public class CspFactory {
         }
     }
 
+    /**
+     * Encodes a CSP predicate as a CNF.
+     * @param predicate the predicate
+     * @param context   the encoding context
+     * @return the encoded CNF
+     */
     public List<Formula> encodeConstraint(final CspPredicate predicate, final CspEncodingContext context) {
         final EncodingResult result = EncodingResult.resultForFormula(formulaFactory);
         encodeConstraint(predicate, context, result);
         return result.result();
     }
 
+    /**
+     * Encodes a CSP predicate as a CNF.
+     * @param predicate the predicate
+     * @param context   the encoding context
+     * @param result    the destination for the encoding
+     */
     public void encodeConstraint(final CspPredicate predicate, final CspEncodingContext context,
                                  final EncodingResult result) {
         final CspPredicate.Decomposition decomp = predicate.decompose(this);
@@ -569,6 +837,13 @@ public class CspFactory {
         }
     }
 
+    /**
+     * Decodes a propositional model for a CSP problem to an {@link CspAssignment}.
+     * @param model   the propositional model
+     * @param csp     the CSP problem
+     * @param context the encoding context
+     * @return the decoded model
+     */
     public CspAssignment decode(final Assignment model, final Csp csp, final CspEncodingContext context) {
         switch (context.getAlgorithm()) {
             case Order:
@@ -581,6 +856,14 @@ public class CspFactory {
         }
     }
 
+    /**
+     * Decodes a propositional model to an {@link CspAssignment}.
+     * @param model            the propositional model
+     * @param integerVariables the relevant integer variables
+     * @param booleanVariables the relevant boolean variables
+     * @param context          the encoding context
+     * @return the decoded model
+     */
     public CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables,
                                 final Collection<Variable> booleanVariables, final CspEncodingContext context) {
         switch (context.getAlgorithm()) {
@@ -596,6 +879,13 @@ public class CspFactory {
         }
     }
 
+    /**
+     * Decodes a propositional model to an {@link CspAssignment}.
+     * @param model            the propositional model
+     * @param integerVariables the relevant integer variables
+     * @param context          the encoding context
+     * @return the decoded model
+     */
     public CspAssignment decode(final Assignment model, final Collection<IntegerVariable> integerVariables,
                                 final CspEncodingContext context) {
         switch (context.getAlgorithm()) {

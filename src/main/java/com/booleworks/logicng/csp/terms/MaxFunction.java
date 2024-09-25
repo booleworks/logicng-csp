@@ -12,9 +12,22 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * A function term representing the maximum operation.
+ */
 public class MaxFunction extends BinaryFunction {
+    /**
+     * Prefix for auxiliary variables introduced by the decomposition.
+     */
     public final static String MAX_AUX_VARIABLE = "MAX";
 
+    /**
+     * Constructs a new max function term.
+     * <p>
+     * <B>This constructor should not be used!</B> Use {@link CspFactory} to create new terms.
+     * @param left  the first argument
+     * @param right the second argument
+     */
     public MaxFunction(final Term left, final Term right) {
         super(Term.Type.MAX, left, right);
     }

@@ -8,7 +8,17 @@ import com.booleworks.logicng.formulas.Variable;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+/**
+ * A function term representing the subtraction operation.
+ */
 public final class SubtractionFunction extends BinaryFunction {
+    /**
+     * Constructs a new subtraction function term.
+     * <p>
+     * <B>This constructor should not be used!</B> Use {@link CspFactory} to create new terms.
+     * @param left  the minuend
+     * @param right the subtrahend
+     */
     public SubtractionFunction(final Term left, final Term right) {
         super(Term.Type.SUB, left, right);
     }

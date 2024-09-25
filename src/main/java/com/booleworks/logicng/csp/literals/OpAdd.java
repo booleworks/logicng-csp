@@ -9,12 +9,23 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * z op x+y (op in {=, <=, >=, !=})
+ * Auxiliary literal representing a relation with an addition of two variables:
+ * <p>
+ * {@code z (op) x + y} with {@code op in {=, <=, >=, !=}}
+ * <p>
+ * This class is an intermediate representation used by encoding algorithms. It should not be used directly.
  */
 public class OpAdd implements RCSPLiteral {
     private final IntegerHolder z, x, y;
     private final Operator op;
 
+    /**
+     * Constructs new addition relation: {@code z (op) x + y; op in {=, <=, >=, !=}}
+     * @param op operator of the relation
+     * @param z  argument for z
+     * @param x  argument for x
+     * @param y  argument for y
+     */
     public OpAdd(final Operator op, final IntegerHolder z, final IntegerHolder x, final IntegerHolder y) {
         this.z = z;
         this.x = x;
@@ -22,12 +33,32 @@ public class OpAdd implements RCSPLiteral {
         this.op = op;
     }
 
+    /**
+     * Operators that can be used this literal.
+     */
     public enum Operator {
+        /**
+         * Less-than-equals ({@code <=}).
+         */
         LE,
+        /**
+         * Greater-than-equals ({@code >=}).
+         */
         GE,
+        /**
+         * Equals ({@code =}).
+         */
         EQ,
+        /**
+         * Not equals ({@code !=}).
+         */
         NE;
 
+        /**
+         * Convert a linear literal operator
+         * @param op linear literal operator
+         * @return converted literal
+         */
         public static Operator from(final LinearLiteral.Operator op) {
             switch (op) {
                 case LE:
@@ -40,10 +71,16 @@ public class OpAdd implements RCSPLiteral {
             throw new RuntimeException("Unreachable Code");
         }
 
-        public static Operator from(final LinearLiteral.Operator op, final boolean inverted) {
+        /**
+         * Convert linear literal operator and inverts the operator.
+         * @param op     linear literal operator
+         * @param invert whether to invert the operator or not
+         * @return converted literal
+         */
+        public static Operator from(final LinearLiteral.Operator op, final boolean invert) {
             switch (op) {
                 case LE:
-                    return inverted ? GE : LE;
+                    return invert ? GE : LE;
                 case EQ:
                     return EQ;
                 case NE:
@@ -53,18 +90,34 @@ public class OpAdd implements RCSPLiteral {
         }
     }
 
+    /**
+     * Returns z.
+     * @return z
+     */
     public IntegerHolder getZ() {
         return z;
     }
 
+    /**
+     * Returns x.
+     * @return x
+     */
     public IntegerHolder getX() {
         return x;
     }
 
+    /**
+     * Returns y.
+     * @return y
+     */
     public IntegerHolder getY() {
         return y;
     }
 
+    /**
+     * Returns the operator of the relation.
+     * @return operator of the relation
+     */
     public Operator getOp() {
         return op;
     }

@@ -15,13 +15,38 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Class grouping functions for enumerate models from CSP problems.
+ */
 public class CspModelEnumeration {
+    private CspModelEnumeration() {
+    }
+
+    /**
+     * Enumerate models from a solver given a CSP problem.
+     * @param solver  the solver with the encoded problem
+     * @param csp     the corresponding csp problem
+     * @param context the encoding context
+     * @param cf      the factory
+     * @return a list with all models for this problem
+     */
     public static List<CspAssignment> enumerate(final SATSolver solver, final Csp csp, final CspEncodingContext context,
                                                 final CspFactory cf) {
         return enumerate(solver, csp.getPropagateSubstitutions().getAllOrSelf(csp.getVisibleIntegerVariables()),
                 csp.getVisibleBooleanVariables(), context, cf);
     }
 
+    /**
+     * Enumerate models from a solver and a set of relevant integer and boolean variables. The relevant variables are
+     * all in the produced models. If a variable was not encoded on the solver, the function will assume that all
+     * values of the variable are allowed.
+     * @param solver           the solver with the encoded problem
+     * @param integerVariables the relevant integer variables
+     * @param booleanVariables the relevant boolean variables
+     * @param context          the encoding context
+     * @param cf               the factory
+     * @return a list with all models for this problem
+     */
     public static List<CspAssignment> enumerate(final SATSolver solver,
                                                 final Collection<IntegerVariable> integerVariables,
                                                 final Collection<Variable> booleanVariables,
@@ -40,6 +65,7 @@ public class CspModelEnumeration {
         }
     }
 
+    // FIXME: Consider additional boolean variable!!!
     private static List<CspAssignment> enumerateAdditionalVariables(final List<CspAssignment> decodedModels,
                                                                     final List<IntegerVariable> integerVariables) {
         final List<Iterator<Integer>> iterators =

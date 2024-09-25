@@ -1,3 +1,6 @@
+/**
+ * LogicNG CSP Extension
+ */
 module logicng.csp {
     requires logicng;
 

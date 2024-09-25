@@ -2,7 +2,14 @@ package com.booleworks.logicng.csp.terms;
 
 import com.booleworks.logicng.csp.datastructures.domains.IntegerDomain;
 
+/**
+ * An interface for atomic terms holding integers.
+ */
 public interface IntegerHolder extends Comparable<IntegerHolder> {
+    /**
+     * Returns the domain of the held object.
+     * @return the domain of the held object
+     */
     IntegerDomain getDomain();
 
     @Override

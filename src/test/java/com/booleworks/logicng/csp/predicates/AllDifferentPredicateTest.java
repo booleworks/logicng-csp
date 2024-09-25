@@ -1,7 +1,5 @@
 package com.booleworks.logicng.csp.predicates;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.booleworks.logicng.csp.Common;
 import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.ParameterizedCspTest;
@@ -21,12 +19,15 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 public class AllDifferentPredicateTest extends ParameterizedCspTest {
     @ParameterizedTest
     @MethodSource("cspFactories")
     public void testType(final CspFactory cf) {
         assertThat(cf.allDifferent(List.of()).getType()).isEqualTo(CspPredicate.Type.ALLDIFFERENT);
-        assertThat(cf.allDifferent(List.of(cf.variable("a", 0, 20), cf.one(), cf.constant(2))).getType()).isEqualTo(CspPredicate.Type.ALLDIFFERENT);
+        assertThat(cf.allDifferent(List.of(cf.variable("a", 0, 20), cf.one(), cf.constant(2))).getType()).isEqualTo(
+                CspPredicate.Type.ALLDIFFERENT);
     }
 
     @ParameterizedTest
@@ -38,7 +39,8 @@ public class AllDifferentPredicateTest extends ParameterizedCspTest {
         final Term term2 = cf.mul(2, a);
         final AllDifferentPredicate pred1 = cf.allDifferent(List.of(cf.zero(), cf.one()));
         final AllDifferentPredicate pred2 = cf.allDifferent(List.of(term1, term2));
-        final AllDifferentPredicate pred3 = cf.allDifferent(List.of(term1, term2, cf.zero(), cf.one(), cf.constant(20)));
+        final AllDifferentPredicate pred3 =
+                cf.allDifferent(List.of(term1, term2, cf.zero(), cf.one(), cf.constant(20)));
 
         assertThat(pred1.terms).containsExactlyInAnyOrder(cf.zero(), cf.one());
         assertThat(pred1.type).isEqualTo(CspPredicate.Type.ALLDIFFERENT);
@@ -81,7 +83,8 @@ public class AllDifferentPredicateTest extends ParameterizedCspTest {
         final Term term2 = cf.mul(2, a);
         final AllDifferentPredicate pred1 = cf.allDifferent(List.of(cf.zero(), cf.one()));
         final AllDifferentPredicate pred2 = cf.allDifferent(List.of(term1, term2));
-        final AllDifferentPredicate pred3 = cf.allDifferent(List.of(term1, term2, cf.zero(), cf.one(), cf.constant(20)));
+        final AllDifferentPredicate pred3 =
+                cf.allDifferent(List.of(term1, term2, cf.zero(), cf.one(), cf.constant(20)));
 
         assertThat(pred1).isSameAs(cf.allDifferent(List.of(cf.zero(), cf.one())));
         assertThat(pred2).isSameAs(cf.allDifferent(List.of(term1, term2)));

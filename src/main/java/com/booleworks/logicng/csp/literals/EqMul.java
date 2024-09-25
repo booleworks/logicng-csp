@@ -9,12 +9,22 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * z = x * y
+ * Auxiliary literal representing an equality with a multiplication of two variables:
+ * <p>
+ * {@code z = x * y}
+ * <p>
+ * This class is an intermediate representation used by encoding algorithms. It should not be used directly.
  */
 public class EqMul implements RCSPLiteral {
     private final IntegerHolder z, x;
     private final IntegerVariable y;
 
+    /**
+     * Construct new EQ-MUL literal: {@code z = x * y}
+     * @param z argument for z
+     * @param x argument for x
+     * @param y argument for y
+     */
     public EqMul(final IntegerHolder z, final IntegerHolder x, final IntegerVariable y) {
         this.z = z;
         this.x = x;
@@ -82,14 +92,26 @@ public class EqMul implements RCSPLiteral {
         return Math.max(Math.max(x.getDomain().ub(), y.getDomain().ub()), y.getDomain().ub());
     }
 
+    /**
+     * Returns z.
+     * @return z
+     */
     public IntegerHolder getZ() {
         return z;
     }
 
+    /**
+     * Returns x.
+     * @return x
+     */
     public IntegerHolder getX() {
         return x;
     }
 
+    /**
+     * Returns y.
+     * @return y
+     */
     public IntegerVariable getY() {
         return y;
     }

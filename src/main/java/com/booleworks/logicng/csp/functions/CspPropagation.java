@@ -15,9 +15,27 @@ import java.util.TreeSet;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+/**
+ * A class grouping functions for propagating CSP problems.
+ */
 public class CspPropagation {
+    /**
+     * Prefix for auxiliary variables introduced by the propagation.
+     */
     public static String BOUNDED_AUX_VAR = "PROPAGATION";
 
+    private CspPropagation() {
+    }
+
+    /**
+     * Propagates a CSP problem. This is an optimization that reduces the variable's domains if it recognizes that
+     * the full domain is not necessary.
+     * <p>
+     * A problem can only be propagated once!
+     * @param csp the un-propagated CSP problem
+     * @param cf  the factory
+     * @return the propagated CSP problem
+     */
     public static Csp propagate(final Csp csp, final CspFactory cf) {
         if (!csp.getPropagateSubstitutions().isEmpty()) {
             throw new IllegalArgumentException("Propagating a CSP more than once is not supported");
@@ -146,7 +164,7 @@ public class CspPropagation {
     /**
      * ceil(b/a)
      */
-    static private int divceil(final int b, final int a) {
+    private static int divceil(final int b, final int a) {
         if ((a >= 0 && b >= 0) ||
                 (a < 0 && b < 0)) {
             return b / a;
@@ -160,7 +178,7 @@ public class CspPropagation {
     /**
      * floor(b/a)
      */
-    static private int divfloor(final int b, final int a) {
+    private static int divfloor(final int b, final int a) {
         if (a >= 0 && b >= 0) {
             return b / a;
         } else if (a < 0 && b < 0) {

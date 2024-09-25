@@ -7,20 +7,33 @@ import com.booleworks.logicng.csp.datastructures.domains.IntegerDomain;
 import java.util.Collections;
 import java.util.SortedSet;
 
+/**
+ * An integer constant.
+ */
 public final class IntegerConstant extends Term implements IntegerHolder {
     private final int value;
 
+    /**
+     * Constructs a new integer constant.
+     * <p>
+     * <B>This constructor should not be used!</B> Use {@link CspFactory} to create new terms.
+     * @param value the constant value
+     */
     public IntegerConstant(final int value) {
         super(value == 0 ? Term.Type.ZERO : value == 1 ? Term.Type.ONE : Term.Type.CONST);
         this.value = value;
     }
 
-    @Override
-    public void variablesInplace(final SortedSet<IntegerVariable> variables) {
-    }
-
+    /**
+     * Returns the value of the constant.
+     * @return the value of the constant
+     */
     public int getValue() {
         return value;
+    }
+
+    @Override
+    public void variablesInplace(final SortedSet<IntegerVariable> variables) {
     }
 
     @Override
@@ -58,9 +71,5 @@ public final class IntegerConstant extends Term implements IntegerHolder {
     @Override
     public String toString() {
         return String.valueOf(value);
-    }
-
-    public int compareTo(final IntegerConstant o) {
-        return Integer.compare(value, o.value);
     }
 }

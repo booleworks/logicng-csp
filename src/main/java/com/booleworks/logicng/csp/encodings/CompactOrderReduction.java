@@ -26,13 +26,42 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * A class grouping functions for reducing a problem for the compact order encoding.
+ */
 public class CompactOrderReduction {
 
+    /**
+     * Prefix for adjusted variables.
+     */
     public static final String AUX_ADJUST = "COE_ADJUST";
+
+    /**
+     * Prefix for ternary auxiliary variables.
+     */
     public static final String AUX_TERNARY = "COE_TERNARY";
+
+    /**
+     * Prefix for RCSP auxiliary variables.
+     */
     public static final String AUX_RCSP = "COE_RCSP";
+
+    /**
+     * Prefix for simplification auxiliary variables.
+     */
     public static final String AUX_SIMPLE = "COE_SIMPLE";
 
+    private CompactOrderReduction() {
+    }
+
+    /**
+     * Reduces a set of arithmetic clauses so that it can be encoded with the compact order encoding.
+     * @param clauses          the clauses
+     * @param integerVariables the integer variables
+     * @param context          the encoding context
+     * @param cf               the factory
+     * @return the reduced problem
+     */
     static ReductionResult reduce(final Set<IntegerClause> clauses, final Set<IntegerVariable> integerVariables,
                                   final CompactOrderEncodingContext context,
                                   final CspFactory cf) {
@@ -52,19 +81,6 @@ public class CompactOrderReduction {
         return CompactCSPReduction.toCCSP(newClauses, currentVariables, context, cf);
     }
 
-    /**
-     * <h1>Behaviour</h1>
-     * <p>
-     * Adjusts variables to be continuous and start at 0 (see {@link CompactOrderReduction#createAdjustedVariable})
-     * <p>
-     * Adjust linear literals / linear sums: Adds the offset of each auxiliary variable to {@code b}.
-     * {@code b_new = b + coef(v_1) * offset(v_1) + ... + coef(v_n) * offset(v_n)}
-     * <p>
-     * Replace all literals in clauses with the adjusted literals.
-     * <p>
-     * <h1>Example</h1>
-     * TODO
-     */
     private static Set<IntegerClause> adjust(final Set<IntegerClause> clauses, final Set<IntegerVariable> variables,
                                              final CompactOrderEncodingContext context,
                                              final CspFactory cf) {
@@ -85,7 +101,7 @@ public class CompactOrderReduction {
                     if (lit instanceof LinearLiteral) {
                         final LinearLiteral ll =
                                 ((LinearLiteral) lit).substitute(context.getAdjustedVariablesSubstitution());
-                        final LinearExpression ls = ll.getLinearExpression();
+                        final LinearExpression ls = ll.getSum();
                         int b = ls.getB();
                         for (final Map.Entry<IntegerVariable, Integer> es : ls.getCoef().entrySet()) {
                             b += context.getOffset(es.getKey()) * es.getValue();
@@ -103,23 +119,6 @@ public class CompactOrderReduction {
         return newClauses;
     }
 
-    /**
-     * Adjust Variable: Makes non-contiguous variable contiguous and offset so that their lower bound is at 0:
-     * - Substitute original variable with auxiliary variable, that has the wanted properties.
-     * - Document the offset of the auxiliary variable inside the encoding context.
-     * - We add clauses that exclude values that are not contained in the domain if the domain is not contiguous.
-     * <p>
-     * This function does not substitute the variables in the existing clauses, but uses the substitute in the created
-     * clauses. This caller must make sure the remaining uses of
-     * the original variables are substituted.
-     * <p>
-     * Example:
-     * TODO
-     * <p>
-     * TODO: There are some things I would like to investigate:
-     * - What is the reason for the {@code useOffset} case distinction?
-     * - Are variables with negative lower bounds represented properly?
-     */
     private static IntegerVariable createAdjustedVariable(final IntegerDomain d, final String prefix,
                                                           final boolean useOffset,
                                                           final Set<IntegerClause> additionalClauses,
@@ -168,10 +167,6 @@ public class CompactOrderReduction {
         return newVar;
     }
 
-    /**
-     * Convert arithmetic literals to arithmetic literals with less or equal 3 variables. Substitutes new literals in
-     * the returned clauses
-     */
     private static Set<IntegerClause> toTernary(final Set<IntegerClause> clauses,
                                                 final CompactOrderEncodingContext context, final CspFactory cf) {
         final Set<IntegerClause> newClauses = new LinkedHashSet<>();
@@ -180,9 +175,9 @@ public class CompactOrderReduction {
             for (final ArithmeticLiteral lit : c.getArithmeticLiterals()) {
                 if (lit instanceof LinearLiteral) {
                     final LinearLiteral ll = (LinearLiteral) lit;
-                    if (ll.getLinearExpression().size() > 3) {
+                    if (ll.getSum().size() > 3) {
                         final LinearExpression.Builder ls =
-                                simplifyToTernary(new LinearExpression.Builder(ll.getLinearExpression()), newClauses,
+                                simplifyToTernary(new LinearExpression.Builder(ll.getSum()), newClauses,
                                         context, cf);
                         newClause.addArithmeticLiteral(new LinearLiteral(ls.build(), ll.getOperator()));
                     } else {
@@ -278,7 +273,7 @@ public class CompactOrderReduction {
                 for (final ArithmeticLiteral al : c.getArithmeticLiterals()) {
                     if (al instanceof LinearLiteral) {
                         final LinearLiteral ll = (LinearLiteral) al;
-                        final LinearExpression ls = ll.getLinearExpression();
+                        final LinearExpression ls = ll.getSum();
                         if (ll.getOperator() == LinearLiteral.Operator.EQ && ls.size() == 2 && ls.getB() == 0) {
                             final IntegerVariable v1 = ls.getCoef().firstKey();
                             final IntegerVariable v2 = ls.getCoef().lastKey();
@@ -469,8 +464,9 @@ public class CompactOrderReduction {
         return ret;
     }
 
-    static Set<IntegerClause> simplify(final Set<IntegerClause> clauses, final CompactOrderEncodingContext context,
-                                       final FormulaFactory f) {
+    private static Set<IntegerClause> simplify(final Set<IntegerClause> clauses,
+                                               final CompactOrderEncodingContext context,
+                                               final FormulaFactory f) {
         return clauses.stream().flatMap(clause -> {
             if (clause.isValid()) {
                 return null;
@@ -482,6 +478,13 @@ public class CompactOrderReduction {
         }).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
+    /**
+     * Simplifies a clause such that all resulting arithmetic clauses are <I>simple</I>.
+     * @param clause  the clause
+     * @param context the encoding context
+     * @param f       the factory
+     * @return simplified clauses
+     */
     static Set<IntegerClause> simplifyClause(final IntegerClause clause, final CompactOrderEncodingContext context,
                                              final FormulaFactory f) {
         final Set<IntegerClause> newClauses = new LinkedHashSet<>();
@@ -490,7 +493,7 @@ public class CompactOrderReduction {
             if (CompactOrderEncoding.isSimpleLiteral(literal, context)) {
                 c.addArithmeticLiteral(literal);
             } else {
-                final Variable p = context.getOrderContext().addSimplifyBooleanVariable(f);
+                final Variable p = context.getOrderContext().newSimplifyBooleanVariable(f);
                 final Literal notP = p.negate(f);
                 final IntegerClause newClause = new IntegerClause(notP, literal);
                 newClauses.add(newClause);

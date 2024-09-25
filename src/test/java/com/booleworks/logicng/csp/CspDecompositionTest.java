@@ -1,7 +1,5 @@
 package com.booleworks.logicng.csp;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.booleworks.logicng.csp.datastructures.IntegerClause;
 import com.booleworks.logicng.csp.datastructures.LinearExpression;
 import com.booleworks.logicng.csp.literals.LinearLiteral;
@@ -18,6 +16,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class CspDecompositionTest extends ParameterizedCspTest {
 
@@ -49,11 +49,13 @@ public class CspDecompositionTest extends ParameterizedCspTest {
         assertThat(decomp1.getClauses()).containsExactlyInAnyOrder(new IntegerClause(A), new IntegerClause(B));
         assertThat(decomp1.getAuxiliaryBooleanVariables()).isEmpty();
         assertThat(decomp1.getAuxiliaryIntegerVariables()).isEmpty();
-        assertThat(decomp2.getClauses()).containsExactlyInAnyOrder(new IntegerClause(A), new IntegerClause(B.negate(f)), new IntegerClause(C.negate(f)));
+        assertThat(decomp2.getClauses()).containsExactlyInAnyOrder(new IntegerClause(A), new IntegerClause(B.negate(f)),
+                new IntegerClause(C.negate(f)));
         assertThat(decomp2.getAuxiliaryBooleanVariables()).isEmpty();
         assertThat(decomp2.getAuxiliaryIntegerVariables()).isEmpty();
         final LinearLiteral l = new LinearLiteral(new LinearExpression(1, a, -2), LinearLiteral.Operator.EQ);
-        assertThat(decomp3.getClauses()).containsExactlyInAnyOrder(Common.integerClauseFrom(C, l), Common.integerClauseFrom(D, l));
+        assertThat(decomp3.getClauses()).containsExactlyInAnyOrder(Common.integerClauseFrom(C, l),
+                Common.integerClauseFrom(D, l));
         assertThat(decomp3.getAuxiliaryBooleanVariables()).isEmpty();
         assertThat(decomp3.getAuxiliaryIntegerVariables()).isEmpty();
         assertThat(decomp4.getClauses()).containsExactlyInAnyOrder(
@@ -77,7 +79,8 @@ public class CspDecompositionTest extends ParameterizedCspTest {
         return new LinearLiteral(new LinearExpression(coefs, 0), LinearLiteral.Operator.EQ);
     }
 
-    private static LinearLiteral lt(final int c0, final IntegerVariable a0, final int c1, final IntegerVariable a1, final int c2, final IntegerVariable a2) {
+    private static LinearLiteral lt(final int c0, final IntegerVariable a0, final int c1, final IntegerVariable a1,
+                                    final int c2, final IntegerVariable a2) {
         final SortedMap<IntegerVariable, Integer> coefs = new TreeMap<>();
         coefs.put(a0, c0);
         coefs.put(a1, c1);

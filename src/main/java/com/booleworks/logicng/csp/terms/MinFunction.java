@@ -12,9 +12,22 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * A function term representing the minimum operation.
+ */
 public class MinFunction extends BinaryFunction {
+    /**
+     * Prefix for auxiliary variables introduced by the decomposition.
+     */
     public final static String MIN_AUX_VARIABLE = "MIN";
 
+    /**
+     * Constructs a new min function term.
+     * <p>
+     * <B>This constructor should not be used!</B> Use {@link CspFactory} to create new terms.
+     * @param left  the first argument
+     * @param right the second argument
+     */
     public MinFunction(final Term left, final Term right) {
         super(Term.Type.MIN, left, right);
     }

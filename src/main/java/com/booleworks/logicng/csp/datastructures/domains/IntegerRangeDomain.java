@@ -175,9 +175,12 @@ class IntegerRangeDomain extends IntegerDomain {
         return ub == that.ub && lb == that.lb;
     }
 
+    /**
+     * Iterator for a range domain
+     */
     protected static class Iter implements Iterator<Integer> {
-        int value;
-        int ub;
+        private int value;
+        private final int ub;
 
         /**
          * Constructs a new bound iterator.

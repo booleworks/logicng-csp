@@ -16,10 +16,20 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.stream.Collectors;
 
+/**
+ * A predicate that evaluates whether all operands have different values.
+ */
 public class AllDifferentPredicate extends CspPredicate {
 
     List<Term> terms;
 
+    /**
+     * Constructs a new all-different predicate.
+     * <p>
+     * <B>This constructor should not be used!</B> Use {@link CspFactory} to create new predicates.
+     * @param terms operands which are tested to be different
+     * @param f     the formula factory
+     */
     public AllDifferentPredicate(final Collection<Term> terms, final FormulaFactory f) {
         super(CspPredicate.Type.ALLDIFFERENT, f);
         this.terms = new ArrayList<>(terms);
