@@ -6,7 +6,7 @@ import com.booleworks.logicng.csp.datastructures.CspAssignment;
 import com.booleworks.logicng.csp.encodings.CspEncodingContext;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.formulas.Variable;
-import com.booleworks.logicng.solvers.SATSolver;
+import com.booleworks.logicng.solvers.SatSolver;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,7 +30,8 @@ public class CspModelEnumeration {
      * @param cf      the factory
      * @return a list with all models for this problem
      */
-    public static List<CspAssignment> enumerate(final SATSolver solver, final Csp csp, final CspEncodingContext context,
+    public static List<CspAssignment> enumerate(final SatSolver solver, final Csp csp,
+                                                final CspEncodingContext context,
                                                 final CspFactory cf) {
         return enumerate(solver, csp.getPropagateSubstitutions().getAllOrSelf(csp.getVisibleIntegerVariables()),
                 csp.getVisibleBooleanVariables(), context, cf);
@@ -47,7 +48,7 @@ public class CspModelEnumeration {
      * @param cf               the factory
      * @return a list with all models for this problem
      */
-    public static List<CspAssignment> enumerate(final SATSolver solver,
+    public static List<CspAssignment> enumerate(final SatSolver solver,
                                                 final Collection<IntegerVariable> integerVariables,
                                                 final Collection<Variable> booleanVariables,
                                                 final CspEncodingContext context, final CspFactory cf) {
@@ -56,7 +57,7 @@ public class CspModelEnumeration {
         final List<IntegerVariable> additionalVariables =
                 integerVariables.stream().filter(v -> !context.isEncoded(v)).collect(Collectors.toList());
         final List<CspAssignment> decodedModels = solver.enumerateAllModels(allVars).stream()
-                .map(m -> cf.decode(m.assignment(), integerVariables, booleanVariables, context))
+                .map(m -> cf.decode(m.toAssignment(), integerVariables, booleanVariables, context))
                 .collect(Collectors.toList());
         if (additionalVariables.isEmpty() || decodedModels.isEmpty()) {
             return decodedModels;

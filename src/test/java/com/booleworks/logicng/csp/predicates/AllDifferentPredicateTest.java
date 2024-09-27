@@ -25,8 +25,9 @@ public class AllDifferentPredicateTest extends ParameterizedCspTest {
     @ParameterizedTest
     @MethodSource("cspFactories")
     public void testType(final CspFactory cf) {
-        assertThat(cf.allDifferent(List.of()).getType()).isEqualTo(CspPredicate.Type.ALLDIFFERENT);
-        assertThat(cf.allDifferent(List.of(cf.variable("a", 0, 20), cf.one(), cf.constant(2))).getType()).isEqualTo(
+        assertThat(cf.allDifferent(List.of()).getPredicateType()).isEqualTo(CspPredicate.Type.ALLDIFFERENT);
+        assertThat(cf.allDifferent(List.of(cf.variable("a", 0, 20), cf.one(), cf.constant(2)))
+                .getPredicateType()).isEqualTo(
                 CspPredicate.Type.ALLDIFFERENT);
     }
 
@@ -65,8 +66,8 @@ public class AllDifferentPredicateTest extends ParameterizedCspTest {
 
         assertThat(pred1).isEqualTo(cf.eq(cf.zero(), cf.one()));
         assertThat(pred2).isEqualTo(cf.eq(cf.add(a, b), cf.mul(2, a)));
-        assertThat(pred3.type()).isEqualTo(FType.OR);
-        assertThat(((Or) pred3).operands()).containsExactlyInAnyOrder(
+        assertThat(pred3.getType()).isEqualTo(FType.OR);
+        assertThat(((Or) pred3).getOperands()).containsExactlyInAnyOrder(
                 cf.eq(cf.add(a, b), cf.mul(2, a)), cf.eq(cf.add(a, b), cf.zero()), cf.eq(cf.add(a, b), cf.one()),
                 cf.eq(cf.add(a, b), cf.constant(20)), cf.eq(cf.mul(2, a), cf.zero()), cf.eq(cf.mul(2, a), cf.one()),
                 cf.eq(cf.mul(2, a), cf.constant(20)), cf.eq(cf.zero(), cf.one()), cf.eq(cf.zero(), cf.constant(20)),

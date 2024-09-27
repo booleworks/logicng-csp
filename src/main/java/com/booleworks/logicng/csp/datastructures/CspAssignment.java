@@ -67,7 +67,7 @@ public class CspAssignment {
      * @param lit the boolean literal
      */
     public void addLiteral(final Literal lit) {
-        if (lit.phase()) {
+        if (lit.getPhase()) {
             posBooleans.add(lit.variable());
         } else {
             negBooleans.add(lit);

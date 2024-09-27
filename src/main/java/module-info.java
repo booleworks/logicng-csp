@@ -2,7 +2,7 @@
  * LogicNG CSP Extension
  */
 module logicng.csp {
-    requires logicng;
+    requires logicng.core;
 
     exports com.booleworks.logicng.csp;
     exports com.booleworks.logicng.csp.encodings;

@@ -34,7 +34,7 @@ public class CspDecomposition {
 
     private static void decomposeRecursive(final Formula formula, final CspFactory cf,
                                            final Set<CspPredicate.Decomposition> decompositions) {
-        switch (formula.type()) {
+        switch (formula.getType()) {
             case AND:
                 for (final Formula op : formula) {
                     decomposeRecursive(op, cf, decompositions);
@@ -73,12 +73,12 @@ public class CspDecomposition {
                 break;
             case NOT:
                 final Not not = (Not) formula;
-                assert (not.operand().type() == FType.PREDICATE);
-                if (not.operand() instanceof CspPredicate) {
-                    decomposeRecursive(((CspPredicate) not.operand()).negate(cf).nnf(cf.getFormulaFactory()), cf,
+                assert (not.getOperand().getType() == FType.PREDICATE);
+                if (not.getOperand() instanceof CspPredicate) {
+                    decomposeRecursive(((CspPredicate) not.getOperand()).negate(cf).nnf(cf.getFormulaFactory()), cf,
                             decompositions);
                 } else {
-                    throw new RuntimeException("Cannot decompose predicates of type: " + not.operand().getClass());
+                    throw new RuntimeException("Cannot decompose predicates of type: " + not.getOperand().getClass());
                 }
                 break;
             default:

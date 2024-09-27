@@ -1,7 +1,5 @@
 package com.booleworks.logicng.csp.functions;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.ParameterizedCspTest;
 import com.booleworks.logicng.csp.datastructures.Csp;
@@ -13,11 +11,13 @@ import com.booleworks.logicng.formulas.Formula;
 import com.booleworks.logicng.formulas.FormulaFactory;
 import com.booleworks.logicng.formulas.Literal;
 import com.booleworks.logicng.formulas.Variable;
-import com.booleworks.logicng.solvers.SATSolver;
+import com.booleworks.logicng.solvers.SatSolver;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class CspModelEnumerationTest extends ParameterizedCspTest {
 
@@ -31,7 +31,7 @@ public class CspModelEnumerationTest extends ParameterizedCspTest {
         final Formula formula = cf.eq(cf.add(a, c), b);
         final Csp csp = cf.buildCsp(formula);
         final OrderEncodingContext context = CspEncodingContext.order();
-        final SATSolver solver = SATSolver.newSolver(f);
+        final SatSolver solver = SatSolver.newSolver(f);
         solver.add(cf.encodeCsp(csp, context));
         final List<CspAssignment> models = CspModelEnumeration.enumerate(solver, csp, context, cf);
         assertThat(models).hasSize(6);
@@ -55,7 +55,7 @@ public class CspModelEnumerationTest extends ParameterizedCspTest {
         final Formula formula = f.or(a, f.and(b, c));
         final Csp csp = cf.buildCsp(formula);
         final OrderEncodingContext context = CspEncodingContext.order();
-        final SATSolver solver = SATSolver.newSolver(f);
+        final SatSolver solver = SatSolver.newSolver(f);
         solver.add(cf.encodeCsp(csp, context));
         final List<CspAssignment> models = CspModelEnumeration.enumerate(solver, csp, context, cf);
         assertThat(models).hasSize(5);
@@ -74,14 +74,16 @@ public class CspModelEnumerationTest extends ParameterizedCspTest {
         return assignment;
     }
 
-    private CspAssignment assignmentFrom(final IntegerVariable v1, final int value1, final IntegerVariable v2, final int value2) {
+    private CspAssignment assignmentFrom(final IntegerVariable v1, final int value1, final IntegerVariable v2,
+                                         final int value2) {
         final CspAssignment assignment = new CspAssignment();
         assignment.addIntAssignment(v1, value1);
         assignment.addIntAssignment(v2, value2);
         return assignment;
     }
 
-    private CspAssignment assignmentFrom(final IntegerVariable v1, final int value1, final IntegerVariable v2, final int value2, final IntegerVariable v3, final int value3) {
+    private CspAssignment assignmentFrom(final IntegerVariable v1, final int value1, final IntegerVariable v2,
+                                         final int value2, final IntegerVariable v3, final int value3) {
         final CspAssignment assignment = new CspAssignment();
         assignment.addIntAssignment(v1, value1);
         assignment.addIntAssignment(v2, value2);

@@ -750,7 +750,7 @@ public class CspFactory {
     public List<Formula> encodeCsp(final Csp csp, final CspEncodingContext context) {
         final EncodingResult result = EncodingResult.resultForFormula(formulaFactory);
         encodeCsp(csp, context, result);
-        return result.result();
+        return result.getResult();
     }
 
     /**
@@ -782,7 +782,7 @@ public class CspFactory {
     public List<Formula> encodeVariable(final IntegerVariable variable, final CspEncodingContext context) {
         final EncodingResult result = EncodingResult.resultForFormula(formulaFactory);
         encodeVariable(variable, context, result);
-        return result.result();
+        return result.getResult();
     }
 
     /**
@@ -815,7 +815,7 @@ public class CspFactory {
     public List<Formula> encodeConstraint(final CspPredicate predicate, final CspEncodingContext context) {
         final EncodingResult result = EncodingResult.resultForFormula(formulaFactory);
         encodeConstraint(predicate, context, result);
-        return result.result();
+        return result.getResult();
     }
 
     /**

@@ -25,7 +25,7 @@ public class IntegerVariablesFunction {
         stack.push(formula);
         while (!stack.isEmpty()) {
             final Formula current = stack.pop();
-            switch (current.type()) {
+            switch (current.getType()) {
                 case EQUIV:
                 case IMPL:
                 case OR:

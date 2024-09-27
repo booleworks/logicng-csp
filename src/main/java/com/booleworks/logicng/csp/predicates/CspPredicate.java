@@ -45,7 +45,7 @@ public abstract class CspPredicate implements Predicate {
      * Returns the type of the predicate.
      * @return the type of the predicate
      */
-    public Type getType() {
+    public Type getPredicateType() {
         return type;
     }
 
@@ -93,7 +93,7 @@ public abstract class CspPredicate implements Predicate {
     }
 
     @Override
-    public FormulaFactory factory() {
+    public FormulaFactory getFactory() {
         return f;
     }
 

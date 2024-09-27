@@ -20,12 +20,12 @@ public class ComparisonPredicateTest extends ParameterizedCspTest {
     @ParameterizedTest
     @MethodSource("cspFactories")
     public void testType(final CspFactory cf) {
-        assertThat(cf.eq(cf.zero(), cf.one()).getType()).isEqualTo(CspPredicate.Type.EQ);
-        assertThat(cf.ne(cf.zero(), cf.one()).getType()).isEqualTo(CspPredicate.Type.NE);
-        assertThat(cf.le(cf.zero(), cf.one()).getType()).isEqualTo(CspPredicate.Type.LE);
-        assertThat(cf.lt(cf.zero(), cf.one()).getType()).isEqualTo(CspPredicate.Type.LT);
-        assertThat(cf.ge(cf.zero(), cf.one()).getType()).isEqualTo(CspPredicate.Type.GE);
-        assertThat(cf.gt(cf.zero(), cf.one()).getType()).isEqualTo(CspPredicate.Type.GT);
+        assertThat(cf.eq(cf.zero(), cf.one()).getPredicateType()).isEqualTo(CspPredicate.Type.EQ);
+        assertThat(cf.ne(cf.zero(), cf.one()).getPredicateType()).isEqualTo(CspPredicate.Type.NE);
+        assertThat(cf.le(cf.zero(), cf.one()).getPredicateType()).isEqualTo(CspPredicate.Type.LE);
+        assertThat(cf.lt(cf.zero(), cf.one()).getPredicateType()).isEqualTo(CspPredicate.Type.LT);
+        assertThat(cf.ge(cf.zero(), cf.one()).getPredicateType()).isEqualTo(CspPredicate.Type.GE);
+        assertThat(cf.gt(cf.zero(), cf.one()).getPredicateType()).isEqualTo(CspPredicate.Type.GT);
     }
 
     @ParameterizedTest

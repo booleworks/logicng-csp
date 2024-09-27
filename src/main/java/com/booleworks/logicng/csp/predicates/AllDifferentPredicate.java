@@ -55,7 +55,7 @@ public class AllDifferentPredicate extends CspPredicate {
 
     @Override
     protected Decomposition calculateDecomposition(final CspFactory cf) {
-        final FormulaFactory f = factory();
+        final FormulaFactory f = getFactory();
         final List<Decomposition> decomps = new ArrayList<>();
         for (int i = 0; i < terms.size(); i++) {
             for (int j = i + 1; j < terms.size(); j++) {
@@ -87,7 +87,7 @@ public class AllDifferentPredicate extends CspPredicate {
             return true;
         }
         if (getClass() == other.getClass()) {
-            if (factory() == ((AllDifferentPredicate) other).factory()) {
+            if (getFactory() == ((AllDifferentPredicate) other).getFactory()) {
                 return false; // the same factory would have produced a == object
             }
             return Objects.equals(terms, ((AllDifferentPredicate) other).terms);

@@ -1,6 +1,6 @@
 package com.booleworks.logicng.csp.encodings;
 
-import com.booleworks.logicng.collections.LNGVector;
+import com.booleworks.logicng.collections.LngVector;
 import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.datastructures.Csp;
 import com.booleworks.logicng.csp.datastructures.IntegerClause;
@@ -309,9 +309,9 @@ public class OrderEncoding {
     }
 
     private static void writeClause(final Formula[] clause, final EncodingResult result) {
-        final LNGVector<Literal> vec = new LNGVector<>();
+        final LngVector<Literal> vec = new LngVector<>();
         for (final Formula literal : clause) {
-            switch (literal.type()) {
+            switch (literal.getType()) {
                 case TRUE:
                     return;
                 case FALSE:
@@ -320,7 +320,8 @@ public class OrderEncoding {
                     vec.push((Literal) literal);
                     break;
                 default:
-                    throw new IllegalArgumentException("Unsupported formula type in order encoding:" + literal.type());
+                    throw new IllegalArgumentException(
+                            "Unsupported formula type in order encoding:" + literal.getType());
             }
         }
         result.addClause(vec);
