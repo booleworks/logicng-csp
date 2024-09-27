@@ -222,6 +222,10 @@ public class CompactOrderEncodingContext implements CspEncodingContext {
         adjustedVariablesSubstitution.add(original, substitute);
     }
 
+    boolean hasAdjustedVariable(final IntegerVariable original) {
+        return adjustedVariablesSubstitution.containsKey(original);
+    }
+
     /**
      * Returns the adjusted variable of a variable.
      * @param original the variable

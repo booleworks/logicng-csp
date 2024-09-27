@@ -3,6 +3,9 @@ package com.booleworks.logicng.csp.encodings;
 import com.booleworks.logicng.csp.datastructures.IntegerClause;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -40,5 +43,14 @@ class ReductionResult {
      */
     public List<IntegerVariable> getFrontierAuxiliaryVariables() {
         return frontierAuxiliaryVariables;
+    }
+
+    public static ReductionResult merge(Collection<ReductionResult> results) {
+        ReductionResult merged = new ReductionResult(new LinkedHashSet<>(), new ArrayList<>());
+        for (ReductionResult r : results) {
+            merged.getClauses().addAll(r.getClauses());
+            merged.getFrontierAuxiliaryVariables().addAll(r.getFrontierAuxiliaryVariables());
+        }
+        return merged;
     }
 }

@@ -797,6 +797,9 @@ public class CspFactory {
             case Order:
                 OrderEncoding.encodeVariable(variable, (OrderEncodingContext) context, result, this);
                 break;
+            case CompactOrder:
+                CompactOrderEncoding.encodeVariable(variable, (CompactOrderEncodingContext) context, result, this);
+                break;
             default:
                 throw new UnsupportedOperationException(
                         "Unsupported csp encoding algorithm: " + context.getAlgorithm());
@@ -831,6 +834,11 @@ public class CspFactory {
                 }
                 OrderEncoding.encodeClauses(decomp.getClauses(), (OrderEncodingContext) context, result, this);
                 break;
+            case CompactOrder:
+                CompactOrderEncoding.encodeVariables(decomp.getAuxiliaryIntegerVariables(),
+                        (CompactOrderEncodingContext) context, result, this);
+                CompactOrderEncoding.encodeClauses(decomp.getClauses(), (CompactOrderEncodingContext) context, result,
+                        this);
             default:
                 throw new UnsupportedOperationException(
                         "Unsupported csp encoding algorithm: " + context.getAlgorithm());

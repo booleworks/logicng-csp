@@ -10,6 +10,8 @@ import com.booleworks.logicng.csp.literals.OpXY;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.datastructures.EncodingResult;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -28,22 +30,69 @@ public class CompactOrderEncoding {
      */
     public static void encode(final Csp csp, final CompactOrderEncodingContext context, final EncodingResult result,
                               final CspFactory cf) {
-        final ReductionResult reduced =
+        final ReductionResult reduction =
                 CompactOrderReduction.reduce(csp.getClauses(), csp.getInternalIntegerVariables(), context, cf);
-        for (final IntegerVariable v : reduced.getFrontierAuxiliaryVariables()) {
-            encodeVariable(v, context, result, cf);
-        }
-        encodeClauses(reduced.getClauses(), context, result, cf);
+        encodeIntern(reduction, context, result, cf);
     }
 
-    private static void encodeVariable(final IntegerVariable v, final CompactOrderEncodingContext context,
-                                       final EncodingResult result, final CspFactory cf) {
-        assert context.getDigits(v) == null || context.getDigits(v).size() == 1;
-        OrderEncoding.encodeVariable(v, context.getOrderContext(), result, cf);
-    }
-
-    private static void encodeClauses(final Set<IntegerClause> clauses, final CompactOrderEncodingContext context,
+    /**
+     * Encodes an integer variable using the compact order encoding.
+     * @param v       the variable
+     * @param context the encoding context
+     * @param result  destination for the result
+     * @param cf      the factory
+     */
+    public static void encodeVariable(final IntegerVariable v, final CompactOrderEncodingContext context,
                                       final EncodingResult result, final CspFactory cf) {
+        final ReductionResult reduction = CompactOrderReduction.reduceVariables(List.of(v), context, cf);
+        encodeIntern(reduction, context, result, cf);
+    }
+
+    /**
+     * Encodes a list of integer variables using the compact order encoding.
+     * @param variables the variables
+     * @param context   the encoding context
+     * @param result    destination for the result
+     * @param cf        the factory
+     */
+    public static void encodeVariables(final Collection<IntegerVariable> variables,
+                                       final CompactOrderEncodingContext context, final EncodingResult result,
+                                       final CspFactory cf) {
+        final ReductionResult reduction = CompactOrderReduction.reduceVariables(variables, context, cf);
+        encodeIntern(reduction, context, result, cf);
+    }
+
+    /**
+     * Encodes a set of arithmetic clauses using the compact order encoding.
+     * @param clauses the arithmetic clauses
+     * @param context the encoding context
+     * @param result  destination for the result
+     * @param cf      the factory
+     */
+    public static void encodeClauses(final Set<IntegerClause> clauses, final CompactOrderEncodingContext context,
+                                     final EncodingResult result, final CspFactory cf) {
+        final ReductionResult reduction = CompactOrderReduction.reduceClauses(clauses, context, cf);
+        encodeIntern(reduction, context, result, cf);
+    }
+
+    private static void encodeIntern(final ReductionResult reduction, final CompactOrderEncodingContext context,
+                                     final EncodingResult result, final CspFactory cf) {
+        encodeVariablesIntern(reduction.getFrontierAuxiliaryVariables(), context, result, cf);
+        encodeClausesIntern(reduction.getClauses(), context, result, cf);
+    }
+
+    private static void encodeVariablesIntern(final List<IntegerVariable> variables,
+                                              final CompactOrderEncodingContext context,
+                                              final EncodingResult result, final CspFactory cf) {
+        for (final IntegerVariable v : variables) {
+            assert context.getDigits(v) == null || context.getDigits(v).size() == 1;
+            OrderEncoding.encodeVariable(v, context.getOrderContext(), result, cf);
+        }
+    }
+
+    private static void encodeClausesIntern(final Set<IntegerClause> clauses,
+                                            final CompactOrderEncodingContext context,
+                                            final EncodingResult result, final CspFactory cf) {
         for (final IntegerClause c : clauses) {
             encodeClause(c, context, result, cf);
         }

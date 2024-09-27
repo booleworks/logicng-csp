@@ -16,6 +16,7 @@ import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.formulas.Variable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -48,25 +49,10 @@ public class CompactCSPReduction {
     static ReductionResult toCCSP(final Set<IntegerClause> clauses, final List<IntegerVariable> variables,
                                   final CompactOrderEncodingContext context,
                                   final CspFactory cf) {
-        final Set<IntegerClause> newClauses = new LinkedHashSet<>();
-        final List<IntegerVariable> frontierVariables = new ArrayList<>();
-        for (final IntegerVariable v : variables) {
-            final List<IntegerVariable> digits = splitToDigits(v, context, cf);
-            context.addDigits(v, digits);
-            frontierVariables.addAll(digits);
-            final int lb = v.getDomain().lb();
-            final int ub = v.getDomain().ub();
-            final int m = context.getDigits(v).size();
-            if (m > 1 || ub <= Math.pow(context.getBase(), m) - 1) {
-                newClauses.addAll(convertToCCSP(new OpXY(OpXY.Operator.LE, v, cf.constant(ub)), context, cf));
-            }
-            if (m > 1 && lb != 0) {
-                newClauses.addAll(convertToCCSP(new OpXY(OpXY.Operator.LE, cf.constant(lb), v), context, cf));
-            }
-        }
+        final ReductionResult result = variablesToCCSP(variables, context, cf);
         for (final IntegerClause clause : clauses) {
             if (clause.getArithmeticLiterals().isEmpty()) {
-                newClauses.add(clause);
+                result.getClauses().add(clause);
             } else {
                 assert clause.size() - CompactOrderEncoding.simpleClauseSize(clause, context) <= 1;
 
@@ -74,7 +60,8 @@ public class CompactCSPReduction {
                 final Set<IntegerClause> ccspClauses = new LinkedHashSet<>();
                 for (final ArithmeticLiteral al : clause.getArithmeticLiterals()) {
                     final RCSPLiteral ll = (RCSPLiteral) al;
-                    final Set<IntegerClause> ccsp = convertToCCSP(ll, frontierVariables, context, cf);
+                    final Set<IntegerClause> ccsp =
+                            convertToCCSP(ll, result.getFrontierAuxiliaryVariables(), context, cf);
                     if (CompactOrderEncoding.isSimpleLiteral(ll, context)) {
                         assert ccsp.size() == 1;
                         final IntegerClause c = ccsp.iterator().next();
@@ -86,15 +73,41 @@ public class CompactCSPReduction {
                     }
                 }
                 if (ccspClauses.isEmpty()) {
-                    newClauses.add(new IntegerClause(clause.getBoolLiterals(), simpleLiterals));
+                    result.getClauses().add(new IntegerClause(clause.getBoolLiterals(), simpleLiterals));
                 } else {
                     for (final IntegerClause c : ccspClauses) {
                         final IntegerClause.Builder newC = new IntegerClause.Builder(c);
                         newC.addBooleanLiterals(clause.getBoolLiterals());
                         newC.addArithmeticLiterals(simpleLiterals);
-                        newClauses.add(newC.build());
+                        result.getClauses().add(newC.build());
                     }
                 }
+            }
+        }
+        return result;
+    }
+
+    static ReductionResult variablesToCCSP(final Collection<IntegerVariable> variables,
+                                           final CompactOrderEncodingContext context, final CspFactory cf) {
+        final Set<IntegerClause> newClauses = new LinkedHashSet<>();
+        final List<IntegerVariable> frontierVariables = new ArrayList<>();
+        for (final IntegerVariable v : variables) {
+            final List<IntegerVariable> digits;
+            if (context.hasDigits(v)) {
+                digits = context.getDigits(v);
+            } else {
+                digits = splitToDigits(v, context, cf);
+                context.addDigits(v, digits);
+            }
+            frontierVariables.addAll(digits);
+            final int lb = v.getDomain().lb();
+            final int ub = v.getDomain().ub();
+            final int m = context.getDigits(v).size();
+            if (m > 1 || ub <= Math.pow(context.getBase(), m) - 1) {
+                newClauses.addAll(convertToCCSP(new OpXY(OpXY.Operator.LE, v, cf.constant(ub)), context, cf));
+            }
+            if (m > 1 && lb != 0) {
+                newClauses.addAll(convertToCCSP(new OpXY(OpXY.Operator.LE, cf.constant(lb), v), context, cf));
             }
         }
         return new ReductionResult(newClauses, frontierVariables);
