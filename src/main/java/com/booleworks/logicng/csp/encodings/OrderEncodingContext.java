@@ -3,7 +3,6 @@ package com.booleworks.logicng.csp.encodings;
 import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.datastructures.domains.IntegerDomain;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
-import com.booleworks.logicng.datastructures.EncodingResult;
 import com.booleworks.logicng.formulas.FormulaFactory;
 import com.booleworks.logicng.formulas.Variable;
 
@@ -74,14 +73,14 @@ public class OrderEncodingContext implements CspEncodingContext {
 
     /**
      * Get or create a boolean variable representing a certain index of an integer variable.
-     * @param group  the integer variable
-     * @param index  the queried index
-     * @param result the destination for encodings
+     * @param group the integer variable
+     * @param index the queried index
+     * @param f     the formula factory
      * @return the boolean variable
      */
-    Variable intVariableInstance(final IntegerVariable group, final int index, final EncodingResult result) {
+    Variable intVariableInstance(final IntegerVariable group, final int index, final FormulaFactory f) {
         final Map<Integer, Variable> intMap = this.variableMap.computeIfAbsent(group, k -> new TreeMap<>());
-        return intMap.computeIfAbsent(index, i -> result.newVariable(CSP_AUX_LNG_VARIABLE));
+        return intMap.computeIfAbsent(index, i -> f.newAuxVariable(CSP_AUX_LNG_VARIABLE));
     }
 
     /**

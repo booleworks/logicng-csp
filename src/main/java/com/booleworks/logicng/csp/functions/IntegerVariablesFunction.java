@@ -1,9 +1,14 @@
 package com.booleworks.logicng.csp.functions;
 
+import com.booleworks.logicng.csp.encodings.CspEncodingContext;
 import com.booleworks.logicng.csp.predicates.CspPredicate;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.formulas.Formula;
+import com.booleworks.logicng.formulas.Variable;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.Stack;
 import java.util.TreeSet;
@@ -55,5 +60,20 @@ public class IntegerVariablesFunction {
         final SortedSet<IntegerVariable> variables = new TreeSet<>();
         integerVariablesInplace(formula, variables);
         return variables;
+    }
+
+    public static SortedSet<IntegerVariable> getVariablesOnSolver(final Set<Variable> solverVariables,
+                                                                  final Collection<IntegerVariable> variables,
+                                                                  final CspEncodingContext context) {
+        final TreeSet<IntegerVariable> result = new TreeSet<>();
+        for (final IntegerVariable intVar : variables) {
+            for (final Variable v : context.getSatVariables(List.of(intVar))) {
+                if (solverVariables.contains(v)) {
+                    result.add(intVar);
+                    break;
+                }
+            }
+        }
+        return result;
     }
 }

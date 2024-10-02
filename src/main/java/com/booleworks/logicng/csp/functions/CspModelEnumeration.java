@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.stream.Collectors;
 
 /**
@@ -52,21 +53,25 @@ public class CspModelEnumeration {
                                                 final Collection<IntegerVariable> integerVariables,
                                                 final Collection<Variable> booleanVariables,
                                                 final CspEncodingContext context, final CspFactory cf) {
-        final Set<Variable> allVars = context.getSatVariables(integerVariables);
-        allVars.addAll(booleanVariables);
-        final List<IntegerVariable> additionalVariables =
-                integerVariables.stream().filter(v -> !context.isEncoded(v)).collect(Collectors.toList());
-        final List<CspAssignment> decodedModels = solver.enumerateAllModels(allVars).stream()
-                .map(m -> cf.decode(m.toAssignment(), integerVariables, booleanVariables, context))
+        final SortedSet<IntegerVariable> intVariablesOnSolver =
+                IntegerVariablesFunction.getVariablesOnSolver(solver.getUnderlyingSolver().knownVariables(),
+                        integerVariables, context);
+        final List<IntegerVariable> intVariablesNotOnSolver = integerVariables
+                .stream()
+                .filter(v -> !intVariablesOnSolver.contains(v))
                 .collect(Collectors.toList());
-        if (additionalVariables.isEmpty() || decodedModels.isEmpty()) {
+        final Set<Variable> allVars = context.getSatVariables(intVariablesOnSolver);
+        allVars.addAll(booleanVariables);
+        final List<CspAssignment> decodedModels = solver.enumerateAllModels(allVars).stream()
+                .map(m -> cf.decode(m.toAssignment(), intVariablesOnSolver, booleanVariables, context))
+                .collect(Collectors.toList());
+        if (intVariablesNotOnSolver.isEmpty() || decodedModels.isEmpty()) {
             return decodedModels;
         } else {
-            return enumerateAdditionalVariables(decodedModels, additionalVariables);
+            return enumerateAdditionalVariables(decodedModels, intVariablesNotOnSolver);
         }
     }
 
-    // FIXME: Consider additional boolean variable!!!
     private static List<CspAssignment> enumerateAdditionalVariables(final List<CspAssignment> decodedModels,
                                                                     final List<IntegerVariable> integerVariables) {
         final List<Iterator<Integer>> iterators =

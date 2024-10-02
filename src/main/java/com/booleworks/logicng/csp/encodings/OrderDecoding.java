@@ -21,7 +21,6 @@ public class OrderDecoding {
     private OrderDecoding() {
     }
 
-
     /**
      * Decodes a problem that was encoded with the order encoding.
      * <p>

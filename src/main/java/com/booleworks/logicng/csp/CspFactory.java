@@ -839,6 +839,7 @@ public class CspFactory {
                         (CompactOrderEncodingContext) context, result, this);
                 CompactOrderEncoding.encodeClauses(decomp.getClauses(), (CompactOrderEncodingContext) context, result,
                         this);
+                break;
             default:
                 throw new UnsupportedOperationException(
                         "Unsupported csp encoding algorithm: " + context.getAlgorithm());

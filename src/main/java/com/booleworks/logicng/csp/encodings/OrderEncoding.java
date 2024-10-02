@@ -201,7 +201,7 @@ public class OrderEncoding {
             return f.verum();
         }
         final int index = sizeLE(domain, right) - 1;
-        return context.intVariableInstance(left, index, result);
+        return context.intVariableInstance(left, index, f);
     }
 
     private static Formula getCodeLE(final IntegerVariable left, final int a, final int b,
