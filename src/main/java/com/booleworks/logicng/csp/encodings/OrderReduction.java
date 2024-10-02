@@ -5,6 +5,7 @@ import com.booleworks.logicng.csp.datastructures.IntegerClause;
 import com.booleworks.logicng.csp.datastructures.LinearExpression;
 import com.booleworks.logicng.csp.literals.ArithmeticLiteral;
 import com.booleworks.logicng.csp.literals.LinearLiteral;
+import com.booleworks.logicng.csp.literals.ProductLiteral;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.formulas.FormulaFactory;
 import com.booleworks.logicng.formulas.Literal;
@@ -12,9 +13,12 @@ import com.booleworks.logicng.formulas.Variable;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -111,6 +115,9 @@ public class OrderReduction {
                 if (nonSimpleLiteral instanceof LinearLiteral) {
                     return reduceLinearLiteralToLinearLE((LinearLiteral) nonSimpleLiteral, simpleLiterals,
                             c.getBoolLiterals(), context, f).stream();
+                } else if (nonSimpleLiteral instanceof ProductLiteral) {
+                    return reduceProductLiteralToLinearLE((ProductLiteral) nonSimpleLiteral, simpleLiterals,
+                            c.getBoolLiterals(), context, f).stream();
                 } else {
                     throw new IllegalArgumentException(
                             "Invalid literal for order encoding reduction: " + nonSimpleLiteral.getClass());
@@ -155,6 +162,49 @@ public class OrderReduction {
                         "Invalid operator of linear expression for order encoding reduction: " + literal.getOperator());
 
         }
+    }
+
+    private static Set<IntegerClause> reduceProductLiteralToLinearLE(final ProductLiteral literal,
+                                                                     final Set<ArithmeticLiteral> simpleLiterals,
+                                                                     final Set<Literal> boolLiterals,
+                                                                     final OrderEncodingContext context,
+                                                                     final FormulaFactory f) {
+        final Set<IntegerClause> ret = new LinkedHashSet<>();
+        final IntegerVariable v = literal.getV();
+        final IntegerVariable v1 = literal.getV1();
+        final IntegerVariable v2 = literal.getV2();
+        final IntegerVariable sv = v1.getDomain().size() <= v2.getDomain().size() ? v1 : v2;
+        final IntegerVariable lv = sv == v1 ? v2 : v1;
+
+        final Iterator<Integer> iter = sv.getDomain().iterator();
+        while (iter.hasNext()) {
+            final int a = iter.next();
+            final LinearLiteral xlea =
+                    new LinearLiteral(new LinearExpression(1, sv, -a + 1), LinearLiteral.Operator.LE);
+            final LinearLiteral xgea =
+                    new LinearLiteral(new LinearExpression(-1, sv, a + 1), LinearLiteral.Operator.LE);
+
+            final SortedMap<IntegerVariable, Integer> ls1Coefs = new TreeMap<>();
+            ls1Coefs.put(v, -1);
+            ls1Coefs.put(lv, a);
+            final LinearLiteral ls1 = new LinearLiteral(new LinearExpression(ls1Coefs, 0), LinearLiteral.Operator.LE);
+            final IntegerClause.Builder cls1 = new IntegerClause.Builder();
+            cls1.addBooleanLiterals(boolLiterals);
+            cls1.addArithmeticLiterals(simpleLiterals);
+            cls1.addArithmeticLiterals(ls1, xlea, xgea);
+            ret.add(cls1.build());
+
+            final SortedMap<IntegerVariable, Integer> ls2Coefs = new TreeMap<>();
+            ls2Coefs.put(v, 1);
+            ls2Coefs.put(lv, -a);
+            final LinearLiteral ls2 = new LinearLiteral(new LinearExpression(ls2Coefs, 0), LinearLiteral.Operator.LE);
+            final IntegerClause.Builder cls2 = new IntegerClause.Builder();
+            cls2.addBooleanLiterals(boolLiterals);
+            cls2.addArithmeticLiterals(simpleLiterals);
+            cls2.addArithmeticLiterals(ls2, xlea, xgea);
+            ret.add(cls2.build());
+        }
+        return ret;
     }
 
     private static Set<IntegerClause> simplifyClause(final IntegerClause clause, final Set<Literal> initBoolLiterals,

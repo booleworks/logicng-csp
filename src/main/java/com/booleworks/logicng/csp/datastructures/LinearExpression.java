@@ -38,7 +38,9 @@ public class LinearExpression implements Comparable<LinearExpression> {
      */
     public LinearExpression(final int a0, final IntegerVariable v0, final int b) {
         this(b);
-        this.coef.put(v0, a0);
+        if (a0 != 0) {
+            this.coef.put(v0, a0);
+        }
     }
 
     /**
@@ -55,7 +57,8 @@ public class LinearExpression implements Comparable<LinearExpression> {
      * @param b    the constant offset
      */
     public LinearExpression(final SortedMap<IntegerVariable, Integer> coef, final int b) {
-        this.coef = coef;
+        this.coef = new TreeMap<>(coef);
+        this.coef.entrySet().removeIf(e -> e.getValue() == 0);
         this.b = b;
     }
 

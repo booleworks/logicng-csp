@@ -63,7 +63,7 @@ public class CspFactory {
     private final Map<Term, NegationFunction> unaryMinusTerms;
     private final Map<LinkedHashSet<Term>, Term> addTerms;
     private final Map<Pair<Term, Term>, SubtractionFunction> subTerms;
-    private final Map<Pair<Integer, Term>, MultiplicationFunction> mulTerms;
+    private final Map<LinkedHashSet<Term>, MultiplicationFunction> mulTerms;
     private final Map<Term, AbsoluteFunction> absTerms;
     private final Map<LinkedHashSet<Term>, MaxFunction> maxTerms;
     private final Map<LinkedHashSet<Term>, MinFunction> minTerms;
@@ -350,11 +350,13 @@ public class CspFactory {
     }
 
     private void addOperand(final Term op, final LinkedHashMap<Term, Integer> compactifiedTerms) {
-        if (op instanceof MultiplicationFunction) {
-            compactifiedTerms.compute(((MultiplicationFunction) op).getRight(),
-                    (k, v) -> v == null
-                              ? ((MultiplicationFunction) op).getLeft().getValue()
-                              : ((MultiplicationFunction) op).getLeft().getValue() + v);
+        if (op instanceof MultiplicationFunction
+                && ((MultiplicationFunction) op).getLeft() instanceof IntegerConstant) {
+            final MultiplicationFunction mop = (MultiplicationFunction) op;
+            if (mop.getLeft() instanceof IntegerConstant) {
+                final int newValue = ((IntegerConstant) mop.getLeft()).getValue();
+                compactifiedTerms.compute(mop.getRight(), (k, v) -> v == null ? newValue : newValue + v);
+            }
         } else {
             compactifiedTerms.compute(op, (k, v) -> v == null ? 1 : v + 1);
         }
@@ -412,7 +414,7 @@ public class CspFactory {
      * @param right the term
      * @return the multiplication
      */
-    public Term mul(final IntegerConstant left, final Term right) {
+    public Term mul(final Term left, final Term right) {
         // a*0 or 0*a = 0
         if (left.getType() == Term.Type.ZERO || right.getType() == Term.Type.ZERO) {
             return zero;
@@ -426,11 +428,13 @@ public class CspFactory {
             return left;
         }
         // inline * in constants
-        if (right instanceof IntegerConstant) {
-            return constant(left.getValue() * ((IntegerConstant) right).getValue());
+        if (left instanceof IntegerConstant && right instanceof IntegerConstant) {
+            return constant(((IntegerConstant) left).getValue() * ((IntegerConstant) right).getValue());
+        } else if (right instanceof IntegerConstant) {
+            return mul(right, left);
         }
-        return mulTerms.computeIfAbsent(new Pair<>(left.getValue(), right),
-                o -> new MultiplicationFunction(left, right));
+        final LinkedHashSet<Term> operands = new LinkedHashSet<>(Arrays.asList(left, right));
+        return mulTerms.computeIfAbsent(operands, o -> new MultiplicationFunction(left, right));
     }
 
     /**

@@ -9,6 +9,7 @@ import com.booleworks.logicng.csp.literals.EqMul;
 import com.booleworks.logicng.csp.literals.LinearLiteral;
 import com.booleworks.logicng.csp.literals.OpAdd;
 import com.booleworks.logicng.csp.literals.OpXY;
+import com.booleworks.logicng.csp.literals.ProductLiteral;
 import com.booleworks.logicng.csp.terms.IntegerConstant;
 import com.booleworks.logicng.csp.terms.IntegerHolder;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
@@ -87,7 +88,7 @@ public class CompactOrderReduction {
 
     static ReductionResult reduceClauses(final Set<IntegerClause> clauses, final CompactOrderEncodingContext context,
                                          final CspFactory cf) {
-        final Set<IntegerClause> adjustedClauses = adjustClauses(clauses, context);
+        final Set<IntegerClause> adjustedClauses = adjustClauses(clauses, context, cf);
         final ReductionResult toTernaryResult = toTernary(adjustedClauses, context, cf);
         final ReductionResult toRcspResult = toRcsp(toTernaryResult.getClauses(), context, cf);
         final Set<IntegerClause> simplificationResult = simplify(toRcspResult.getClauses(), context,
@@ -102,7 +103,7 @@ public class CompactOrderReduction {
     }
 
     private static Set<IntegerClause> adjustClauses(final Set<IntegerClause> clauses,
-                                                    final CompactOrderEncodingContext context) {
+                                                    final CompactOrderEncodingContext context, final CspFactory cf) {
         final Set<IntegerClause> newClauses = new LinkedHashSet<>();
         for (final IntegerClause c : clauses) {
             if (c.getArithmeticLiterals().isEmpty()) {
@@ -121,8 +122,37 @@ public class CompactOrderReduction {
                         final LinearExpression newLs = new LinearExpression(ls.getCoef(), b);
                         final LinearLiteral newLl = new LinearLiteral(newLs, ll.getOperator());
                         newClause.addArithmeticLiteral(newLl);
-                    } else {
-                        throw new IllegalArgumentException("Reduction not supported for: " + lit.getClass());
+                    } else if (lit instanceof ProductLiteral) {
+                        assert lit instanceof ProductLiteral;
+                        final IntegerVariable z = ((ProductLiteral) lit).getV();
+                        final IntegerVariable x = ((ProductLiteral) lit).getV1();
+                        final IntegerVariable y = ((ProductLiteral) lit).getV2();
+                        final int zoffset = context.getOffset(z);
+                        final int xoffset = context.getOffset(x);
+                        final int yoffset = context.getOffset(y);
+                        if (zoffset == 0 && xoffset == 0 && yoffset == 0) {
+                            newClause.addArithmeticLiteral(lit);
+                        } else {
+							/*
+								(z+zoffset) = (x+xoffset)(y+yoffset)
+								z = p+yoffset*x+xoffset*y+xoffset*yoffset-zoffset
+								--> -z + p + yoffset*x + xoffset*y + xoffset*yoffset-zoffset = 0
+								p = xy --> p=xy
+							*/
+                            final IntegerDomain xdom = x.getDomain();
+                            final IntegerDomain ydom = y.getDomain();
+                            final LinearExpression.Builder ls =
+                                    new LinearExpression.Builder(xoffset * yoffset - zoffset);
+                            ls.setA(-1, z);
+                            final IntegerVariable p =
+                                    context.newAdjustedVariable(AUX_ADJUST, IntegerDomain.of(0, xdom.mul(ydom).ub()),
+                                            cf);
+                            ls.setA(1, p);
+                            ls.setA(yoffset, x);
+                            ls.setA(xoffset, y);
+                            newClause.addArithmeticLiteral(new LinearLiteral(ls.build(), LinearLiteral.Operator.EQ));
+                            newClauses.add(new IntegerClause(new ProductLiteral(p, x, y)));
+                        }
                     }
                 }
                 newClauses.add(newClause.build());
@@ -436,7 +466,9 @@ public class CompactOrderReduction {
                             newClause.addArithmeticLiterals(lit);
                         }
                     } else {
-                        throw new IllegalArgumentException("Cannot reduce " + al.getClass());
+                        assert al instanceof ProductLiteral;
+                        final ProductLiteral pl = (ProductLiteral) al;
+                        newClause.addArithmeticLiteral(new EqMul(pl.getV(), pl.getV1(), pl.getV2()));
                     }
                 }
                 newClauses.add(newClause.build());

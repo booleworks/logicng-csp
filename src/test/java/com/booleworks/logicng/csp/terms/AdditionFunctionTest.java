@@ -1,7 +1,5 @@
 package com.booleworks.logicng.csp.terms;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.ParameterizedCspTest;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -9,6 +7,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.LinkedHashSet;
 import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class AdditionFunctionTest extends ParameterizedCspTest {
 
@@ -40,7 +40,11 @@ public class AdditionFunctionTest extends ParameterizedCspTest {
         assertThat(cf.add(a, b, c)).isEqualTo(new AdditionFunction(new LinkedHashSet<>(List.of(a, b, c))));
         assertThat(cf.add(a, a)).isSameAs(cf.mul(2, a));
         assertThat(cf.add(a, a, c)).isSameAs(cf.add(cf.mul(2, a), c));
-        assertThat(cf.add(a, cf.add(b, cf.add(a, c)), cf.add(a, c))).isSameAs(cf.add(cf.mul(3, a), b, cf.constant(c.getValue() * 2)));
+        assertThat(cf.add(a, cf.add(b, cf.add(a, c)), cf.add(a, c))).isSameAs(
+                cf.add(cf.mul(3, a), b, cf.constant(c.getValue() * 2)));
+        assertThat(cf.add(cf.mul(2, a), cf.mul(3, a))).isSameAs(cf.mul(5, a));
+        assertThat(cf.add(cf.mul(a, b), cf.mul(a, b))).isSameAs(cf.add(cf.mul(2, cf.mul(a, b))));
+        assertThat(cf.add(cf.mul(2, cf.mul(a, b)), cf.mul(a, b))).isSameAs(cf.add(cf.mul(3, cf.mul(a, b))));
     }
 
     @ParameterizedTest
