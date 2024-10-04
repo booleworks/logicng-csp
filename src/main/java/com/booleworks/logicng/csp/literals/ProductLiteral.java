@@ -54,7 +54,7 @@ public class ProductLiteral implements ArithmeticLiteral {
     }
 
     @Override
-    public ArithmeticLiteral substitute(final IntegerVariableSubstitution assignment) {
+    public ProductLiteral substitute(final IntegerVariableSubstitution assignment) {
         if (assignment.containsKey(v) || assignment.containsKey(v1) || assignment.containsKey(v2)) {
             return new ProductLiteral(assignment.getOrSelf(v), assignment.getOrSelf(v1), assignment.getOrSelf(v2));
         } else {

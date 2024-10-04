@@ -88,23 +88,26 @@ public class CompactOrderReduction {
 
     static ReductionResult reduceClauses(final Set<IntegerClause> clauses, final CompactOrderEncodingContext context,
                                          final CspFactory cf) {
-        final Set<IntegerClause> adjustedClauses = adjustClauses(clauses, context, cf);
-        final ReductionResult toTernaryResult = toTernary(adjustedClauses, context, cf);
+        final ReductionResult adjustedResult = adjustClauses(clauses, context, cf);
+        final ReductionResult toTernaryResult = toTernary(adjustedResult.getClauses(), context, cf);
         final ReductionResult toRcspResult = toRcsp(toTernaryResult.getClauses(), context, cf);
         final Set<IntegerClause> simplificationResult = simplify(toRcspResult.getClauses(), context,
                 cf.getFormulaFactory());
 
-        final int size = toTernaryResult.getFrontierAuxiliaryVariables().size()
+        final int size = adjustedResult.getFrontierAuxiliaryVariables().size()
+                + toTernaryResult.getFrontierAuxiliaryVariables().size()
                 + toRcspResult.getFrontierAuxiliaryVariables().size();
         final List<IntegerVariable> currentVariables = new ArrayList<>(size);
+        currentVariables.addAll(adjustedResult.getFrontierAuxiliaryVariables());
         currentVariables.addAll(toTernaryResult.getFrontierAuxiliaryVariables());
         currentVariables.addAll(toRcspResult.getFrontierAuxiliaryVariables());
         return CompactCSPReduction.toCCSP(simplificationResult, currentVariables, context, cf);
     }
 
-    private static Set<IntegerClause> adjustClauses(final Set<IntegerClause> clauses,
-                                                    final CompactOrderEncodingContext context, final CspFactory cf) {
+    private static ReductionResult adjustClauses(final Set<IntegerClause> clauses,
+                                                 final CompactOrderEncodingContext context, final CspFactory cf) {
         final Set<IntegerClause> newClauses = new LinkedHashSet<>();
+        final List<IntegerVariable> auxiliaryVariables = new ArrayList<>();
         for (final IntegerClause c : clauses) {
             if (c.getArithmeticLiterals().isEmpty()) {
                 newClauses.add(c);
@@ -123,15 +126,16 @@ public class CompactOrderReduction {
                         final LinearLiteral newLl = new LinearLiteral(newLs, ll.getOperator());
                         newClause.addArithmeticLiteral(newLl);
                     } else if (lit instanceof ProductLiteral) {
-                        assert lit instanceof ProductLiteral;
-                        final IntegerVariable z = ((ProductLiteral) lit).getV();
-                        final IntegerVariable x = ((ProductLiteral) lit).getV1();
-                        final IntegerVariable y = ((ProductLiteral) lit).getV2();
+                        final ProductLiteral pl =
+                                ((ProductLiteral) lit).substitute(context.getAdjustedVariablesSubstitution());
+                        final IntegerVariable z = pl.getV();
+                        final IntegerVariable x = pl.getV1();
+                        final IntegerVariable y = pl.getV2();
                         final int zoffset = context.getOffset(z);
                         final int xoffset = context.getOffset(x);
                         final int yoffset = context.getOffset(y);
                         if (zoffset == 0 && xoffset == 0 && yoffset == 0) {
-                            newClause.addArithmeticLiteral(lit);
+                            newClause.addArithmeticLiteral(pl);
                         } else {
 							/*
 								(z+zoffset) = (x+xoffset)(y+yoffset)
@@ -144,9 +148,9 @@ public class CompactOrderReduction {
                             final LinearExpression.Builder ls =
                                     new LinearExpression.Builder(xoffset * yoffset - zoffset);
                             ls.setA(-1, z);
-                            final IntegerVariable p =
-                                    context.newAdjustedVariable(AUX_ADJUST, IntegerDomain.of(0, xdom.mul(ydom).ub()),
-                                            cf);
+                            final IntegerDomain pdom = IntegerDomain.of(0, xdom.mul(ydom).ub());
+                            final IntegerVariable p = context.newAdjustedVariable(AUX_ADJUST, pdom, cf);
+                            auxiliaryVariables.add(p);
                             ls.setA(1, p);
                             ls.setA(yoffset, x);
                             ls.setA(xoffset, y);
@@ -158,7 +162,7 @@ public class CompactOrderReduction {
                 newClauses.add(newClause.build());
             }
         }
-        return newClauses;
+        return new ReductionResult(newClauses, auxiliaryVariables);
     }
 
     private static void adjustVariable(final IntegerVariable v, final ReductionResult destination,
@@ -344,7 +348,7 @@ public class CompactOrderReduction {
                             final int c2 = ls.getA(v2);
                             if (c1 * c2 < 0) {
                                 IntegerVariable lhs = Math.abs(c1) < Math.abs(c2) ? v1 : v2;
-                                final IntegerVariable rhs = Math.abs(c1) <= Math.abs(c2) ? v2 : v1;
+                                final IntegerVariable rhs = Math.abs(c1) < Math.abs(c2) ? v2 : v1;
                                 final int lc = Math.abs(ls.getA(lhs));
                                 final int rc = Math.abs(ls.getA(rhs));
                                 if (lc > 1) {
