@@ -9,7 +9,6 @@ import com.booleworks.logicng.csp.encodings.OrderEncodingContext;
 import com.booleworks.logicng.csp.terms.IntegerVariable;
 import com.booleworks.logicng.formulas.Formula;
 import com.booleworks.logicng.formulas.FormulaFactory;
-import com.booleworks.logicng.formulas.Literal;
 import com.booleworks.logicng.formulas.Variable;
 import com.booleworks.logicng.solvers.SatSolver;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -17,6 +16,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.List;
 
+import static com.booleworks.logicng.csp.Common.assignmentFrom;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CspModelEnumerationTest extends ParameterizedCspTest {
@@ -66,49 +66,5 @@ public class CspModelEnumerationTest extends ParameterizedCspTest {
                 assignmentFrom(a, b.negate(f), c),
                 assignmentFrom(a.negate(f), b, c)
         );
-    }
-
-    private CspAssignment assignmentFrom(final IntegerVariable v1, final int value1) {
-        final CspAssignment assignment = new CspAssignment();
-        assignment.addIntAssignment(v1, value1);
-        return assignment;
-    }
-
-    private CspAssignment assignmentFrom(final IntegerVariable v1, final int value1, final IntegerVariable v2,
-                                         final int value2) {
-        final CspAssignment assignment = new CspAssignment();
-        assignment.addIntAssignment(v1, value1);
-        assignment.addIntAssignment(v2, value2);
-        return assignment;
-    }
-
-    private CspAssignment assignmentFrom(final IntegerVariable v1, final int value1, final IntegerVariable v2,
-                                         final int value2, final IntegerVariable v3, final int value3) {
-        final CspAssignment assignment = new CspAssignment();
-        assignment.addIntAssignment(v1, value1);
-        assignment.addIntAssignment(v2, value2);
-        assignment.addIntAssignment(v3, value3);
-        return assignment;
-    }
-
-    private CspAssignment assignmentFrom(final Literal l1) {
-        final CspAssignment assignment = new CspAssignment();
-        assignment.addLiteral(l1);
-        return assignment;
-    }
-
-    private CspAssignment assignmentFrom(final Literal l1, final Literal l2) {
-        final CspAssignment assignment = new CspAssignment();
-        assignment.addLiteral(l1);
-        assignment.addLiteral(l2);
-        return assignment;
-    }
-
-    private CspAssignment assignmentFrom(final Literal l1, final Literal l2, final Literal l3) {
-        final CspAssignment assignment = new CspAssignment();
-        assignment.addLiteral(l1);
-        assignment.addLiteral(l2);
-        assignment.addLiteral(l3);
-        return assignment;
     }
 }

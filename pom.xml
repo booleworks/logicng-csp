@@ -339,5 +339,12 @@
         </repository>
       </distributionManagement>
     </profile>
+
+    <profile>
+      <id>long-running-tests</id>
+      <properties>
+        <groups>longRunning</groups>
+      </properties>
+    </profile>
   </profiles>
 </project>
