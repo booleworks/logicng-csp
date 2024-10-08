@@ -1,11 +1,11 @@
 package com.booleworks.logicng.csp.terms;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.ParameterizedCspTest;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class MultiplicationFunctionTest extends ParameterizedCspTest {
     @ParameterizedTest
@@ -16,7 +16,7 @@ public class MultiplicationFunctionTest extends ParameterizedCspTest {
         final IntegerConstant c = cf.constant(5);
         final IntegerConstant d = cf.constant(10);
 
-        assertThat(cf.mul(0, a).getType()).isEqualTo(Term.Type.ZERO);
+        assertThat(cf.mul(0, a).getType()).isEqualTo(Term.Type.MUL);
         assertThat(cf.mul(c, cf.zero()).getType()).isEqualTo(Term.Type.ZERO);
         assertThat(cf.mul(c, d).getType()).isEqualTo(Term.Type.CONST);
         assertThat(cf.mul(c, a).getType()).isEqualTo(Term.Type.MUL);
@@ -34,7 +34,7 @@ public class MultiplicationFunctionTest extends ParameterizedCspTest {
         final IntegerConstant c = cf.constant(5);
         final IntegerConstant d = cf.constant(10);
 
-        assertThat(cf.mul(0, a)).isEqualTo(cf.zero());
+        assertThat(cf.mul(0, a)).isEqualTo(new MultiplicationFunction(cf.constant(0), a));
         assertThat(cf.mul(c, cf.zero())).isEqualTo(cf.zero());
         assertThat(cf.mul(c, d)).isEqualTo(cf.constant(50));
         assertThat(cf.mul(c, a)).isEqualTo(new MultiplicationFunction(c, a));
@@ -52,7 +52,7 @@ public class MultiplicationFunctionTest extends ParameterizedCspTest {
         final IntegerConstant c = cf.constant(5);
         final IntegerConstant d = cf.constant(10);
 
-        assertThat(cf.mul(0, a)).isSameAs(cf.zero());
+        assertThat(cf.mul(0, a)).isSameAs(cf.mul(cf.zero(), a));
         assertThat(cf.mul(c, cf.zero())).isSameAs(cf.zero());
         assertThat(cf.mul(c, d)).isSameAs(cf.constant(50));
         assertThat(cf.mul(c, a)).isSameAs(cf.mul(c, a));

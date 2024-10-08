@@ -1,11 +1,11 @@
 package com.booleworks.logicng.csp.terms;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.booleworks.logicng.csp.CspFactory;
 import com.booleworks.logicng.csp.ParameterizedCspTest;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class SubtractionFunctionTest extends ParameterizedCspTest {
     @ParameterizedTest
@@ -21,7 +21,7 @@ public class SubtractionFunctionTest extends ParameterizedCspTest {
         assertThat(cf.sub(c, cf.zero()).getType()).isEqualTo(c.getType());
         assertThat(cf.sub(a, cf.zero()).getType()).isEqualTo(a.getType());
         assertThat(cf.sub(c, c).getType()).isEqualTo(Term.Type.ZERO);
-        assertThat(cf.sub(a, a).getType()).isEqualTo(Term.Type.ZERO);
+        assertThat(cf.sub(a, a).getType()).isEqualTo(Term.Type.SUB);
         assertThat(cf.sub(c, d).getType()).isEqualTo(Term.Type.CONST);
         assertThat(cf.sub(a, b).getType()).isEqualTo(Term.Type.SUB);
         assertThat(cf.sub(a, c).getType()).isEqualTo(Term.Type.SUB);
@@ -40,7 +40,7 @@ public class SubtractionFunctionTest extends ParameterizedCspTest {
         assertThat(cf.sub(c, cf.zero())).isEqualTo(c);
         assertThat(cf.sub(a, cf.zero())).isEqualTo(a);
         assertThat(cf.sub(c, c)).isEqualTo(cf.zero());
-        assertThat(cf.sub(a, a)).isEqualTo(cf.zero());
+        assertThat(cf.sub(a, a)).isEqualTo(new SubtractionFunction(a, a));
         assertThat(cf.sub(c, d)).isEqualTo(new IntegerConstant(c.getValue() - d.getValue()));
         assertThat(cf.sub(a, b)).isEqualTo(new SubtractionFunction(a, b));
         assertThat(cf.sub(a, c)).isEqualTo(new SubtractionFunction(a, c));
@@ -59,7 +59,7 @@ public class SubtractionFunctionTest extends ParameterizedCspTest {
         assertThat(cf.sub(c, cf.zero())).isSameAs(c);
         assertThat(cf.sub(a, cf.zero())).isSameAs(a);
         assertThat(cf.sub(c, c)).isSameAs(cf.zero());
-        assertThat(cf.sub(a, a)).isSameAs(cf.zero());
+        assertThat(cf.sub(a, a)).isSameAs(cf.sub(a, a));
         assertThat(cf.sub(c, d)).isSameAs(cf.sub(c, d));
         assertThat(cf.sub(a, b)).isSameAs(cf.sub(a, b));
         assertThat(cf.sub(a, c)).isSameAs(cf.sub(a, c));

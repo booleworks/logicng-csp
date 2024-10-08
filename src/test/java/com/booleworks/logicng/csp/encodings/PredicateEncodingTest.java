@@ -145,7 +145,7 @@ public class PredicateEncodingTest extends ParameterizedCspTest {
     public void testGt(final CspFactory cf, final CspEncodingContext context) {
         final IntegerVariable a = cf.variable("A", -2, 2);
         final IntegerVariable b = cf.variable("B", -2, 2);
-        final CspPredicate p = cf.ge(a, b);
+        final CspPredicate p = cf.gt(a, b);
 
         checkModels(p, cf, context, List.of(
                 assignmentFrom(a, -1, b, -2),

@@ -1,5 +1,8 @@
-package com.booleworks.logicng.csp;
+package com.booleworks.logicng.csp.functions;
 
+import com.booleworks.logicng.csp.Common;
+import com.booleworks.logicng.csp.CspFactory;
+import com.booleworks.logicng.csp.ParameterizedCspTest;
 import com.booleworks.logicng.csp.datastructures.IntegerClause;
 import com.booleworks.logicng.csp.datastructures.LinearExpression;
 import com.booleworks.logicng.csp.literals.LinearLiteral;
