@@ -369,10 +369,6 @@ public class CspFactory {
      * @return the subtraction
      */
     public Term sub(final Term left, final Term right) {
-        // x-x = 0
-        if (left.equals(right)) {
-            return zero;
-        }
         // 0 - x = -x
         if (left.getType() == Term.Type.ZERO) {
             return minus(right);
@@ -415,10 +411,6 @@ public class CspFactory {
      * @return the multiplication
      */
     public Term mul(final Term left, final Term right) {
-        // a*0 or 0*a = 0
-        if (left.getType() == Term.Type.ZERO || right.getType() == Term.Type.ZERO) {
-            return zero;
-        }
         // 1*a = a
         if (left.getType() == Term.Type.ONE) {
             return right;
@@ -510,10 +502,6 @@ public class CspFactory {
         }
         if (right.getValue() < 0) {
             throw new IllegalArgumentException("Modulo a negative number is not allowed");
-        }
-        // x % 1 = 0
-        if (right.getValue() == 1) {
-            return this.zero;
         }
         // inline % in constants
         if (left instanceof IntegerConstant) {

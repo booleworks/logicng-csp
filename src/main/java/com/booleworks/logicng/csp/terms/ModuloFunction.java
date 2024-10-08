@@ -31,10 +31,15 @@ public class ModuloFunction extends BinaryFunction {
 
     @Override
     public Decomposition calculateDecomposition(final CspFactory cf) {
+        final int rightValue = getRight().getValue();
+        if (rightValue == 1) {
+            return new Term.Decomposition(new LinearExpression(0), new LinkedHashSet<>(), new
+                    LinkedHashSet<>(),
+                    new LinkedHashSet<>());
+        }
         final Decomposition resultLeft = left.decompose(cf);
         final Set<IntegerVariable> intVars = new LinkedHashSet<>(resultLeft.getAuxiliaryIntegerVariables());
         final IntegerDomain domainLeft = resultLeft.getLinearExpression().getDomain();
-        final int rightValue = getRight().getValue();
         final IntegerVariable q = cf.auxVariable(MOD_AUX_VARIABLE, domainLeft.div(rightValue));
         final IntegerVariable r = cf.auxVariable(MOD_AUX_VARIABLE, domainLeft.mod(rightValue));
         intVars.add(q);
